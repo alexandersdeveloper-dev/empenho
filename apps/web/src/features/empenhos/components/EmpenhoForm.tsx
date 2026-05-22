@@ -1,0 +1,837 @@
+import { useEffect, useRef, useState } from 'react';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { EmpenhoSchema, type EmpenhoDto, normalizarNatureza, padSubelemento, formatCurrencyBR, parseCurrencyBR } from '@ficha-empenho/shared';
+import { apiClient } from '@/shared/lib/apiClient';
+import { useCriarEmpenho, useAtualizarEmpenho, useFormasPagamento } from '../hooks/useEmpenhos';
+import { Combobox } from '@/shared/components/Combobox';
+import { cn } from '@/shared/lib/cn';
+import type { Empenho } from '@ficha-empenho/shared';
+
+type Props = {
+  empenho?: Empenho; // preenchido ao editar
+  onSuccess?: (empenho: Empenho) => void;
+  onCancel?: () => void;
+};
+
+const TIPO_OPTS = [
+  { value: 1, label: 'Ordinário' },
+  { value: 2, label: 'Reexercício' },
+  { value: 3, label: 'Global' },
+];
+
+const EXERCICIO_OPTS = [
+  { value: 1, label: 'Normal' },
+  { value: 2, label: 'Superávit' },
+];
+
+export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
+  const isEdit = !!empenho;
+  const criar = useCriarEmpenho();
+  const atualizar = useAtualizarEmpenho();
+  const { data: formasPagamento = [] } = useFormasPagamento();
+
+  // Sub-elemento: subs válidos para a natureza atual
+  const [subsAtuais, setSubsAtuais] = useState<Array<{ sub: string; descricao: string }>>([]);
+  const [naturezaAtual, setNaturezaAtual] = useState('');
+  const [showSubSugestoes, setShowSubSugestoes] = useState(false);
+  const [subFiltro, setSubFiltro] = useState('');
+  const [classificacaoTravada, setClassificacaoTravada] = useState(false);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EmpenhoDto>({
+    resolver: zodResolver(EmpenhoSchema),
+    defaultValues: empenho
+      ? {
+          numero_ficha: empenho.numero_ficha ?? '',
+          projeto_atividade: empenho.projeto_atividade ?? '',
+          dotacao: empenho.dotacao ?? '',
+          stn: empenho.stn ?? '',
+          subelemento_codigo: empenho.subelemento_codigo ?? '',
+          subelemento_descricao: empenho.subelemento_descricao ?? '',
+          credor_id: empenho.credor_id ?? undefined,
+          credor_numero: empenho.credor_numero ?? '',
+          credor_nome: empenho.credor_nome ?? '',
+          tipo_empenho: (empenho.tipo_empenho as 1 | 2 | 3) ?? 1,
+          historico: empenho.historico ?? '',
+          valor_empenho: empenho.valor_empenho ?? 0,
+          emenda: empenho.emenda ?? undefined,
+          exercicio: (empenho.exercicio as 1 | 2) ?? 1,
+          numero_contrato: empenho.numero_contrato ?? '',
+          numero_convenio: empenho.numero_convenio ?? '',
+          data_empenho: empenho.data_empenho ?? '',
+          descontos: empenho.descontos ?? [],
+          liquidacao: empenho.liquidacao
+            ? {
+                valor: empenho.liquidacao.valor,
+                data_liquidacao: empenho.liquidacao.data_liquidacao ?? '',
+                data_pagamento: empenho.liquidacao.data_pagamento ?? '',
+                numero_op: empenho.liquidacao.numero_op ?? '',
+                forma_pagamento: empenho.liquidacao.forma_pagamento ?? '',
+                conta: empenho.liquidacao.conta ?? '',
+                parcelas: empenho.liquidacao.parcelas ?? [],
+              }
+            : undefined,
+        }
+      : {
+          tipo_empenho: 1,
+          exercicio: 1,
+          valor_empenho: 0,
+          descontos: [],
+        },
+  });
+
+  const tipoEmpenho = useWatch({ control, name: 'tipo_empenho' });
+  const exercicio = useWatch({ control, name: 'exercicio' });
+  const valorEmpenho = useWatch({ control, name: 'valor_empenho' });
+  const descontosWatch = useWatch({ control, name: 'descontos' });
+  const isSuperavit = exercicio === 2;
+  const isGlobal = tipoEmpenho === 3;
+
+  // Total descontos e valor líquido
+  const totalDescontos = (descontosWatch ?? []).reduce(
+    (sum, d) => sum + (Number(d?.valor) || 0),
+    0,
+  );
+  const valorLiquido = Math.max(0, (Number(valorEmpenho) || 0) - totalDescontos);
+
+  // Sincroniza valor líquido no campo de liquidação
+  useEffect(() => {
+    setValue('liquidacao.valor', valorLiquido);
+  }, [valorLiquido, setValue]);
+
+  // Descontos (linhas dinâmicas)
+  const { fields: descontoFields, append: addDesconto, remove: removeDesconto } = useFieldArray({
+    control,
+    name: 'descontos',
+  });
+
+  // Parcelas (linhas dinâmicas dentro da liquidação)
+  const { fields: parcelaFields, append: addParcela, remove: removeParcela } = useFieldArray({
+    control,
+    name: 'liquidacao.parcelas',
+  });
+
+  // Credor: estado local para o campo de busca visível
+  const [credorBusca, setCredorBusca] = useState(empenho?.credor_nome ?? '');
+
+  // ─── Classificação orçamentária ───────────────────────────────────────────────
+
+  async function handleFichaBlur(ficha: string) {
+    const v = ficha.trim();
+    if (!v) {
+      setValue('projeto_atividade', '');
+      setValue('dotacao', '');
+      setValue('stn', '');
+      setValue('subelemento_codigo', '');
+      setValue('subelemento_descricao', '');
+      setClassificacaoTravada(false);
+      await carregarSubs('', false);
+      return;
+    }
+
+    // Limpa sub ao trocar de ficha (pode ter natureza diferente)
+    setValue('subelemento_codigo', '');
+    setValue('subelemento_descricao', '');
+
+    try {
+      const { data } = await apiClient.get(`/classificacao/ficha/${encodeURIComponent(v)}`);
+      if (data?.dotacao || data?.projeto_atividade || data?.stn) {
+        setValue('projeto_atividade', data.projeto_atividade ?? '');
+        setValue('dotacao', data.dotacao ?? '');
+        setValue('stn', data.stn ?? '');
+        if (!isSuperavit) setClassificacaoTravada(true);
+        if (data.dotacao) await carregarSubs(data.dotacao, false);
+      } else {
+        if (!isSuperavit) setClassificacaoTravada(false);
+        await carregarSubs('', false);
+      }
+    } catch {
+      if (!isSuperavit) setClassificacaoTravada(false);
+    }
+  }
+
+  // Superávit destrava classificação
+  useEffect(() => {
+    if (isSuperavit) setClassificacaoTravada(false);
+  }, [isSuperavit]);
+
+  // ─── Sub-elemento ─────────────────────────────────────────────────────────────
+
+  async function carregarSubs(dotacaoStr: string, manterAtual: boolean) {
+    setSubsAtuais([]);
+    setNaturezaAtual('');
+    if (!dotacaoStr) return;
+
+    const natureza = normalizarNatureza(dotacaoStr);
+    try {
+      const { data } = await apiClient.get('/subelementos', { params: { natureza } });
+      const items: Array<{ sub: string; descricao: string }> = (data?.items ?? []).map(
+        (x: { sub: string; descricao: string }) => ({
+          sub: padSubelemento(x.sub),
+          descricao: x.descricao ?? '',
+        }),
+      );
+      setSubsAtuais(items);
+      setNaturezaAtual(natureza);
+
+      if (manterAtual) {
+        const subAtual = padSubelemento(getValues('subelemento_codigo') ?? '');
+        const found = items.find((x) => x.sub === subAtual);
+        if (found) setValue('subelemento_descricao', found.descricao);
+      }
+    } catch {
+      // silencioso — modo manual
+    }
+  }
+
+  // Carrega subs ao editar (se já tem dotação)
+  useEffect(() => {
+    if (isEdit && empenho?.dotacao) {
+      carregarSubs(empenho.dotacao, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const subsFiltradas = subFiltro
+    ? subsAtuais.filter(
+        (x) =>
+          x.sub.includes(subFiltro) ||
+          x.descricao.toLowerCase().includes(subFiltro.toLowerCase()),
+      )
+    : subsAtuais;
+
+  function selecionarSub(sub: { sub: string; descricao: string }) {
+    setValue('subelemento_codigo', sub.sub);
+    setValue('subelemento_descricao', sub.descricao);
+    if (naturezaAtual) setValue('dotacao', naturezaAtual + '.' + sub.sub);
+    setShowSubSugestoes(false);
+    setSubFiltro('');
+  }
+
+  function handleSubBlur() {
+    setTimeout(() => {
+      setShowSubSugestoes(false);
+      const raw = getValues('subelemento_codigo') ?? '';
+      if (!raw) return;
+      const sub2 = padSubelemento(raw);
+      setValue('subelemento_codigo', sub2);
+      if (subsAtuais.length > 0) {
+        const valid = subsAtuais.map((x) => x.sub);
+        if (!valid.includes(sub2)) {
+          toast.error(`Sub-elemento '${sub2}' inválido para esta natureza`);
+          setValue('subelemento_codigo', '');
+          setValue('subelemento_descricao', '');
+          return;
+        }
+        const found = subsAtuais.find((x) => x.sub === sub2);
+        setValue('subelemento_descricao', found?.descricao ?? '');
+        if (naturezaAtual) setValue('dotacao', naturezaAtual + '.' + sub2);
+      }
+    }, 150);
+  }
+
+  // ─── Credor autocomplete ──────────────────────────────────────────────────────
+
+  async function searchCredores(q: string) {
+    const { data } = await apiClient.get('/credores', { params: { q } });
+    return (data as Array<{ id: number; numero: string | null; nome: string }>).map((r) => ({
+      label: (r.numero ? r.numero + ' — ' : '') + r.nome,
+      value: String(r.id),
+      meta: r,
+    }));
+  }
+
+  function handleCredorSelect(label: string, option?: { value: string; meta?: Record<string, unknown> }) {
+    setCredorBusca(label);
+    if (option?.meta) {
+      const m = option.meta as { id: number; numero: string | null; nome: string };
+      setValue('credor_id', m.id);
+      setValue('credor_numero', m.numero ?? '');
+      setValue('credor_nome', m.nome);
+    } else {
+      setValue('credor_id', undefined);
+      setValue('credor_nome', label);
+    }
+  }
+
+  async function handleCredorNumeroBlur(numero: string) {
+    if (!numero) return;
+    try {
+      const { data } = await apiClient.get(`/credores/numero/${encodeURIComponent(numero)}`);
+      if (data?.nome) {
+        setValue('credor_id', data.id);
+        setValue('credor_nome', data.nome);
+        setCredorBusca(data.nome);
+      }
+    } catch { /* credor não cadastrado, modo manual */ }
+  }
+
+  // ─── Retenção autocomplete (descontos) ───────────────────────────────────────
+
+  async function searchRetencoes(q: string) {
+    const { data } = await apiClient.get('/config/retencoes', { params: { q } });
+    return (data as Array<{ nome: string; codigo: string }>).map((r) => ({
+      label: (r.codigo ? r.codigo + ' — ' : '') + r.nome,
+      value: r.codigo,
+      meta: r,
+    }));
+  }
+
+  async function searchEfd(q: string) {
+    const { data } = await apiClient.get('/subelementos/efd', { params: { q } });
+    return (data as Array<{ codigo: string; descricao: string }>).map((r) => ({
+      label: r.codigo + (r.descricao ? ' — ' + r.descricao : ''),
+      value: r.codigo,
+    }));
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────────
+
+  const onSubmit = async (data: EmpenhoDto) => {
+    try {
+      let result: Empenho;
+      if (isEdit) {
+        result = await atualizar.mutateAsync({ id: empenho!.id, dto: data });
+      } else {
+        result = await criar.mutateAsync(data);
+      }
+      onSuccess?.(result);
+    } catch {
+      // erro já tratado pelo hook (toast)
+    }
+  };
+
+  // ─── Enter → Tab ──────────────────────────────────────────────────────────────
+
+  const formRef = useRef<HTMLFormElement>(null);
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== 'Enter') return;
+    const el = e.target as HTMLElement;
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'BUTTON') return;
+    e.preventDefault();
+    const sel = 'input:not([type="hidden"]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled])';
+    const all = Array.from(formRef.current?.querySelectorAll<HTMLElement>(sel) ?? []).filter(
+      (x) => (x as HTMLElement).offsetParent !== null,
+    );
+    const idx = all.indexOf(el);
+    const next = all[idx + 1] ?? all[0];
+    next?.focus();
+    if (next instanceof HTMLInputElement && next.type !== 'checkbox') next.select?.();
+  }
+
+  // ─── Render helpers ───────────────────────────────────────────────────────────
+
+  const fieldCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none disabled:bg-gray-50 read-only:bg-gray-50';
+  const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
+  const errorCls = 'text-xs text-red-500 mt-0.5';
+
+  function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+    return (
+      <div>
+        <label className={labelCls}>{label}</label>
+        {children}
+        {error && <p className={errorCls}>{error}</p>}
+      </div>
+    );
+  }
+
+  // ─── JSX ──────────────────────────────────────────────────────────────────────
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown} className="space-y-6">
+      <h2 className="text-lg font-semibold text-gray-800">
+        {isEdit ? `Editar Empenho ${empenho.codigo_interno}` : 'Novo Empenho'}
+      </h2>
+
+      {/* ── Exercício e Tipo ─────────────────────────────────────────── */}
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Field label="Exercício" error={errors.exercicio?.message}>
+          <select {...register('exercicio', { valueAsNumber: true })} className={fieldCls}>
+            {EXERCICIO_OPTS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Tipo de Empenho" error={errors.tipo_empenho?.message}>
+          <select {...register('tipo_empenho', { valueAsNumber: true })} className={fieldCls}>
+            {TIPO_OPTS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Data do Empenho">
+          <input type="date" {...register('data_empenho')} className={fieldCls} />
+        </Field>
+
+        <Field label="Emenda">
+          <input type="number" {...register('emenda', { valueAsNumber: true })} className={fieldCls} placeholder="—" />
+        </Field>
+      </section>
+
+      {/* ── Classificação Orçamentária ───────────────────────────────── */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Classificação Orçamentária</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <Field label="Nº da Ficha">
+            <input
+              {...register('numero_ficha')}
+              className={fieldCls}
+              placeholder="Ex: 001"
+              onBlur={(e) => handleFichaBlur(e.target.value)}
+              onChange={() => {
+                setValue('subelemento_codigo', '');
+                setValue('subelemento_descricao', '');
+              }}
+            />
+          </Field>
+
+          <div className="sm:col-span-3">
+            <Field label="Projeto / Atividade">
+              <input
+                {...register('projeto_atividade')}
+                readOnly={classificacaoTravada}
+                className={fieldCls}
+                placeholder="Auto-preenchido pela ficha"
+              />
+            </Field>
+          </div>
+
+          <div className="sm:col-span-2">
+            <Field label="Dotação (Natureza)">
+              <input
+                {...register('dotacao')}
+                readOnly={classificacaoTravada}
+                className={fieldCls}
+                placeholder="Ex: 3.1.90.04.00"
+                onBlur={(e) => carregarSubs(e.target.value, false)}
+              />
+            </Field>
+          </div>
+
+          <Field label="Fonte (STN)">
+            <input
+              {...register('stn')}
+              readOnly={classificacaoTravada}
+              className={fieldCls}
+            />
+          </Field>
+
+          {/* Sub-elemento */}
+          <div>
+            <label className={labelCls}>Sub-elemento</label>
+            <div className="relative flex gap-1">
+              <div className="relative flex-1">
+                <input
+                  {...register('subelemento_codigo')}
+                  className={fieldCls}
+                  placeholder="Código"
+                  onChange={(e) => setSubFiltro(e.target.value)}
+                  onFocus={() => subsAtuais.length > 0 && setShowSubSugestoes(true)}
+                  onBlur={handleSubBlur}
+                  autoComplete="off"
+                />
+                {showSubSugestoes && subsFiltradas.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto text-sm">
+                    {subsFiltradas.map((s) => (
+                      <li
+                        key={s.sub}
+                        onMouseDown={(e) => { e.preventDefault(); selecionarSub(s); }}
+                        className="cursor-pointer px-3 py-2 hover:bg-brand-50 hover:text-brand-700"
+                      >
+                        <span className="font-mono mr-2">{s.sub}</span>
+                        <span className="text-gray-600">{s.descricao}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!naturezaAtual) { toast.info('Informe a ficha para carregar sub-elementos'); return; }
+                  setShowSubSugestoes(true);
+                }}
+                className="rounded-lg border border-gray-300 px-2.5 text-gray-500 hover:bg-gray-50"
+                title="Ver sub-elementos disponíveis"
+              >
+                🔍
+              </button>
+            </div>
+            <input
+              {...register('subelemento_descricao')}
+              readOnly={subsAtuais.length > 0}
+              className={cn(fieldCls, 'mt-1')}
+              placeholder="Descrição do sub-elemento"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Credor ──────────────────────────────────────────────────────── */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Credor</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <Field label="Nº do Credor">
+            <input
+              {...register('credor_numero')}
+              className={fieldCls}
+              placeholder="Código"
+              onBlur={(e) => handleCredorNumeroBlur(e.target.value)}
+            />
+          </Field>
+
+          <div className="sm:col-span-3">
+            <label className={labelCls}>Nome do Credor</label>
+            <Combobox
+              value={credorBusca}
+              onChange={(val, opt) => handleCredorSelect(val, opt as { value: string; meta?: Record<string, unknown> })}
+              onSearch={searchCredores}
+              placeholder="Digite para buscar..."
+              minChars={2}
+            />
+            <input type="hidden" {...register('credor_id', { valueAsNumber: true })} />
+            <input type="hidden" {...register('credor_nome')} />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Dados do Empenho ─────────────────────────────────────────────── */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Dados do Empenho</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field label="Histórico / Objeto">
+              <textarea
+                {...register('historico')}
+                rows={3}
+                className={cn(fieldCls, 'resize-none')}
+                placeholder="Descreva o objeto ou serviço..."
+              />
+            </Field>
+          </div>
+
+          <Field label="Valor do Empenho (R$)" error={errors.valor_empenho?.message}>
+            <Controller
+              control={control}
+              name="valor_empenho"
+              render={({ field }) => (
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className={fieldCls}
+                  placeholder="0,00"
+                  value={formatCurrencyBR(field.value)}
+                  onChange={(e) => field.onChange(parseCurrencyBR(e.target.value))}
+                  onBlur={(e) => field.onChange(parseCurrencyBR(e.target.value))}
+                />
+              )}
+            />
+          </Field>
+
+          {/* Contrato/Convênio — apenas tipo Global */}
+          {isGlobal && (
+            <>
+              <Field label="Nº Contrato">
+                <input {...register('numero_contrato')} className={fieldCls} />
+              </Field>
+              <Field label="Nº Convênio">
+                <input {...register('numero_convenio')} className={fieldCls} />
+              </Field>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ── Descontos / Retenções ─────────────────────────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700 border-b pb-1 flex-1">Descontos / Retenções</h3>
+          <button
+            type="button"
+            onClick={() => addDesconto({ tipo: '', codigo: '', valor: 0, efd_codigo: '', ord: descontoFields.length })}
+            className="ml-4 text-xs rounded-lg border border-brand-300 text-brand-600 px-3 py-1.5 hover:bg-brand-50 transition"
+          >
+            + Adicionar
+          </button>
+        </div>
+
+        {descontoFields.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                <tr>
+                  <th className="px-3 py-2 text-left w-32">Código</th>
+                  <th className="px-3 py-2 text-left">Tipo / Retenção</th>
+                  <th className="px-3 py-2 text-right w-36">Valor (R$)</th>
+                  <th className="px-3 py-2 text-left w-36">Código EFD</th>
+                  <th className="px-3 py-2 w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {descontoFields.map((field, i) => (
+                  <tr key={field.id}>
+                    {/* Código */}
+                    <td className="px-3 py-2">
+                      <input
+                        {...register(`descontos.${i}.codigo`)}
+                        className={fieldCls}
+                        placeholder="Cód."
+                        onBlur={async (e) => {
+                          const v = e.target.value.trim();
+                          if (!v) return;
+                          try {
+                            const { data } = await apiClient.get(`/config/retencoes/${encodeURIComponent(v)}`);
+                            if (data?.nome) setValue(`descontos.${i}.tipo`, data.nome);
+                          } catch { /* manual */ }
+                        }}
+                      />
+                    </td>
+                    {/* Tipo/Retenção (combobox) */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`descontos.${i}.tipo`}
+                        render={({ field: f }) => (
+                          <Combobox
+                            value={f.value ?? ''}
+                            onChange={async (val, opt) => {
+                              f.onChange(val);
+                              if (opt?.value) setValue(`descontos.${i}.codigo`, opt.value);
+                            }}
+                            onSearch={searchRetencoes}
+                            placeholder="Digite para buscar..."
+                            minChars={1}
+                          />
+                        )}
+                      />
+                    </td>
+                    {/* Valor */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`descontos.${i}.valor`}
+                        render={({ field: f }) => (
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            className={cn(fieldCls, 'text-right')}
+                            placeholder="0,00"
+                            value={formatCurrencyBR(f.value)}
+                            onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                            onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                          />
+                        )}
+                      />
+                    </td>
+                    {/* EFD */}
+                    <td className="px-3 py-2">
+                      <Controller
+                        control={control}
+                        name={`descontos.${i}.efd_codigo`}
+                        render={({ field: f }) => (
+                          <Combobox
+                            value={f.value ?? ''}
+                            onChange={(val) => f.onChange(val)}
+                            onSearch={searchEfd}
+                            placeholder="EFD..."
+                            minChars={1}
+                          />
+                        )}
+                      />
+                    </td>
+                    {/* Remover */}
+                    <td className="px-3 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeDesconto(i)}
+                        className="text-red-400 hover:text-red-600 text-lg leading-none"
+                      >
+                        ×
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Totais */}
+        <div className="mt-3 flex justify-end gap-8 text-sm">
+          <span className="text-gray-500">
+            Total descontos: <span className="font-medium text-gray-800">R$ {formatCurrencyBR(totalDescontos)}</span>
+          </span>
+          <span className="text-gray-500">
+            Valor líquido: <span className="font-semibold text-brand-700">R$ {formatCurrencyBR(valorLiquido)}</span>
+          </span>
+        </div>
+      </section>
+
+      {/* ── Liquidação ───────────────────────────────────────────────────── */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Liquidação</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg border border-gray-200 p-4">
+          <Field label="Valor Liquidado (R$)">
+            <Controller
+              control={control}
+              name="liquidacao.valor"
+              render={({ field: f }) => (
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className={fieldCls}
+                  value={formatCurrencyBR(f.value ?? valorLiquido)}
+                  onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                  onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                />
+              )}
+            />
+          </Field>
+
+          <Field label="Data da Liquidação">
+            <input type="date" {...register('liquidacao.data_liquidacao')} className={fieldCls} />
+          </Field>
+
+          <Field label="Data do Pagamento">
+            <input type="date" {...register('liquidacao.data_pagamento')} className={fieldCls} />
+          </Field>
+
+          <Field label="Nº O.P.">
+            <input {...register('liquidacao.numero_op')} className={fieldCls} />
+          </Field>
+
+          <Field label="Forma de Pagamento">
+            <select {...register('liquidacao.forma_pagamento')} className={fieldCls}>
+              <option value="">—</option>
+              {formasPagamento.map((f) => (
+                <option key={f.codigo} value={f.codigo}>
+                  {f.descricao || f.codigo}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div className="sm:col-span-3">
+            <Field label="Conta Bancária">
+              <input {...register('liquidacao.conta')} className={fieldCls} />
+            </Field>
+          </div>
+        </div>
+
+        {/* Parcelas */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-gray-600">Parcelas</span>
+            <button
+              type="button"
+              onClick={() =>
+                addParcela({ valor: 0, data: '', forma_pagamento: '', conta: '', numero_op: '', ord: parcelaFields.length })
+              }
+              className="text-xs rounded border border-gray-300 text-gray-600 px-2.5 py-1 hover:bg-gray-50"
+            >
+              + Parcela
+            </button>
+          </div>
+
+          {parcelaFields.length > 0 && (
+            <div className="overflow-x-auto rounded-lg border border-gray-100">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                  <tr>
+                    <th className="px-3 py-2 text-right w-36">Valor (R$)</th>
+                    <th className="px-3 py-2 text-left w-36">Data</th>
+                    <th className="px-3 py-2 text-left">Forma</th>
+                    <th className="px-3 py-2 text-left">Conta</th>
+                    <th className="px-3 py-2 text-left">N.º O.P.</th>
+                    <th className="px-3 py-2 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {parcelaFields.map((field, i) => (
+                    <tr key={field.id}>
+                      <td className="px-3 py-2">
+                        <Controller
+                          control={control}
+                          name={`liquidacao.parcelas.${i}.valor`}
+                          render={({ field: f }) => (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              className={cn(fieldCls, 'text-right')}
+                              value={formatCurrencyBR(f.value)}
+                              onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                              onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                            />
+                          )}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="date" {...register(`liquidacao.parcelas.${i}.data`)} className={fieldCls} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select {...register(`liquidacao.parcelas.${i}.forma_pagamento`)} className={fieldCls}>
+                          <option value="">—</option>
+                          {formasPagamento.map((f) => (
+                            <option key={f.codigo} value={f.codigo}>
+                              {f.descricao || f.codigo}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input {...register(`liquidacao.parcelas.${i}.conta`)} className={fieldCls} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input {...register(`liquidacao.parcelas.${i}.numero_op`)} className={fieldCls} />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeParcela(i)}
+                          className="text-red-400 hover:text-red-600 text-lg leading-none"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Ações ──────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-end gap-3 pt-2 border-t">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition"
+          >
+            Cancelar
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-lg bg-brand-600 text-white px-6 py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-50"
+        >
+          {isSubmitting ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Empenho'}
+        </button>
+      </div>
+    </form>
+  );
+}
