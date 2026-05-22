@@ -1,4 +1,5 @@
-import { Body, Controller, Get, IsString, IsOptional, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { IsOptional, IsString } from 'class-validator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DepartamentosService } from './departamentos.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';

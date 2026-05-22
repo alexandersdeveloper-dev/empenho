@@ -202,7 +202,7 @@ export class EmpenhosService {
       .filter(Boolean);
 
     const erros = obrig.filter((campo: string) => {
-      const val = (dto as Record<string, unknown>)[campo];
+      const val = (dto as unknown as Record<string, unknown>)[campo];
       return val === null || val === undefined || val === '' || val === 0;
     });
 
