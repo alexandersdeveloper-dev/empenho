@@ -43,8 +43,8 @@ export function App() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f6f8fb' }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
       </div>
     );
   }

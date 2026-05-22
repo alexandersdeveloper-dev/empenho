@@ -7,8 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@ficha-empenho/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
     },
+  },
+  optimizeDeps: {
+    include: ['@ficha-empenho/shared'],
   },
   server: {
     port: 5173,

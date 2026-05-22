@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pesquisa de Clima Organizacional · Secretaria de Finanças · Prefeitura de Parintins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c-blue:    #3ea3ff;
+    --c-orange:  #b86a2b;
+    --c-yellow:  #ffb829;
+    --c-red:     #ea4242;
+
+    --ink-900: #0f1622;
+    --ink-700: #2a3344;
+    --ink-500: #5b667a;
+    --ink-400: #8590a3;
+    --ink-300: #b4bccb;
+    --line:    #e3e7ee;
+    --line-2:  #eef1f6;
+    --bg:      #ffffff;
+    --bg-soft: #f6f8fb;
+    --bg-card: #ffffff;
+
+    --radius: 10px;
+    --radius-lg: 14px;
+
+    --font-sans: "Manrope", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "Fraunces", Georgia, serif;
+
+    --shadow-sm: 0 1px 2px rgba(15,22,34,.04), 0 1px 1px rgba(15,22,34,.03);
+    --shadow-md: 0 6px 24px -8px rgba(15,22,34,.12), 0 2px 6px rgba(15,22,34,.05);
+    --shadow-lg: 0 24px 60px -20px rgba(15,22,34,.20), 0 6px 18px rgba(15,22,34,.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink-900); }
+  body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+
+  /* ---------- 4-color stripe ---------- */
+  .stripe {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: 6px;
+    width: 100%;
+  }
+  .stripe > i:nth-child(1) { background: var(--c-blue); }
+  .stripe > i:nth-child(2) { background: var(--c-orange); }
+  .stripe > i:nth-child(3) { background: var(--c-yellow); }
+  .stripe > i:nth-child(4) { background: var(--c-red); }
+
+  /* ---------- Header ---------- */
+  .header-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .header {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .header-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
+  .header-logo { height: 56px; width: auto; display: block; }
+  .header-divider { width: 1px; height: 38px; background: var(--line); }
+  .header-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .header-meta .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .header-meta .title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink-900);
+    letter-spacing: -.005em;
+  }
+
+  .btn-services {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 18px 11px 16px;
+    background: var(--ink-900);
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13.5px;
+    letter-spacing: -.005em;
+    transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+  }
+  .btn-services:hover {
+    background: #1a2436;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  .btn-services .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--c-yellow);
+    box-shadow: 0 0 0 3px rgba(255,184,41,.25);
+  }
+  .btn-services svg { width: 14px; height: 14px; opacity: .85; }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 56px 0 36px;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 72px;
+    align-items: start;
+  }
+
+  .crumbs {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .crumbs .sep { color: var(--ink-300); }
+  .crumbs .now { color: var(--ink-900); font-weight: 600; }
+
+  .h-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 8px;
+    border-radius: 999px;
+    background: #eaf4ff;
+    color: #1a5fa8;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .h-eyebrow .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--c-blue);
+    box-shadow: 0 0 0 0 rgba(62,163,255,.6);
+    animation: pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(62,163,255,.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(62,163,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(62,163,255,0); }
+  }
+
+  h1.hero-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 64px);
+    line-height: 1.02;
+    letter-spacing: -.025em;
+    margin: 0 0 24px;
+    color: var(--ink-900);
+    text-wrap: pretty;
+  }
+  h1.hero-title .accent {
+    font-style: italic;
+    font-weight: 500;
+    background: linear-gradient(95deg, var(--c-blue), var(--c-orange) 45%, var(--c-yellow) 70%, var(--c-red));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-lead {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-500);
+    max-width: 56ch;
+    margin: 0 0 32px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 26px;
+    background: var(--ink-900);
+    color: #fff;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -.005em;
+    box-shadow: var(--shadow-md);
+    transition: transform .18s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: #1a2436;
+  }
+  .btn-primary .arr { transition: transform .25s ease; }
+  .btn-primary:hover .arr { transform: translateX(4px); }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    color: var(--ink-700);
+    font-weight: 600;
+    font-size: 14.5px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #fff;
+    transition: border-color .2s ease, color .2s ease, transform .15s ease;
+  }
+  .btn-ghost:hover { border-color: var(--ink-700); color: var(--ink-900); transform: translateY(-1px); }
+
+  /* Hero stats */
+  .hero-stats {
+    margin-top: 44px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .stat .num {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: -.02em;
+    color: var(--ink-900);
+    line-height: 1;
+  }
+  .stat .lbl {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-500);
+    letter-spacing: .005em;
+  }
+  .stat.b .num { color: var(--c-blue); }
+  .stat.o .num { color: var(--c-orange); }
+  .stat.r .num { color: var(--c-red); }
+
+  /* ---------- Token Card (right of hero) ---------- */
+  .token-card {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .token-card::before {
+    content: "";
+    position: absolute; left: 0; top: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%);
+  }
+  .tc-head {
+    padding: 26px 28px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .tc-head .lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .tc-head .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #effaf2;
+    color: #1f7a3f;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: .04em;
+  }
+  .tc-head .pill .dt { width: 6px; height: 6px; background: #2aa05a; border-radius: 50%; }
+
+  .tc-body { padding: 28px; }
+  .token-display {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: .14em;
+    color: var(--ink-900);
+    background: var(--bg-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 22px 18px;
+    text-align: center;
+    user-select: all;
+    position: relative;
+  }
+  .token-display .seg { display: inline-block; }
+  .token-display .seg + .seg::before {
+    content: "·"; color: var(--ink-300); margin: 0 10px; font-weight: 400;
+  }
+  .token-actions {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .ta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink-700);
+    font-weight: 600;
+    font-size: 13px;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .ta-btn:hover { border-color: var(--ink-700); color: var(--ink-900); background: #fafbfd; }
+  .ta-btn.copied { border-color: #2aa05a; color: #1f7a3f; background: #f1faf3; }
+
+  .tc-meta {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+  }
+  .tc-meta .row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tc-meta .row .k {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .tc-meta .row .v {
+    font-size: 13px;
+    color: var(--ink-900);
+    font-weight: 600;
+  }
+
+  /* ---------- Info section: pillars ---------- */
+  .pillars {
+    margin: 24px 0 80px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .pillar {
+    padding: 28px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pillar .ico {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    border-radius: 10px;
+    background: var(--bg-soft);
+    color: var(--ink-700);
+  }
+  .pillar.b .ico { background: #eaf4ff; color: #1a5fa8; }
+  .pillar.y .ico { background: #fff5dd; color: #8a5a08; }
+  .pillar.r .ico { background: #fdecec; color: #b22e2e; }
+  .pillar h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -.015em;
+    color: var(--ink-900);
+  }
+  .pillar p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-500);
+    line-height: 1.55;
+  }
+  .pillar .num-tag {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+  }
+
+  /* ---------- "How it works" timeline ---------- */
+  .how {
+    padding: 64px 0 32px;
+    border-top: 1px solid var(--line);
+  }
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 24px;
+  }
+  .section-head .left .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--c-orange);
+    margin-bottom: 12px;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(28px, 3vw, 40px);
+    letter-spacing: -.02em;
+    margin: 0;
+    color: var(--ink-900);
+  }
+  .section-head .right {
+    color: var(--ink-500);
+    font-size: 14.5px;
+    max-width: 38ch;
+    text-align: right;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .step {
+    padding: 24px 22px 26px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .step:last-child { border-right: 0; }
+  .step .n {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-400);
+    letter-spacing: .14em;
+    margin-bottom: 16px;
+  }
+  .step .ico-line {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: grid; place-items: center;
+    margin-bottom: 16px;
+  }
+  .step h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.005em;
+    color: var(--ink-900);
+  }
+  .step p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-500);
+    line-height: 1.5;
+  }
+  .step:nth-child(1) .ico-line { color: var(--c-blue); }
+  .step:nth-child(2) .ico-line { color: var(--c-orange); }
+  .step:nth-child(3) .ico-line { color: #c8941f; }
+  .step:nth-child(4) .ico-line { color: var(--c-red); }
+
+  /* ---------- Trust strip ---------- */
+  .trust {
+    padding: 56px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .trust-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    background: var(--bg-soft);
+  }
+  .trust-card h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 24px;
+    margin: 0 0 12px;
+    letter-spacing: -.015em;
+  }
+  .trust-card p { margin: 0 0 16px; color: var(--ink-700); font-size: 14.5px; line-height: 1.6; }
+  .checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .checks li { display: flex; gap: 10px; align-items: start; font-size: 14px; color: var(--ink-700); }
+  .checks li svg { flex-shrink: 0; margin-top: 3px; color: #2aa05a; }
+  .trust-vis {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .trust-vis::after {
+    content: "";
+    position: absolute; right: -80px; bottom: -80px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(62,163,255,.10), transparent 65%);
+    pointer-events: none;
+  }
+  .vis-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .vis-grid .cell {
+    aspect-ratio: 1/1;
+    border-radius: 4px;
+    background: var(--line-2);
+  }
+  .vis-grid .cell.b { background: var(--c-blue); }
+  .vis-grid .cell.o { background: var(--c-orange); }
+  .vis-grid .cell.y { background: var(--c-yellow); }
+  .vis-grid .cell.r { background: var(--c-red); }
+  .vis-grid .cell.muted { background: #e9eef6; }
+  .vis-cap {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+
+  /* ---------- FAQ ---------- */
+  .faq {
+    padding: 56px 0 80px;
+    border-top: 1px solid var(--line);
+  }
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 60px;
+  }
+  .faq-list { display: flex; flex-direction: column; }
+  details.q {
+    border-bottom: 1px solid var(--line);
+    padding: 20px 0;
+  }
+  details.q[open] summary .plus { transform: rotate(45deg); }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink-900);
+    letter-spacing: -.005em;
+  }
+  summary::-webkit-details-marker { display: none; }
+  .plus {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    display: grid; place-items: center;
+    transition: transform .25s ease, border-color .2s, background .2s;
+  }
+  summary:hover .plus { border-color: var(--ink-700); background: #fafbfd; }
+  details.q .ans {
+    margin-top: 12px;
+    color: var(--ink-500);
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 64ch;
+  }
+
+  /* ---------- Footer ---------- */
+  footer { background: #fff; }
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 32px 24px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.1fr;
+    gap: 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .footer-inner::after {
+    content: "EU AMO PIN";
+    position: absolute;
+    right: -10px; top: 30px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 90px;
+    letter-spacing: -.02em;
+    color: rgba(184,106,43,.05);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .f-brand img { height: 56px; width: auto; }
+  .f-brand p {
+    margin-top: 16px;
+    font-size: 13.5px;
+    color: var(--ink-500);
+    line-height: 1.6;
+    max-width: 36ch;
+  }
+  .f-col h5 {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.005em;
+    margin: 0 0 18px;
+    color: var(--ink-900);
+  }
+  .f-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .f-col ul li a { font-size: 13.5px; color: var(--c-blue); transition: opacity .2s; }
+  .f-col ul li a:hover { opacity: .7; }
+  .f-contact { display: flex; flex-direction: column; gap: 14px; }
+  .f-contact .item { display: flex; gap: 10px; align-items: start; font-size: 13.5px; color: var(--c-blue); }
+  .f-contact .item svg { color: var(--c-blue); flex-shrink: 0; margin-top: 2px; }
+  .copyright {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 32px 28px;
+    border-top: 1px solid var(--line-2);
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-500);
+  }
+
+  /* ---------- Modal / Survey ---------- */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,22,34,.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    animation: fade .2s ease both;
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: pop .25s cubic-bezier(.2,.8,.2,1) both;
+    position: relative;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%);
+  }
+  .modal-head {
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--line-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .modal-head .lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .modal-head h3 {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -.015em;
+    color: var(--ink-900);
+  }
+  .modal-close {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    display: grid; place-items: center;
+    color: var(--ink-700);
+    transition: border-color .2s, color .2s;
+  }
+  .modal-close:hover { border-color: var(--ink-900); color: var(--ink-900); }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--line-2);
+    position: relative;
+  }
+  .progress-bar > i {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--c-blue), var(--c-orange));
+    transition: width .3s ease;
+  }
+
+  .modal-body {
+    padding: 28px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-foot {
+    padding: 16px 28px;
+    border-top: 1px solid var(--line-2);
+    background: #fafbfd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .modal-foot .step-info {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-500);
+    letter-spacing: .04em;
+  }
+  .modal-foot .actions { display: flex; gap: 10px; }
+  .btn-back {
+    padding: 11px 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--ink-700);
+    font-weight: 600;
+    font-size: 13.5px;
+    background: #fff;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-back:hover:not(:disabled) { border-color: var(--ink-700); color: var(--ink-900); }
+  .btn-back:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-next {
+    padding: 11px 22px;
+    background: var(--ink-900);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13.5px;
+    transition: background .2s, transform .15s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-next:hover { background: #1a2436; transform: translateY(-1px); }
+  .btn-next:disabled { background: var(--ink-300); cursor: not-allowed; transform: none; }
+
+  /* Survey Q */
+  .qheader { margin-bottom: 24px; }
+  .qheader .qmeta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+    margin-bottom: 10px;
+  }
+  .qheader .qtxt {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.25;
+    letter-spacing: -.015em;
+    color: var(--ink-900);
+    margin: 0;
+  }
+  .qheader .qsub {
+    margin-top: 8px;
+    color: var(--ink-500);
+    font-size: 14px;
+  }
+
+  /* Likert */
+  .likert {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .lik {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 12px;
+    background: #fff;
+    text-align: center;
+    cursor: pointer;
+    transition: all .18s ease;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .lik:hover { border-color: var(--ink-700); transform: translateY(-2px); }
+  .lik.sel {
+    border-color: var(--ink-900);
+    background: var(--ink-900);
+    color: #fff;
+    box-shadow: var(--shadow-md);
+  }
+  .lik .face { font-size: 22px; line-height: 1; }
+  .lik .v { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; opacity: .7; }
+  .lik .lbl { font-size: 12.5px; font-weight: 600; line-height: 1.2; }
+
+  /* Multi-choice */
+  .choice-list { display: flex; flex-direction: column; gap: 10px; }
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .15s ease;
+    background: #fff;
+  }
+  .choice:hover { border-color: var(--ink-700); }
+  .choice.sel { border-color: var(--ink-900); background: #fafbfd; box-shadow: 0 0 0 3px rgba(15,22,34,.04); }
+  .choice .box {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--ink-300);
+    border-radius: 5px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .choice.sel .box { background: var(--ink-900); border-color: var(--ink-900); }
+  .choice.sel .box svg { display: block; }
+  .choice .box svg { display: none; color: #fff; }
+  .choice .lbl { font-size: 14.5px; color: var(--ink-900); font-weight: 500; }
+
+  /* Textarea */
+  textarea.tx {
+    width: 100%;
+    min-height: 130px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--ink-900);
+    background: #fff;
+    resize: vertical;
+    transition: border-color .2s;
+  }
+  textarea.tx:focus { outline: none; border-color: var(--ink-700); }
+  .char-count {
+    margin-top: 6px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-400);
+  }
+
+  /* Identify step */
+  .id-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .id-field { display: flex; flex-direction: column; gap: 6px; }
+  .id-field label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .id-field select, .id-field input {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink-900);
+    background: #fff;
+    transition: border-color .2s;
+  }
+  .id-field select:focus, .id-field input:focus { outline: none; border-color: var(--ink-700); }
+  .id-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: #eaf4ff;
+    border: 1px solid #cfe4f8;
+    border-radius: 10px;
+    color: #1a5fa8;
+    font-size: 13px;
+    display: flex; gap: 10px; align-items: start;
+  }
+
+  /* Token gate (modal start) */
+  .token-gate { text-align: center; padding: 8px 0 4px; }
+  .token-gate .lock {
+    width: 56px; height: 56px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #eaf4ff;
+    color: #1a5fa8;
+    display: grid; place-items: center;
+  }
+  .token-gate h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0 0 8px;
+    letter-spacing: -.015em;
+  }
+  .token-gate p { color: var(--ink-500); margin: 0 0 24px; font-size: 14.5px; }
+  .token-gate .tk-display {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: .14em;
+    background: var(--bg-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+
+  /* Done state */
+  .done {
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .done .check {
+    width: 72px; height: 72px;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2aa05a, #1f7a3f);
+    color: #fff;
+    display: grid; place-items: center;
+    box-shadow: 0 12px 30px -8px rgba(42,160,90,.4);
+    animation: bounce .5s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes bounce {
+    0% { transform: scale(.4); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .done h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 28px;
+    margin: 0 0 10px;
+    letter-spacing: -.02em;
+  }
+  .done p { color: var(--ink-500); margin: 0 auto 6px; max-width: 44ch; font-size: 14.5px; line-height: 1.6; }
+  .done .protocol {
+    margin-top: 22px;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: .1em;
+    color: var(--ink-700);
+  }
+
+  /* Already submitted state on page */
+  .blocked-banner {
+    margin: 24px 0 0;
+    padding: 18px 22px;
+    border: 1px solid #fde0e0;
+    background: #fef5f5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #8b2424;
+  }
+  .blocked-banner .ico {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #fdecec;
+    color: var(--c-red);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .blocked-banner .tx { flex: 1; }
+  .blocked-banner .tx strong { display: block; font-size: 14px; color: #8b2424; }
+  .blocked-banner .tx span { font-size: 13px; color: #a04848; }
+
+  /* Responsive */
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; }
+    .pillars { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .step:nth-child(even) { border-right: 0; }
+    .step:nth-child(1), .step:nth-child(2) { border-bottom: 1px solid var(--line); }
+    .trust { grid-template-columns: 1fr; }
+    .faq-grid { grid-template-columns: 1fr; gap: 24px; }
+    .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .section-head .right { text-align: left; }
+  }
+  @media (max-width: 600px) {
+    .header { padding: 14px 18px; }
+    .header-meta { display: none; }
+    main { padding: 0 18px; }
+    .hero { padding: 32px 0 20px; }
+    .hero-stats { grid-template-columns: 1fr; gap: 14px; padding-top: 18px; margin-top: 28px; }
+    .steps { grid-template-columns: 1fr; }
+    .step { border-right: 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: 0; }
+    .footer-inner { padding: 32px 18px 18px; }
+    .copyright { padding: 18px; }
+    .id-form { grid-template-columns: 1fr; }
+    .likert { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .lik { padding: 10px 4px; }
+    .lik .lbl { font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ----- helpers -----
+function genToken() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const seg = (n) => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join("");
+  return `${seg(4)}-${seg(4)}-${seg(4)}`;
+}
+
+function nowDateStr() {
+  const d = new Date();
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function deadlineStr() {
+  // 30 days from current date
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+// ----- Survey definition -----
+const SECTIONS = [
+  {
+    id: "trabalho",
+    label: "Ambiente de trabalho",
+    questions: [
+      { id: "q1", type: "likert", text: "Sinto-me satisfeito(a) com o ambiente físico do meu local de trabalho.", sub: "Considere iluminação, mobiliário, equipamentos e conforto." },
+      { id: "q2", type: "likert", text: "Os recursos e ferramentas que utilizo são adequados para realizar minhas tarefas.", sub: "" },
+      { id: "q3", type: "likert", text: "Existe um clima de respeito e cooperação entre os colegas da equipe.", sub: "" },
+    ],
+  },
+  {
+    id: "lideranca",
+    label: "Liderança e gestão",
+    questions: [
+      { id: "q4", type: "likert", text: "Minha chefia imediata oferece feedback claro e construtivo.", sub: "" },
+      { id: "q5", type: "likert", text: "As decisões da Secretaria de Finanças são comunicadas de forma transparente.", sub: "" },
+    ],
+  },
+  {
+    id: "carreira",
+    label: "Desenvolvimento e reconhecimento",
+    questions: [
+      { id: "q6", type: "likert", text: "Tenho oportunidades reais de crescimento e capacitação profissional.", sub: "" },
+      { id: "q7", type: "likert", text: "Sinto que meu trabalho é reconhecido e valorizado.", sub: "" },
+      {
+        id: "q8",
+        type: "multi",
+        text: "Quais áreas você considera prioritárias para investimento institucional?",
+        sub: "Selecione até três opções.",
+        max: 3,
+        options: [
+          "Capacitação e treinamento",
+          "Plano de cargos e salários",
+          "Saúde mental e qualidade de vida",
+          "Modernização tecnológica",
+          "Comunicação interna",
+          "Reconhecimento e premiação",
+          "Infraestrutura física",
+          "Política de teletrabalho",
+        ],
+      },
+    ],
+  },
+  {
+    id: "aberta",
+    label: "Sua voz",
+    questions: [
+      { id: "q9", type: "text", text: "O que você gostaria que mudasse na Secretaria de Finanças?", sub: "Comentário opcional. Sua resposta é anônima." },
+      { id: "q10", type: "text", text: "O que está funcionando bem e merece ser preservado?", sub: "Comentário opcional." },
+    ],
+  },
+];
+
+const LIKERT = [
+  { v: 1, lbl: "Discordo totalmente", face: "😞" },
+  { v: 2, lbl: "Discordo", face: "🙁" },
+  { v: 3, lbl: "Neutro", face: "😐" },
+  { v: 4, lbl: "Concordo", face: "🙂" },
+  { v: 5, lbl: "Concordo totalmente", face: "😄" },
+];
+
+const SETORES = [
+  "Gabinete da Secretaria",
+  "Departamento de Contabilidade",
+  "Departamento de Tesouraria",
+  "Departamento de Tributos",
+  "Departamento de Planejamento Orçamentário",
+  "Departamento de Compras e Licitações",
+  "Departamento de Controle Interno",
+  "Departamento de Tecnologia da Informação",
+  "Outro",
+];
+
+// ----- Header -----
+function Header() {
+  return (
+    <div className="header-wrap">
+      <header className="header">
+        <div className="header-left">
+          <img src="assets/logo.png" alt="Prefeitura de Parintins · Eu Amo PIN" className="header-logo" />
+          <div className="header-divider" />
+          <div className="header-meta">
+            <span className="eyebrow">Secretaria de Finanças</span>
+            <span className="title">Pesquisa de Clima Organizacional</span>
+          </div>
+        </div>
+        <a href="#" className="btn-services" onClick={(e)=>e.preventDefault()}>
+          <span className="dot"></span>
+          Serviços Integrados
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+      </header>
+      <div className="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+  );
+}
+
+// ----- Footer -----
+function Footer() {
+  return (
+    <footer>
+      <div className="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div className="footer-inner">
+        <div className="f-brand">
+          <img src="assets/logpmp.png" alt="Prefeitura de Parintins" />
+          <p>Portal institucional da Secretaria de Finanças da Prefeitura de Parintins, dedicado à escuta ativa dos servidores e à melhoria contínua do clima organizacional.</p>
+        </div>
+        <div className="f-col">
+          <h5>Acesso rápido</h5>
+          <ul>
+            <li><a href="#">Notícias</a></li>
+            <li><a href="#">Vídeos</a></li>
+            <li><a href="#">Galeria de Fotos</a></li>
+            <li><a href="#">Departamento de Comunicação</a></li>
+            <li><a href="#">Agenda</a></li>
+          </ul>
+        </div>
+        <div className="f-col">
+          <h5>Contato institucional</h5>
+          <div className="f-contact">
+            <div className="item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Parintins · AM</span>
+            </div>
+            <div className="item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span>Canais digitais e atendimento institucional</span>
+            </div>
+            <div className="item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Atendimento em horário administrativo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="copyright">
+        © 2026 Todos os direitos reservados — Prefeitura Municipal de Parintins · CNPJ 04.329.736/0001-69 · Rue Jhonathas Pedrosa, s/n Centro · Parintins · Amazonas · CEP 69151-030
+      </div>
+    </footer>
+  );
+}
+
+// ----- Token Card on hero -----
+function TokenCard({ token, onStart, blocked }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    try {
+      navigator.clipboard.writeText(token);
+      setCopied(true);
+      setTimeout(()=>setCopied(false), 1800);
+    } catch(e) {}
+  }
+  const segs = token.split("-");
+  return (
+    <div className="token-card">
+      <div className="tc-head">
+        <div>
+          <div className="lbl">Token único de acesso</div>
+        </div>
+        <span className="pill"><span className="dt"></span> Válido</span>
+      </div>
+      <div className="tc-body">
+        <div className="token-display" aria-label="Token de acesso">
+          {segs.map((s, i) => <span key={i} className="seg">{s}</span>)}
+        </div>
+        <div className="token-actions">
+          <button className={"ta-btn" + (copied ? " copied" : "")} onClick={copy}>
+            {copied ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Copiado
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar token
+              </>
+            )}
+          </button>
+          <button className="ta-btn" onClick={() => window.print()}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir
+          </button>
+        </div>
+        <div className="tc-meta">
+          <div className="row">
+            <span className="k">Gerado em</span>
+            <span className="v">{nowDateStr()}</span>
+          </div>
+          <div className="row">
+            <span className="k">Encerramento</span>
+            <span className="v">{deadlineStr()}</span>
+          </div>
+          <div className="row">
+            <span className="k">Vínculo</span>
+            <span className="v">Anônimo</span>
+          </div>
+          <div className="row">
+            <span className="k">Tentativas</span>
+            <span className="v">{blocked ? "0 disponíveis" : "1 disponível"}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ----- HERO Section -----
+function Hero({ token, onStart, blocked }) {
+  return (
+    <section className="hero">
+      <div>
+        <div className="crumbs">
+          <span>Início</span>
+          <span className="sep">/</span>
+          <span>Secretaria de Finanças</span>
+          <span className="sep">/</span>
+          <span className="now">Pesquisa de Clima</span>
+        </div>
+        <div className="h-eyebrow"><span className="pulse"></span> Pesquisa em andamento · Ciclo 2026</div>
+        <h1 className="hero-title">
+          Sua voz constrói um <span className="accent">ambiente de trabalho</span> melhor para todos.
+        </h1>
+        <p className="hero-lead">
+          A Secretaria Municipal de Finanças realiza a Pesquisa de Clima Organizacional 2026 para ouvir cada servidor de forma <strong>totalmente anônima</strong>. Suas respostas alimentam diretamente nosso plano de melhorias institucionais — desde infraestrutura até políticas de gestão de pessoas.
+        </p>
+
+        {blocked ? (
+          <div className="blocked-banner">
+            <div className="ico">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div className="tx">
+              <strong>Esta pesquisa já foi respondida neste dispositivo.</strong>
+              <span>Cada servidor pode participar uma única vez. Agradecemos sua contribuição.</span>
+            </div>
+          </div>
+        ) : (
+          <div className="hero-actions">
+            <button className="btn-primary" onClick={onStart}>
+              Iniciar pesquisa
+              <svg className="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <a href="#como" className="btn-ghost">Como funciona</a>
+          </div>
+        )}
+
+        <div className="hero-stats">
+          <div className="stat b">
+            <div className="num">~12 min</div>
+            <div className="lbl">Tempo médio de preenchimento</div>
+          </div>
+          <div className="stat o">
+            <div className="num">10</div>
+            <div className="lbl">Questões objetivas e abertas</div>
+          </div>
+          <div className="stat r">
+            <div className="num">100%</div>
+            <div className="lbl">Sigilo e anonimato garantidos</div>
+          </div>
+        </div>
+      </div>
+      <TokenCard token={token} onStart={onStart} blocked={blocked} />
+    </section>
+  );
+}
+
+// ----- Pillars -----
+function Pillars() {
+  const items = [
+    {
+      cls: "b",
+      tag: "01 / Confidencialidade",
+      title: "Anonimato absoluto",
+      body: "Nenhum dado pessoal — nome, matrícula, IP — é coletado ou armazenado. Apenas respostas agregadas alimentam o relatório final.",
+      icon: (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.7 8 11 4.5-1.3 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>),
+    },
+    {
+      cls: "y",
+      tag: "02 / Acesso por token",
+      title: "Token único e descartável",
+      body: "Ao acessar este portal, um token é gerado automaticamente. Ele autoriza o preenchimento e expira após o envio — não é vinculado à sua identidade.",
+      icon: (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="15" r="4"/><path d="m10.85 12.15 8.4-8.4M14 8l3 3M19 4l3 3"/></svg>),
+    },
+    {
+      cls: "r",
+      tag: "03 / Participação única",
+      title: "Apenas uma resposta por servidor",
+      body: "A pesquisa pode ser respondida apenas uma vez. Após o envio, o token é invalidado para preservar a integridade dos resultados.",
+      icon: (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>),
+    },
+  ];
+  return (
+    <section className="pillars">
+      {items.map((p, i) => (
+        <div key={i} className={"pillar " + p.cls}>
+          <div className="ico">{p.icon}</div>
+          <div className="num-tag">{p.tag}</div>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// ----- How it works -----
+function How() {
+  const steps = [
+    { n: "Etapa 01", title: "Acesse o portal", body: "Um token único é gerado automaticamente ao abrir esta página. Não é necessário login.",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+    { n: "Etapa 02", title: "Inicie a pesquisa", body: "Clique em iniciar e responda em qualquer ordem. Você pode revisar antes do envio final.",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> },
+    { n: "Etapa 03", title: "Responda com sinceridade", body: "São 10 questões: objetivas, múltipla escolha e duas perguntas abertas. Levará cerca de 12 minutos.",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> },
+    { n: "Etapa 04", title: "Envie e receba protocolo", body: "Ao finalizar, você recebe um número de protocolo anônimo confirmando a participação.",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
+  ];
+  return (
+    <section className="how" id="como">
+      <div className="section-head">
+        <div className="left">
+          <div className="eyebrow">Como funciona</div>
+          <h2>Quatro etapas, total transparência.</h2>
+        </div>
+        <div className="right">
+          A jornada foi desenhada para ser rápida, segura e respeitosa com seu tempo.
+        </div>
+      </div>
+      <div className="steps">
+        {steps.map((s, i) => (
+          <div className="step" key={i}>
+            <div className="n">{s.n}</div>
+            <div className="ico-line">{s.icon}</div>
+            <h4>{s.title}</h4>
+            <p>{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ----- Trust strip with vis -----
+function Trust() {
+  // Pre-baked decorative cells: a roughly 7x4 grid of 28 cells with the 4 brand colors
+  const PATTERN = [
+    "b","muted","muted","o","muted","y","muted",
+    "muted","r","muted","muted","b","muted","muted",
+    "y","muted","b","muted","muted","muted","r",
+    "muted","muted","muted","y","o","muted","muted",
+  ];
+  return (
+    <section className="trust">
+      <div className="trust-card">
+        <h3>Por que sua participação é importante?</h3>
+        <p>Os resultados desta pesquisa são consolidados em um relatório técnico apresentado à liderança da Secretaria, e tornam-se base para o Plano de Ação de Clima Organizacional do exercício seguinte.</p>
+        <ul className="checks">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Os resultados são tratados de forma agregada — nunca individual.
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Relatório consolidado divulgado a todos os servidores até abril/2026.
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Plano de ação publicado no portal institucional após análise.
+          </li>
+        </ul>
+      </div>
+      <div className="trust-vis">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:18}}>
+          <div>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.12em',color:'var(--ink-500)',textTransform:'uppercase',marginBottom:6}}>Cobertura prevista</div>
+            <div style={{fontFamily:'var(--font-display)',fontSize:32,fontWeight:600,letterSpacing:'-.02em',color:'var(--ink-900)'}}>100% dos setores</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-500)',letterSpacing:'.1em'}}>SEFIN · 2026</div>
+          </div>
+        </div>
+        <div className="vis-grid">
+          {PATTERN.map((c, i) => <div key={i} className={"cell " + c}></div>)}
+        </div>
+        <div className="vis-cap">
+          <span>8 departamentos</span>
+          <span>· · ·</span>
+          <span>Anônimo</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ----- FAQ -----
+function FAQ() {
+  const items = [
+    { q: "Minhas respostas podem ser identificadas?", a: "Não. O sistema não coleta nome, matrícula, e-mail, IP ou qualquer outro identificador pessoal. Os dados de setor e tempo de serviço são armazenados em conjunto com as respostas, mas analisados apenas em grupos com mínimo de 5 participantes para preservar o anonimato." },
+    { q: "Posso responder pelo celular?", a: "Sim. O portal foi desenhado para funcionar em qualquer dispositivo — computador, tablet ou celular —, dentro ou fora da rede da Prefeitura." },
+    { q: "Posso pausar e voltar mais tarde?", a: "As respostas são mantidas no seu navegador enquanto você não fecha a aba. Recomendamos concluir em uma única sessão para garantir que sua participação seja registrada." },
+    { q: "Como recebo o resultado?", a: "O relatório consolidado será publicado no portal da Secretaria de Finanças e enviado por comunicado interno a todos os servidores ao final do ciclo." },
+    { q: "E se eu encontrar algum problema técnico?", a: "Entre em contato com o Departamento de Tecnologia da Informação pelos canais oficiais. Você não precisa se identificar como participante da pesquisa." },
+  ];
+  return (
+    <section className="faq">
+      <div className="faq-grid">
+        <div>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--c-blue)',marginBottom:12}}>Perguntas frequentes</div>
+          <h2 style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:'clamp(28px,3vw,40px)',letterSpacing:'-.02em',margin:0,color:'var(--ink-900)'}}>Tudo o que você precisa saber antes de começar.</h2>
+          <p style={{color:'var(--ink-500)',marginTop:16,fontSize:14.5,lineHeight:1.6,maxWidth:'40ch'}}>
+            Transparência também faz parte da escuta. Esclarecemos abaixo as principais dúvidas sobre confidencialidade, participação e uso dos resultados.
+          </p>
+        </div>
+        <div className="faq-list">
+          {items.map((it, i) => (
+            <details className="q" key={i} open={i===0}>
+              <summary>
+                <span>{it.q}</span>
+                <span className="plus">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </span>
+              </summary>
+              <div className="ans">{it.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ----- Survey Modal -----
+function SurveyModal({ token, onClose, onComplete }) {
+  // step 0 = gate, step 1 = identify (setor + tempo), step 2..N = questions per section, last = review/submit
+  const flatQuestions = useMemo(() => {
+    const arr = [];
+    SECTIONS.forEach(sec => sec.questions.forEach(q => arr.push({...q, section: sec.label, sectionId: sec.id})));
+    return arr;
+  }, []);
+
+  // total steps: gate(0) + identify(1) + each question + done
+  const totalSteps = 1 + 1 + flatQuestions.length; // before "done"
+  const [step, setStep] = useState(0);
+  const [identify, setIdentify] = useState({ setor: "", tempo: "", vinculo: "" });
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [protocol, setProtocol] = useState("");
+
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [step]);
+
+  function progress() {
+    if (submitted) return 100;
+    if (step === 0) return 4;
+    if (step === 1) return 10;
+    const idx = step - 2;
+    return Math.min(95, 10 + Math.round((idx + 1) / flatQuestions.length * 85));
+  }
+
+  function canAdvance() {
+    if (step === 0) return true;
+    if (step === 1) return identify.setor && identify.tempo && identify.vinculo;
+    const q = flatQuestions[step - 2];
+    if (!q) return true;
+    if (q.type === "likert") return answers[q.id] != null;
+    if (q.type === "multi") return Array.isArray(answers[q.id]) && answers[q.id].length > 0;
+    if (q.type === "text") return true; // optional
+    return true;
+  }
+
+  function setAns(qid, v) {
+    setAnswers(a => ({...a, [qid]: v}));
+  }
+  function toggleMulti(qid, opt, max) {
+    setAnswers(a => {
+      const cur = Array.isArray(a[qid]) ? [...a[qid]] : [];
+      const i = cur.indexOf(opt);
+      if (i > -1) cur.splice(i, 1);
+      else if (!max || cur.length < max) cur.push(opt);
+      return {...a, [qid]: cur};
+    });
+  }
+
+  function next() {
+    if (step >= totalSteps - 1) {
+      // submit
+      const proto = "PCO-" + Math.floor(100000 + Math.random()*900000);
+      setProtocol(proto);
+      setSubmitted(true);
+      try {
+        localStorage.setItem("pco_submitted", "1");
+        localStorage.setItem("pco_protocol", proto);
+        localStorage.setItem("pco_token_used", token);
+      } catch(e) {}
+      return;
+    }
+    setStep(s => s + 1);
+  }
+  function back() { if (step > 0) setStep(s => s - 1); }
+
+  function close() {
+    if (submitted) onComplete(protocol);
+    else if (confirm("Tem certeza que deseja fechar a pesquisa? Suas respostas até aqui serão perdidas.")) onClose();
+  }
+
+  // ---- Render content ----
+  let content;
+  let stepInfo = "";
+  let nextLbl = "Continuar";
+  let nextIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
+
+  if (submitted) {
+    content = (
+      <div className="done">
+        <div className="check"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h4>Pesquisa enviada com sucesso.</h4>
+        <p>Sua contribuição foi registrada de forma <strong>totalmente anônima</strong>. Obrigado por dedicar seu tempo à melhoria da Secretaria de Finanças.</p>
+        <p>O relatório consolidado será divulgado no portal institucional após o encerramento do ciclo.</p>
+        <div className="protocol">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Protocolo {protocol}
+        </div>
+      </div>
+    );
+    stepInfo = "Concluído";
+    nextLbl = "Fechar";
+    nextIcon = null;
+  } else if (step === 0) {
+    stepInfo = "Verificação de acesso";
+    content = (
+      <div className="token-gate">
+        <div className="lock">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h4>Confirme o uso do seu token</h4>
+        <p>Este token é exclusivo desta sessão e será marcado como utilizado após o envio. Você poderá responder a pesquisa <strong>uma única vez</strong>.</p>
+        <div className="tk-display">{token}</div>
+        <div className="id-note" style={{textAlign:'left',marginTop:6}}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:2}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Ao clicar em <strong>Iniciar pesquisa</strong> você confirma estar ciente de que os dados serão tratados de forma agregada e anônima, conforme a política institucional da SEFIN.</span>
+        </div>
+      </div>
+    );
+    nextLbl = "Iniciar pesquisa";
+  } else if (step === 1) {
+    stepInfo = `Etapa 1 de ${flatQuestions.length + 1}`;
+    content = (
+      <div>
+        <div className="qheader">
+          <div className="qmeta">Caracterização anônima</div>
+          <h3 className="qtxt">Conte-nos um pouco sobre seu vínculo institucional.</h3>
+          <p className="qsub">Estes dados são utilizados apenas para análise por grupos. Setores com menos de 5 participantes serão consolidados na categoria geral.</p>
+        </div>
+        <div className="id-form">
+          <div className="id-field">
+            <label>Setor / Departamento</label>
+            <select value={identify.setor} onChange={e=>setIdentify(i=>({...i,setor:e.target.value}))}>
+              <option value="">Selecione...</option>
+              {SETORES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="id-field">
+            <label>Tempo de serviço</label>
+            <select value={identify.tempo} onChange={e=>setIdentify(i=>({...i,tempo:e.target.value}))}>
+              <option value="">Selecione...</option>
+              <option>Menos de 1 ano</option>
+              <option>1 a 3 anos</option>
+              <option>3 a 5 anos</option>
+              <option>5 a 10 anos</option>
+              <option>Mais de 10 anos</option>
+            </select>
+          </div>
+          <div className="id-field" style={{gridColumn:'1 / -1'}}>
+            <label>Tipo de vínculo</label>
+            <select value={identify.vinculo} onChange={e=>setIdentify(i=>({...i,vinculo:e.target.value}))}>
+              <option value="">Selecione...</option>
+              <option>Servidor efetivo</option>
+              <option>Cargo comissionado</option>
+              <option>Contrato temporário</option>
+              <option>Estagiário</option>
+              <option>Prefiro não informar</option>
+            </select>
+          </div>
+        </div>
+        <div className="id-note">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.7 8 11 4.5-1.3 8-6 8-11V5l-8-3z"/></svg>
+          <span>Estas informações <strong>não identificam</strong> você individualmente. São utilizadas apenas para cruzamento estatístico.</span>
+        </div>
+      </div>
+    );
+  } else {
+    const qIdx = step - 2;
+    const q = flatQuestions[qIdx];
+    stepInfo = `Pergunta ${qIdx + 1} de ${flatQuestions.length} · ${q.section}`;
+    let body;
+    if (q.type === "likert") {
+      body = (
+        <div className="likert">
+          {LIKERT.map(l => (
+            <button key={l.v} className={"lik" + (answers[q.id]===l.v ? " sel" : "")} onClick={()=>setAns(q.id, l.v)}>
+              <span className="face">{l.face}</span>
+              <span className="v">0{l.v}</span>
+              <span className="lbl">{l.lbl}</span>
+            </button>
+          ))}
+        </div>
+      );
+    } else if (q.type === "multi") {
+      const sel = answers[q.id] || [];
+      body = (
+        <div className="choice-list">
+          {q.options.map(opt => {
+            const isSel = sel.includes(opt);
+            const disabled = !isSel && q.max && sel.length >= q.max;
+            return (
+              <div key={opt} className={"choice" + (isSel ? " sel" : "")} style={disabled ? {opacity:.5,cursor:'not-allowed'} : {}} onClick={()=> !disabled && toggleMulti(q.id, opt, q.max)}>
+                <div className="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div className="lbl">{opt}</div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    } else if (q.type === "text") {
+      const v = answers[q.id] || "";
+      body = (
+        <div>
+          <textarea className="tx" maxLength={1000} value={v} onChange={e=>setAns(q.id, e.target.value)} placeholder="Compartilhe sua opinião livremente. Sua resposta é anônima."></textarea>
+          <div className="char-count">{v.length} / 1000</div>
+        </div>
+      );
+    }
+
+    content = (
+      <div>
+        <div className="qheader">
+          <div className="qmeta">{q.section}</div>
+          <h3 className="qtxt">{q.text}</h3>
+          {q.sub && <p className="qsub">{q.sub}</p>}
+        </div>
+        {body}
+      </div>
+    );
+
+    if (qIdx === flatQuestions.length - 1) nextLbl = "Enviar pesquisa";
+  }
+
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" onClick={(e)=>{ if(e.target.classList.contains('overlay')) close(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <div>
+            <div className="lbl">Pesquisa de Clima Organizacional · SEFIN</div>
+            <h3>{submitted ? "Obrigado pela sua participação." : step === 0 ? "Antes de começar" : step === 1 ? "Caracterização" : "Sua opinião conta"}</h3>
+          </div>
+          <button className="modal-close" onClick={close} aria-label="Fechar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div className="progress-bar"><i style={{width: progress() + "%"}}></i></div>
+        <div className="modal-body" ref={bodyRef}>{content}</div>
+        <div className="modal-foot">
+          <div className="step-info">{stepInfo}</div>
+          <div className="actions">
+            {!submitted && step > 0 && (<button className="btn-back" onClick={back}>Voltar</button>)}
+            <button className="btn-next" onClick={submitted ? () => onComplete(protocol) : next} disabled={!canAdvance()}>
+              {nextLbl}{nextIcon}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ----- App -----
+function App() {
+  const [token] = useState(() => {
+    try {
+      const existing = localStorage.getItem("pco_token");
+      if (existing) return existing;
+      const t = genToken();
+      localStorage.setItem("pco_token", t);
+      return t;
+    } catch(e) { return genToken(); }
+  });
+  const [blocked, setBlocked] = useState(() => {
+    try { return localStorage.getItem("pco_submitted") === "1"; } catch(e) { return false; }
+  });
+  const [showSurvey, setShowSurvey] = useState(false);
+
+  function start() {
+    if (blocked) return;
+    setShowSurvey(true);
+  }
+  function complete(proto) {
+    setShowSurvey(false);
+    setBlocked(true);
+  }
+
+  return (
+    <>
+      <Header />
+      <main>
+        <Hero token={token} onStart={start} blocked={blocked} />
+        <Pillars />
+        <How />
+        <Trust />
+        <FAQ />
+      </main>
+      <Footer />
+      {showSurvey && <SurveyModal token={token} onClose={()=>setShowSurvey(false)} onComplete={complete} />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>

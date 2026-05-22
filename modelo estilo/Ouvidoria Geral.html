@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ouvidoria Geral · Secretaria de Finanças · Prefeitura de Parintins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c-blue:    #3ea3ff;
+    --c-orange:  #b86a2b;
+    --c-yellow:  #ffb829;
+    --c-red:     #ea4242;
+
+    --ink-900: #0f1622;
+    --ink-700: #2a3344;
+    --ink-500: #5b667a;
+    --ink-400: #8590a3;
+    --ink-300: #b4bccb;
+    --line:    #e3e7ee;
+    --line-2:  #eef1f6;
+    --bg:      #ffffff;
+    --bg-soft: #f6f8fb;
+
+    --radius: 10px;
+    --radius-lg: 14px;
+
+    --font-sans: "Manrope", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "Fraunces", Georgia, serif;
+
+    --shadow-sm: 0 1px 2px rgba(15,22,34,.04), 0 1px 1px rgba(15,22,34,.03);
+    --shadow-md: 0 6px 24px -8px rgba(15,22,34,.12), 0 2px 6px rgba(15,22,34,.05);
+    --shadow-lg: 0 24px 60px -20px rgba(15,22,34,.20), 0 6px 18px rgba(15,22,34,.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink-900); }
+  body { font-family: var(--font-sans); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+  input, select, textarea { font: inherit; color: inherit; }
+
+  /* ---------- 4-color stripe ---------- */
+  .stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; width: 100%; }
+  .stripe > i:nth-child(1) { background: var(--c-blue); }
+  .stripe > i:nth-child(2) { background: var(--c-orange); }
+  .stripe > i:nth-child(3) { background: var(--c-yellow); }
+  .stripe > i:nth-child(4) { background: var(--c-red); }
+
+  /* ---------- Header ---------- */
+  .header-wrap { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.92); backdrop-filter: saturate(180%) blur(10px); -webkit-backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid var(--line); }
+  .header { max-width: 1280px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .header-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
+  .header-logo { height: 56px; width: auto; display: block; }
+  .header-divider { width: 1px; height: 38px; background: var(--line); }
+  .header-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .header-meta .eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); }
+  .header-meta .title { font-weight: 700; font-size: 14px; color: var(--ink-900); letter-spacing: -.005em; }
+
+  .header-nav { display: flex; align-items: center; gap: 4px; }
+  .header-nav a { padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--ink-700); transition: background .15s, color .15s; }
+  .header-nav a:hover { background: var(--bg-soft); color: var(--ink-900); }
+  .header-nav a.active { background: var(--ink-900); color: #fff; }
+
+  .btn-services { display: inline-flex; align-items: center; gap: 10px; padding: 11px 18px 11px 16px; background: var(--ink-900); color: #fff; border-radius: 999px; font-weight: 600; font-size: 13.5px; letter-spacing: -.005em; transition: transform .15s, background .2s, box-shadow .2s; box-shadow: var(--shadow-sm); white-space: nowrap; }
+  .btn-services:hover { background: #1a2436; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn-services .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-yellow); box-shadow: 0 0 0 3px rgba(255,184,41,.25); }
+  .btn-services svg { width: 14px; height: 14px; opacity: .85; }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  .crumbs { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-500); display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .crumbs .sep { color: var(--ink-300); }
+  .crumbs .now { color: var(--ink-900); font-weight: 600; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 56px 0 48px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 72px; align-items: start; }
+
+  .h-eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px 6px 8px; border-radius: 999px; background: #fbeee0; color: #8a4814; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; margin-bottom: 24px; }
+  .h-eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--c-orange); box-shadow: 0 0 0 0 rgba(184,106,43,.55); animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(184,106,43,.55); } 70% { box-shadow: 0 0 0 10px rgba(184,106,43,0); } 100% { box-shadow: 0 0 0 0 rgba(184,106,43,0); } }
+
+  h1.hero-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(40px, 4.6vw, 64px); line-height: 1.02; letter-spacing: -.025em; margin: 0 0 24px; color: var(--ink-900); text-wrap: pretty; }
+  h1.hero-title .accent { font-style: italic; font-weight: 500; background: linear-gradient(95deg, var(--c-blue), var(--c-orange) 45%, var(--c-yellow) 70%, var(--c-red)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-lead { font-size: 17px; line-height: 1.6; color: var(--ink-500); max-width: 56ch; margin: 0 0 32px; }
+
+  .hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 12px; padding: 16px 26px; background: var(--ink-900); color: #fff; border-radius: 12px; font-weight: 700; font-size: 15px; letter-spacing: -.005em; box-shadow: var(--shadow-md); transition: transform .18s, box-shadow .2s, background .2s; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); background: #1a2436; }
+  .btn-primary .arr { transition: transform .25s ease; }
+  .btn-primary:hover .arr { transform: translateX(4px); }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 14px 18px; color: var(--ink-700); font-weight: 600; font-size: 14.5px; border-radius: 12px; border: 1px solid var(--line); background: #fff; transition: border-color .2s, color .2s, transform .15s; }
+  .btn-ghost:hover { border-color: var(--ink-700); color: var(--ink-900); transform: translateY(-1px); }
+
+  .hero-stats { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .stat .num { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: -.02em; color: var(--ink-900); line-height: 1; }
+  .stat .lbl { margin-top: 6px; font-size: 12.5px; color: var(--ink-500); }
+  .stat.b .num { color: var(--c-blue); }
+  .stat.o .num { color: var(--c-orange); }
+  .stat.r .num { color: var(--c-red); }
+
+  /* ---------- Quick Action Card (right of hero) ---------- */
+  .qa-card { position: relative; border: 1px solid var(--line); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow-md); overflow: hidden; }
+  .qa-card::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%); }
+  .qa-head { padding: 26px 28px 18px; border-bottom: 1px solid var(--line-2); }
+  .qa-head .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 4px; }
+  .qa-head .ti { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -.015em; color: var(--ink-900); }
+  .qa-body { padding: 18px 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+  .qa-item { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; transition: border-color .2s, transform .15s, background .2s; cursor: pointer; }
+  .qa-item:hover { border-color: var(--ink-700); transform: translateY(-1px); background: #fafbfd; }
+  .qa-item .ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+  .qa-item.b .ico { background: #eaf4ff; color: #1a5fa8; }
+  .qa-item.o .ico { background: #fbeee0; color: #8a4814; }
+  .qa-item.y .ico { background: #fff5dd; color: #8a5a08; }
+  .qa-item.r .ico { background: #fdecec; color: #b22e2e; }
+  .qa-item.g .ico { background: #effaf2; color: #1f7a3f; }
+  .qa-item .tx { flex: 1; min-width: 0; }
+  .qa-item .tx .nm { font-weight: 700; font-size: 14px; color: var(--ink-900); letter-spacing: -.005em; }
+  .qa-item .tx .ds { font-size: 12.5px; color: var(--ink-500); margin-top: 2px; }
+  .qa-item .arr { color: var(--ink-300); transition: transform .2s, color .2s; }
+  .qa-item:hover .arr { color: var(--ink-900); transform: translateX(3px); }
+
+  /* ---------- Section heads ---------- */
+  .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+  .section-head .left { max-width: 64ch; }
+  .section-head .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 12px; display: inline-flex; align-items: center; gap: 8px; }
+  .section-head .eyebrow .dt { width: 6px; height: 6px; border-radius: 50%; background: var(--c-orange); }
+  .section-head h2 { font-family: var(--font-display); font-weight: 600; font-size: clamp(28px, 3vw, 40px); letter-spacing: -.02em; line-height: 1.1; margin: 0 0 12px; color: var(--ink-900); }
+  .section-head .lead { color: var(--ink-500); font-size: 15px; max-width: 60ch; margin: 0; }
+
+  /* ---------- Tipos de Manifestação (cards) ---------- */
+  .types-section { padding: 80px 0 24px; }
+  .types-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .type-card { position: relative; padding: 26px 22px 24px; background: #fff; border: 1px solid var(--line); border-radius: 14px; transition: border-color .2s, transform .2s, box-shadow .2s; cursor: pointer; overflow: hidden; }
+  .type-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+  .type-card.b::before { background: var(--c-blue); }
+  .type-card.o::before { background: var(--c-orange); }
+  .type-card.y::before { background: var(--c-yellow); }
+  .type-card.r::before { background: var(--c-red); }
+  .type-card.g::before { background: #2aa05a; }
+  .type-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--ink-700); }
+  .type-card .ico { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 18px; }
+  .type-card.b .ico { background: #eaf4ff; color: #1a5fa8; }
+  .type-card.o .ico { background: #fbeee0; color: #8a4814; }
+  .type-card.y .ico { background: #fff5dd; color: #8a5a08; }
+  .type-card.r .ico { background: #fdecec; color: #b22e2e; }
+  .type-card.g .ico { background: #effaf2; color: #1f7a3f; }
+  .type-card h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -.015em; margin: 0 0 8px; color: var(--ink-900); }
+  .type-card p { font-size: 13px; color: var(--ink-500); margin: 0 0 18px; line-height: 1.5; }
+  .type-card .cta { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--ink-900); }
+  .type-card .cta svg { transition: transform .2s; }
+  .type-card:hover .cta svg { transform: translateX(3px); }
+
+  /* ---------- Como funciona ---------- */
+  .how-section { padding: 96px 0; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; background: #fff; }
+  .step { padding: 32px 26px; border-right: 1px solid var(--line); position: relative; }
+  .step:last-child { border-right: 0; }
+  .step .n { font-family: var(--font-display); font-weight: 700; font-size: 44px; letter-spacing: -.03em; line-height: 1; color: var(--c-orange); margin-bottom: 14px; }
+  .step h4 { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -.015em; margin: 0 0 8px; color: var(--ink-900); }
+  .step p { font-size: 13.5px; color: var(--ink-500); margin: 0; line-height: 1.55; }
+  .step .meta { margin-top: 16px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-500); display: flex; align-items: center; gap: 6px; }
+  .step .meta svg { color: var(--c-blue); }
+
+  /* ---------- Ouvidor & Equipe ---------- */
+  .ouvidor-section { padding: 0 0 96px; }
+  .ouvidor-wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: start; }
+  .ouv-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .ouv-cover { position: relative; padding: 36px 32px 28px; background: linear-gradient(135deg, #fafbfd, #fff); border-bottom: 1px solid var(--line-2); }
+  .ouv-cover::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%); }
+  .ouv-id { display: flex; gap: 24px; align-items: start; }
+  .ouv-portrait { width: 110px; height: 110px; border-radius: 16px; background: linear-gradient(135deg, #1a2436, #0f1622); display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 600; font-size: 38px; letter-spacing: -.02em; flex-shrink: 0; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+  .ouv-portrait::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 60%); }
+  .ouv-id .info .lbl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 6px; display: inline-flex; align-items: center; gap: 8px; }
+  .ouv-id .info .lbl .badge { background: var(--ink-900); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 9.5px; }
+  .ouv-id .info h3 { font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: -.02em; margin: 0 0 4px; color: var(--ink-900); }
+  .ouv-id .info .role { font-size: 13.5px; color: var(--ink-500); }
+  .ouv-id .info .deeds { margin-top: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-700); letter-spacing: .04em; line-height: 1.6; }
+  .ouv-id .info .deeds .k { color: var(--ink-500); }
+
+  .ouv-body { padding: 28px 32px 32px; }
+  .ouv-body .quote { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 18px; line-height: 1.5; color: var(--ink-700); letter-spacing: -.01em; padding-left: 18px; border-left: 3px solid var(--c-orange); margin: 0 0 24px; }
+  .ouv-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+  .ouv-meta .row { display: flex; flex-direction: column; gap: 4px; }
+  .ouv-meta .row .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-500); }
+  .ouv-meta .row .v { font-size: 13.5px; color: var(--ink-900); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .ouv-meta .row .v svg { color: var(--c-blue); flex-shrink: 0; }
+
+  .ouv-side h3 { font-family: var(--font-display); font-weight: 600; font-size: 28px; letter-spacing: -.02em; line-height: 1.15; margin: 0 0 16px; color: var(--ink-900); }
+  .ouv-side .desc { color: var(--ink-500); font-size: 15px; line-height: 1.6; margin: 0 0 24px; }
+  .ouv-side .principles { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+  .ouv-side .principle { display: flex; gap: 14px; align-items: start; padding: 16px; background: var(--bg-soft); border-radius: 12px; }
+  .ouv-side .principle .ico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; background: #fff; border: 1px solid var(--line); color: var(--c-orange); }
+  .ouv-side .principle .tx .nm { font-weight: 700; font-size: 14px; color: var(--ink-900); margin-bottom: 2px; }
+  .ouv-side .principle .tx .ds { font-size: 13px; color: var(--ink-500); line-height: 1.5; }
+
+  .team-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .team-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .team-card .av { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 12px; margin-bottom: 12px; }
+  .team-card.b .av { background: linear-gradient(135deg, var(--c-blue), #1a5fa8); }
+  .team-card.o .av { background: linear-gradient(135deg, var(--c-orange), #6f3e16); }
+  .team-card.y .av { background: linear-gradient(135deg, var(--c-yellow), #c8941f); }
+  .team-card .nm { font-weight: 700; font-size: 13.5px; color: var(--ink-900); }
+  .team-card .ro { font-size: 11.5px; color: var(--ink-500); margin-top: 2px; font-family: var(--font-mono); letter-spacing: .04em; }
+
+  /* ---------- Compromissos / SLA ---------- */
+  .sla-section { padding: 0 0 96px; }
+  .sla-band { background: var(--ink-900); color: #fff; border-radius: var(--radius-lg); padding: 56px 56px 48px; position: relative; overflow: hidden; }
+  .sla-band::after { content: "OUVIR · ESCUTAR · RESPONDER"; position: absolute; right: -20px; bottom: -28px; font-family: var(--font-display); font-weight: 700; font-size: 110px; letter-spacing: -.025em; line-height: 1; color: rgba(255,255,255,.04); pointer-events: none; user-select: none; white-space: nowrap; }
+  .sla-band .top { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 36px; }
+  .sla-band .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 12px; }
+  .sla-band h2 { font-family: var(--font-display); font-weight: 600; font-size: 38px; letter-spacing: -.02em; margin: 0; max-width: 26ch; line-height: 1.1; }
+  .sla-band .lead { color: rgba(255,255,255,.7); font-size: 15px; max-width: 48ch; margin: 0; }
+  .sla-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-top: 36px; border-top: 1px solid rgba(255,255,255,.1); position: relative; z-index: 2; }
+  .sla-item .n { font-family: var(--font-display); font-weight: 600; font-size: 44px; letter-spacing: -.025em; line-height: 1; }
+  .sla-item .n.b { color: var(--c-blue); }
+  .sla-item .n.o { color: var(--c-orange); }
+  .sla-item .n.y { color: var(--c-yellow); }
+  .sla-item .n.r { color: var(--c-red); }
+  .sla-item .lbl { margin-top: 10px; font-weight: 700; font-size: 14.5px; }
+  .sla-item .ds { margin-top: 4px; font-size: 12.5px; color: rgba(255,255,255,.6); line-height: 1.5; }
+
+  /* ---------- Acompanhar Protocolo ---------- */
+  .track-section { padding: 0 0 96px; }
+  .track-card { display: grid; grid-template-columns: 1fr 1.2fr; gap: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .track-info { padding: 44px 44px 40px; background: linear-gradient(135deg, #fafbfd, #fff); border-right: 1px solid var(--line-2); }
+  .track-info .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 12px; }
+  .track-info h3 { font-family: var(--font-display); font-weight: 600; font-size: 28px; letter-spacing: -.02em; margin: 0 0 12px; color: var(--ink-900); }
+  .track-info p { color: var(--ink-500); font-size: 14.5px; margin: 0 0 24px; }
+  .track-info .timeline { display: flex; flex-direction: column; gap: 14px; }
+  .track-info .tl-item { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-700); }
+  .track-info .tl-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .track-info .tl-item.done .dot { background: #2aa05a; box-shadow: 0 0 0 4px rgba(42,160,90,.18); }
+  .track-info .tl-item.now .dot { background: var(--c-orange); box-shadow: 0 0 0 4px rgba(184,106,43,.18); }
+  .track-info .tl-item.next .dot { background: var(--ink-300); }
+  .track-info .tl-item .l { flex: 1; }
+  .track-info .tl-item .t { font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); letter-spacing: .04em; }
+
+  .track-form { padding: 44px 44px 40px; }
+  .track-form .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 6px; display: block; }
+  .track-form .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .track-form input { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; font-size: 14.5px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+  .track-form input:focus { outline: none; border-color: var(--ink-900); box-shadow: 0 0 0 3px rgba(15,22,34,.05); }
+  .track-form .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .track-form .protocol-input { font-family: var(--font-mono); letter-spacing: .12em; font-weight: 600; }
+  .track-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .track-form .helper { margin-top: 14px; padding: 12px 14px; background: var(--bg-soft); border-radius: 10px; font-size: 12.5px; color: var(--ink-500); display: flex; gap: 10px; align-items: start; }
+  .track-form .helper svg { color: var(--c-blue); flex-shrink: 0; margin-top: 2px; }
+
+  /* ---------- Stats / Transparência ---------- */
+  .trans-section { padding: 0 0 96px; }
+  .trans-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
+  .trans-main { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 36px 36px 32px; }
+  .trans-main .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .trans-main .head .ti { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -.015em; }
+  .trans-main .head .seg { display: flex; gap: 4px; padding: 4px; background: var(--bg-soft); border-radius: 8px; }
+  .trans-main .head .seg button { padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--ink-500); border-radius: 6px; }
+  .trans-main .head .seg button.active { background: #fff; color: var(--ink-900); box-shadow: var(--shadow-sm); }
+  .bar-list { display: flex; flex-direction: column; gap: 16px; }
+  .bar-row { display: grid; grid-template-columns: 180px 1fr 60px; gap: 16px; align-items: center; }
+  .bar-row .nm { font-size: 13.5px; color: var(--ink-700); font-weight: 500; }
+  .bar-row .bar-bg { height: 10px; background: var(--bg-soft-2, #f0f3f8); border-radius: 999px; overflow: hidden; position: relative; }
+  .bar-row .bar-fill { height: 100%; border-radius: 999px; }
+  .bar-row .bar-fill.b { background: var(--c-blue); }
+  .bar-row .bar-fill.o { background: var(--c-orange); }
+  .bar-row .bar-fill.y { background: var(--c-yellow); }
+  .bar-row .bar-fill.r { background: var(--c-red); }
+  .bar-row .bar-fill.g { background: #2aa05a; }
+  .bar-row .v { font-family: var(--font-mono); font-weight: 600; font-size: 12.5px; color: var(--ink-900); text-align: right; }
+
+  .trans-side { display: flex; flex-direction: column; gap: 16px; }
+  .trans-stat { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px 26px; position: relative; overflow: hidden; }
+  .trans-stat::before { content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 3px; }
+  .trans-stat.b::before { background: var(--c-blue); }
+  .trans-stat.o::before { background: var(--c-orange); }
+  .trans-stat.r::before { background: var(--c-red); }
+  .trans-stat .lbl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); }
+  .trans-stat .num { font-family: var(--font-display); font-weight: 600; font-size: 36px; letter-spacing: -.02em; line-height: 1; margin-top: 10px; color: var(--ink-900); }
+  .trans-stat .sub { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; color: var(--ink-500); }
+  .trans-stat .delta { font-family: var(--font-mono); font-weight: 600; font-size: 11.5px; padding: 1px 6px; border-radius: 4px; }
+  .trans-stat .delta.up { background: #effaf2; color: #1f7a3f; }
+  .trans-stat .delta.dn { background: #fef5f5; color: #8b2424; }
+
+  /* ---------- Direitos & Garantias ---------- */
+  .rights-section { padding: 0 0 96px; }
+  .rights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+  .right-card { padding: 28px; background: #fff; display: flex; flex-direction: column; gap: 12px; }
+  .right-card .ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; }
+  .right-card.b .ico { background: #eaf4ff; color: #1a5fa8; }
+  .right-card.o .ico { background: #fbeee0; color: #8a4814; }
+  .right-card.y .ico { background: #fff5dd; color: #8a5a08; }
+  .right-card.r .ico { background: #fdecec; color: #b22e2e; }
+  .right-card.g .ico { background: #effaf2; color: #1f7a3f; }
+  .right-card.k .ico { background: var(--bg-soft); color: var(--ink-700); }
+  .right-card h4 { font-family: var(--font-display); font-weight: 600; font-size: 18px; letter-spacing: -.015em; margin: 0; color: var(--ink-900); }
+  .right-card p { font-size: 13.5px; color: var(--ink-500); margin: 0; line-height: 1.55; }
+
+  /* ---------- FAQ ---------- */
+  .faq-section { padding: 0 0 96px; }
+  .faq-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 60px; }
+  .faq-list { display: flex; flex-direction: column; }
+  details.q { border-bottom: 1px solid var(--line); padding: 20px 0; }
+  details.q[open] summary .plus { transform: rotate(45deg); }
+  summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-weight: 600; font-size: 16px; color: var(--ink-900); letter-spacing: -.005em; }
+  summary::-webkit-details-marker { display: none; }
+  .plus { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; transition: transform .25s, border-color .2s, background .2s; }
+  summary:hover .plus { border-color: var(--ink-700); background: #fafbfd; }
+  details.q .ans { margin-top: 12px; color: var(--ink-500); font-size: 14.5px; line-height: 1.6; max-width: 64ch; }
+
+  /* ---------- CTA Final ---------- */
+  .cta-section { padding: 0 0 96px; }
+  .cta-card { background: linear-gradient(135deg, #fff, var(--bg-soft)); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 56px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; align-items: center; position: relative; overflow: hidden; }
+  .cta-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%); }
+  .cta-card .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 12px; }
+  .cta-card h2 { font-family: var(--font-display); font-weight: 600; font-size: 36px; letter-spacing: -.02em; line-height: 1.1; margin: 0 0 16px; color: var(--ink-900); }
+  .cta-card p { color: var(--ink-500); font-size: 15px; line-height: 1.6; margin: 0 0 28px; }
+  .cta-channels { display: flex; flex-direction: column; gap: 12px; }
+  .cta-channel { display: flex; gap: 14px; align-items: center; padding: 16px 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; transition: border-color .2s, transform .15s; }
+  .cta-channel:hover { border-color: var(--ink-700); transform: translateY(-1px); }
+  .cta-channel .ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+  .cta-channel.b .ico { background: #eaf4ff; color: #1a5fa8; }
+  .cta-channel.o .ico { background: #fbeee0; color: #8a4814; }
+  .cta-channel.g .ico { background: #effaf2; color: #1f7a3f; }
+  .cta-channel .nm { font-weight: 700; font-size: 14px; color: var(--ink-900); }
+  .cta-channel .ds { font-size: 12.5px; color: var(--ink-500); margin-top: 2px; font-family: var(--font-mono); letter-spacing: .04em; }
+
+  /* ---------- Footer ---------- */
+  footer { background: #fff; border-top: 1px solid var(--line); }
+  .footer-inner { max-width: 1280px; margin: 0 auto; padding: 48px 32px 24px; display: grid; grid-template-columns: 1.4fr 1fr 1.1fr; gap: 56px; position: relative; overflow: hidden; }
+  .footer-inner::after { content: "OUVIDORIA"; position: absolute; right: -10px; top: 30px; font-family: var(--font-display); font-weight: 700; font-size: 90px; letter-spacing: -.02em; color: rgba(184,106,43,.05); line-height: 1; pointer-events: none; user-select: none; }
+  .f-brand img { height: 56px; width: auto; }
+  .f-brand p { margin-top: 16px; font-size: 13.5px; color: var(--ink-500); line-height: 1.6; max-width: 36ch; }
+  .f-col h5 { font-family: var(--font-sans); font-size: 14px; font-weight: 700; letter-spacing: -.005em; margin: 0 0 18px; color: var(--ink-900); }
+  .f-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .f-col ul li a { font-size: 13.5px; color: var(--c-blue); transition: opacity .2s; }
+  .f-col ul li a:hover { opacity: .7; }
+  .f-contact { display: flex; flex-direction: column; gap: 14px; }
+  .f-contact .item { display: flex; gap: 10px; align-items: start; font-size: 13.5px; color: var(--c-blue); }
+  .f-contact .item svg { color: var(--c-blue); flex-shrink: 0; margin-top: 2px; }
+  .copyright { max-width: 1280px; margin: 0 auto; padding: 18px 32px 28px; border-top: 1px solid var(--line-2); text-align: center; font-size: 12px; color: var(--ink-500); }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; }
+    .types-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+    .step:nth-child(2n) { border-right: 0; }
+    .step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .ouvidor-wrap { grid-template-columns: 1fr; gap: 36px; }
+    .sla-grid { grid-template-columns: repeat(2, 1fr); gap: 24px 16px; }
+    .track-card { grid-template-columns: 1fr; }
+    .track-info { border-right: 0; border-bottom: 1px solid var(--line-2); }
+    .trans-grid { grid-template-columns: 1fr; }
+    .rights-grid { grid-template-columns: repeat(2, 1fr); }
+    .faq-grid { grid-template-columns: 1fr; gap: 24px; }
+    .cta-card { grid-template-columns: 1fr; gap: 32px; padding: 36px; }
+    .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+  }
+  @media (max-width: 720px) {
+    .header { padding: 14px 18px; }
+    .header-nav { display: none; }
+    main { padding: 0 18px; }
+    .types-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .step { border-right: 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: 0; }
+    .sla-band { padding: 36px 26px 32px; }
+    .sla-band h2 { font-size: 28px; }
+    .sla-grid { grid-template-columns: 1fr 1fr; }
+    .track-info, .track-form { padding: 28px 24px; }
+    .rights-grid { grid-template-columns: 1fr; }
+    .ouv-id { flex-direction: column; }
+    .ouv-meta { grid-template-columns: 1fr; }
+    .team-row { grid-template-columns: 1fr; }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .bar-row { grid-template-columns: 110px 1fr 50px; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header-wrap">
+  <header class="header">
+    <div class="header-left">
+      <img src="assets/logo.png" alt="Prefeitura de Parintins · Eu Amo PIN" class="header-logo" />
+      <div class="header-divider"></div>
+      <div class="header-meta">
+        <span class="eyebrow">Secretaria de Finanças</span>
+        <span class="title">Ouvidoria Geral</span>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <a href="#manifestar">Manifestar</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#ouvidor">O Ouvidor</a>
+      <a href="#acompanhar">Acompanhar</a>
+      <a href="#transparencia">Transparência</a>
+    </nav>
+    <a href="#manifestar" class="btn-services">
+      <span class="dot"></span>
+      Registrar manifestação
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+    </a>
+  </header>
+  <div class="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+</div>
+
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="crumbs">
+        <span>SEFIN</span><span class="sep">/</span><span>Canais de Atendimento</span><span class="sep">/</span><span class="now">Ouvidoria Geral</span>
+      </div>
+      <div class="h-eyebrow">
+        <span class="pulse"></span>
+        Ouvidoria · Lei 13.460/2017
+      </div>
+      <h1 class="hero-title">Sua voz <span class="accent">orienta</span> o que a Secretaria precisa melhorar.</h1>
+      <p class="hero-lead">A Ouvidoria Geral da Secretaria de Finanças é o canal oficial de diálogo entre a sociedade, os servidores e a administração pública. Aqui sua manifestação é registrada, acompanhada e respondida com transparência, imparcialidade e respeito.</p>
+      <div class="hero-actions">
+        <a href="#manifestar" class="btn-primary">
+          Registrar manifestação
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#acompanhar" class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Consultar protocolo
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat b">
+          <div class="num">20 dias</div>
+          <div class="lbl">Prazo legal de resposta — prorrogável uma única vez</div>
+        </div>
+        <div class="stat o">
+          <div class="num">1.247</div>
+          <div class="lbl">Manifestações concluídas em 2025</div>
+        </div>
+        <div class="stat r">
+          <div class="num">96%</div>
+          <div class="lbl">Respondidas dentro do prazo previsto em lei</div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="qa-card" id="manifestar">
+      <div class="qa-head">
+        <div class="lbl">Inicie agora</div>
+        <div class="ti">Que tipo de manifestação você quer registrar?</div>
+      </div>
+      <div class="qa-body">
+        <div class="qa-item b">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+          <div class="tx"><div class="nm">Reclamação</div><div class="ds">Comunique uma falha em serviço ou atendimento</div></div>
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="qa-item o">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="tx"><div class="nm">Denúncia</div><div class="ds">Comunique irregularidades — sigilo garantido</div></div>
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="qa-item y">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div class="tx"><div class="nm">Sugestão</div><div class="ds">Proponha melhorias para serviços e processos</div></div>
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="qa-item g">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="tx"><div class="nm">Elogio</div><div class="ds">Reconheça o bom atendimento de servidores</div></div>
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="qa-item r">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="tx"><div class="nm">Solicitação de informação</div><div class="ds">Acesso à informação · LAI nº 12.527/2011</div></div>
+          <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- Tipos -->
+  <section class="types-section">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>Conheça os tipos</div>
+        <h2>Cinco formas de fazer sua voz chegar até nós.</h2>
+        <p class="lead">Cada tipo de manifestação tem um fluxo específico de tratamento, prazo e setor responsável. Escolha aquele que melhor representa sua demanda.</p>
+      </div>
+    </div>
+    <div class="types-grid">
+      <article class="type-card b">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <h3>Reclamação</h3>
+        <p>Insatisfação com serviço, atendimento, demora ou falha cometida por agente público da Secretaria.</p>
+        <span class="cta">Iniciar <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+      </article>
+      <article class="type-card o">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+        <h3>Denúncia</h3>
+        <p>Indício de irregularidade, conduta antiética ou desvio cometido por servidor ou contratado da SEFIN.</p>
+        <span class="cta">Iniciar <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+      </article>
+      <article class="type-card y">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h3>Sugestão</h3>
+        <p>Proposta de melhoria de serviços, processos, procedimentos ou políticas internas da Secretaria.</p>
+        <span class="cta">Iniciar <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+      </article>
+      <article class="type-card g">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <h3>Elogio</h3>
+        <p>Reconhecimento público de bom atendimento, postura profissional ou trabalho exemplar de servidor.</p>
+        <span class="cta">Iniciar <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+      </article>
+      <article class="type-card r">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h3>Acesso à Informação</h3>
+        <p>Pedido de informações públicas conforme a Lei de Acesso à Informação (Lei nº 12.527/2011 — LAI).</p>
+        <span class="cta">Iniciar <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+      </article>
+    </div>
+  </section>
+
+  <!-- Como funciona -->
+  <section class="how-section" id="como-funciona">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>O processo</div>
+        <h2>Da sua manifestação à resposta institucional.</h2>
+        <p class="lead">Em quatro etapas claras, mostramos como sua manifestação é tratada da abertura até a resposta final, com prazos e responsáveis bem definidos.</p>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <h4>Registro</h4>
+        <p>Você registra sua manifestação online ou presencialmente. O sistema gera um número de protocolo e uma senha de acompanhamento.</p>
+        <div class="meta">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Imediato
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h4>Triagem</h4>
+        <p>O ouvidor analisa e direciona para o setor competente. Manifestações fora do escopo são reencaminhadas ao órgão correto.</p>
+        <div class="meta">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Até 2 dias úteis
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h4>Apuração</h4>
+        <p>O setor responsável investiga, busca informações e elabora a resposta com base em fatos, normas e procedimentos institucionais.</p>
+        <div class="meta">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Até 15 dias úteis
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">04</div>
+        <h4>Resposta</h4>
+        <p>Você recebe uma resposta clara, fundamentada e por escrito. Caso haja insatisfação, é possível solicitar reanálise.</p>
+        <div class="meta">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Até 20 dias corridos
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ouvidor -->
+  <section class="ouvidor-section" id="ouvidor">
+    <div class="ouvidor-wrap">
+      <div class="ouv-card">
+        <div class="ouv-cover">
+          <div class="ouv-id">
+            <div class="ouv-portrait">RM</div>
+            <div class="info">
+              <div class="lbl"><span class="badge">OUVIDOR</span> Mandato 2025–2027</div>
+              <h3>Ricardo Monteiro</h3>
+              <div class="role">Servidor de carreira · Ouvidor-Geral da Secretaria de Finanças</div>
+              <div class="deeds">
+                <div><span class="k">Formação:</span> Direito · Especialista em Administração Pública</div>
+                <div><span class="k">Designação:</span> Portaria SEFIN nº 087/2025</div>
+                <div><span class="k">Tempo de serviço:</span> 14 anos no serviço público municipal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ouv-body">
+          <p class="quote">"Ouvir é o primeiro ato de respeito. Cada manifestação que chega à Ouvidoria carrega uma expectativa legítima de resposta — e tratá-la com seriedade é a forma mais concreta de honrar o serviço público."</p>
+          <div class="ouv-meta">
+            <div class="row">
+              <span class="k">Atendimento presencial</span>
+              <span class="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Seg a Sex · 8h às 14h</span>
+            </div>
+            <div class="row">
+              <span class="k">Local</span>
+              <span class="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sede SEFIN · Sala 12</span>
+            </div>
+            <div class="row">
+              <span class="k">E-mail direto</span>
+              <span class="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>ouvidoria.sefin@parintins.am.gov.br</span>
+            </div>
+            <div class="row">
+              <span class="k">Telefone institucional</span>
+              <span class="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>(92) 3533-0000 · ramal 412</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ouv-side">
+        <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:12px;display:inline-flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--c-orange);"></span>Quem é o Ouvidor</div>
+        <h3>Um interlocutor independente entre cidadão e administração.</h3>
+        <p class="desc">O Ouvidor-Geral é designado por ato do Secretário, atua com autonomia técnica e tem o dever institucional de receber, analisar e dar tratamento adequado a toda manifestação dirigida à SEFIN — sempre orientado pelos princípios da legalidade, impessoalidade e do interesse público.</p>
+        <div class="principles">
+          <div class="principle">
+            <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="tx"><div class="nm">Imparcialidade</div><div class="ds">Sem juízo prévio sobre quem manifesta ou sobre quem é manifestado.</div></div>
+          </div>
+          <div class="principle">
+            <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="tx"><div class="nm">Sigilo e proteção</div><div class="ds">Identidade do manifestante protegida nos termos da LGPD e Lei 13.460/2017.</div></div>
+          </div>
+          <div class="principle">
+            <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <div class="tx"><div class="nm">Resposta fundamentada</div><div class="ds">Toda manifestação é respondida por escrito, com base em fatos e normas.</div></div>
+          </div>
+        </div>
+
+        <div class="eyebrow" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:12px;display:inline-flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--c-blue);"></span>Equipe técnica</div>
+        <div class="team-row">
+          <div class="team-card b">
+            <div class="av">AC</div>
+            <div class="nm">Ana Carolina</div>
+            <div class="ro">Analista de Ouvidoria</div>
+          </div>
+          <div class="team-card o">
+            <div class="av">JF</div>
+            <div class="nm">João Ferraz</div>
+            <div class="ro">Triagem e Protocolo</div>
+          </div>
+          <div class="team-card y">
+            <div class="av">MS</div>
+            <div class="nm">Mariana Silva</div>
+            <div class="ro">Acesso à Informação</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLA / Compromissos -->
+  <section class="sla-section">
+    <div class="sla-band">
+      <div class="top">
+        <div>
+          <div class="eyebrow">Nossos compromissos</div>
+          <h2>Padrões de atendimento que assumimos com você.</h2>
+        </div>
+        <p class="lead">Todos os números abaixo seguem prazos e parâmetros previstos na Lei nº 13.460/2017 e na Carta de Serviços da Secretaria de Finanças.</p>
+      </div>
+      <div class="sla-grid">
+        <div class="sla-item">
+          <div class="n b">20</div>
+          <div class="lbl">dias para resposta</div>
+          <div class="ds">Prazo legal máximo, prorrogável uma vez por igual período mediante justificativa.</div>
+        </div>
+        <div class="sla-item">
+          <div class="n o">02</div>
+          <div class="lbl">dias úteis para triagem</div>
+          <div class="ds">Tempo máximo para classificar e encaminhar sua manifestação ao setor responsável.</div>
+        </div>
+        <div class="sla-item">
+          <div class="n y">100%</div>
+          <div class="lbl">sigilo do manifestante</div>
+          <div class="ds">Identidade protegida em todos os fluxos, exceto por determinação judicial expressa.</div>
+        </div>
+        <div class="sla-item">
+          <div class="n r">24/7</div>
+          <div class="lbl">canal digital aberto</div>
+          <div class="ds">O registro online está disponível a qualquer hora, todos os dias da semana.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Acompanhar -->
+  <section class="track-section" id="acompanhar">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>Acompanhe</div>
+        <h2>Consulte o andamento da sua manifestação.</h2>
+        <p class="lead">Use o número de protocolo e a senha que você recebeu no momento do registro para acompanhar cada etapa da apuração.</p>
+      </div>
+    </div>
+    <div class="track-card">
+      <div class="track-info">
+        <div class="eyebrow">Status em tempo real</div>
+        <h3>Transparência em cada etapa do processo.</h3>
+        <p>Você pode acompanhar o status da sua manifestação a qualquer momento. Cada mudança de etapa é registrada com data, hora e setor responsável.</p>
+        <div class="timeline">
+          <div class="tl-item done">
+            <span class="dot"></span>
+            <span class="l">Registrado pelo cidadão</span>
+            <span class="t">12/03 · 09:14</span>
+          </div>
+          <div class="tl-item done">
+            <span class="dot"></span>
+            <span class="l">Triagem concluída</span>
+            <span class="t">13/03 · 11:42</span>
+          </div>
+          <div class="tl-item now">
+            <span class="dot"></span>
+            <span class="l">Em apuração no setor</span>
+            <span class="t">em andamento</span>
+          </div>
+          <div class="tl-item next">
+            <span class="dot"></span>
+            <span class="l">Resposta institucional</span>
+            <span class="t">prevista até 02/04</span>
+          </div>
+        </div>
+      </div>
+      <div class="track-form">
+        <div class="field">
+          <label class="lbl">Número do protocolo</label>
+          <input class="protocol-input" type="text" placeholder="OUV-2026-000000" />
+        </div>
+        <div class="field">
+          <label class="lbl">Senha de acompanhamento</label>
+          <input type="password" placeholder="Senha gerada no registro" />
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label class="lbl">Data de registro</label>
+            <input type="date" />
+          </div>
+          <div class="field">
+            <label class="lbl">CPF do manifestante (opcional)</label>
+            <input type="text" placeholder="000.000.000-00" />
+          </div>
+        </div>
+        <div class="track-actions">
+          <button class="btn-primary" style="padding:13px 22px;font-size:14px;">
+            Consultar manifestação
+            <svg class="arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+          <button class="btn-ghost" style="padding:12px 16px;font-size:13.5px;">Esqueci minha senha</button>
+        </div>
+        <div class="helper">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>O número de protocolo segue o formato <strong>OUV-AAAA-NNNNNN</strong> e foi enviado por e-mail no momento do registro. A senha possui 6 dígitos.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Transparência / Estatísticas -->
+  <section class="trans-section" id="transparencia">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>Transparência</div>
+        <h2>Os números da Ouvidoria, abertos e atualizados.</h2>
+        <p class="lead">Publicamos mensalmente a distribuição das manifestações por tipo, tempo médio de resposta e taxa de resolução, conforme a Lei de Acesso à Informação.</p>
+      </div>
+      <a href="#" class="btn-ghost">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar relatório anual
+      </a>
+    </div>
+    <div class="trans-grid">
+      <div class="trans-main">
+        <div class="head">
+          <div class="ti">Distribuição por tipo · 2025</div>
+          <div class="seg">
+            <button class="active">Ano</button>
+            <button>Trimestre</button>
+            <button>Mês</button>
+          </div>
+        </div>
+        <div class="bar-list">
+          <div class="bar-row">
+            <span class="nm">Reclamação</span>
+            <div class="bar-bg"><div class="bar-fill b" style="width:62%"></div></div>
+            <span class="v">772</span>
+          </div>
+          <div class="bar-row">
+            <span class="nm">Solicitação · LAI</span>
+            <div class="bar-bg"><div class="bar-fill r" style="width:36%"></div></div>
+            <span class="v">449</span>
+          </div>
+          <div class="bar-row">
+            <span class="nm">Sugestão</span>
+            <div class="bar-bg"><div class="bar-fill y" style="width:22%"></div></div>
+            <span class="v">274</span>
+          </div>
+          <div class="bar-row">
+            <span class="nm">Denúncia</span>
+            <div class="bar-bg"><div class="bar-fill o" style="width:14%"></div></div>
+            <span class="v">175</span>
+          </div>
+          <div class="bar-row">
+            <span class="nm">Elogio</span>
+            <div class="bar-bg"><div class="bar-fill g" style="width:9%"></div></div>
+            <span class="v">112</span>
+          </div>
+        </div>
+      </div>
+      <div class="trans-side">
+        <div class="trans-stat b">
+          <div class="lbl">Tempo médio de resposta</div>
+          <div class="num">11,4 dias</div>
+          <div class="sub"><span class="delta up">−2,8d</span>vs. ano anterior</div>
+        </div>
+        <div class="trans-stat o">
+          <div class="lbl">Taxa de resolução no prazo</div>
+          <div class="num">96,2%</div>
+          <div class="sub"><span class="delta up">+4,1pp</span>acima da meta institucional</div>
+        </div>
+        <div class="trans-stat r">
+          <div class="lbl">Reabertura por reanálise</div>
+          <div class="num">3,1%</div>
+          <div class="sub"><span class="delta dn">+0,4pp</span>sob monitoramento contínuo</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Direitos -->
+  <section class="rights-section">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>Seus direitos</div>
+        <h2>O que a lei garante a quem se manifesta.</h2>
+        <p class="lead">A Lei nº 13.460/2017 — o Código de Defesa do Usuário do Serviço Público — assegura direitos que orientam toda a atuação desta Ouvidoria.</p>
+      </div>
+    </div>
+    <div class="rights-grid">
+      <div class="right-card b">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h4>Resposta no prazo</h4>
+        <p>Resposta conclusiva em até 20 dias, prorrogáveis uma única vez por igual período mediante justificativa formal.</p>
+      </div>
+      <div class="right-card o">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h4>Sigilo absoluto</h4>
+        <p>Sua identidade é tratada com sigilo, exceto se houver necessidade de comunicação para apuração da matéria.</p>
+      </div>
+      <div class="right-card y">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+        <h4>Linguagem clara</h4>
+        <p>Direito a uma resposta objetiva, em linguagem acessível, sem jargão técnico ou citações genéricas a normas.</p>
+      </div>
+      <div class="right-card r">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h4>Não retaliação</h4>
+        <p>Manifestar-se de boa-fé não pode resultar em qualquer prejuízo institucional, funcional ou pessoal.</p>
+      </div>
+      <div class="right-card g">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h4>Reanálise</h4>
+        <p>Caso a resposta não atenda, é possível solicitar reanálise da manifestação, com revisão por instância superior.</p>
+      </div>
+      <div class="right-card k">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <h4>Carta de Serviços</h4>
+        <p>Acesso público à Carta de Serviços da SEFIN, com padrões, prazos e formas de acesso a cada serviço público prestado.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow"><span class="dt"></span>Dúvidas frequentes</div>
+        <h2>Perguntas comuns sobre a Ouvidoria.</h2>
+      </div>
+    </div>
+    <div class="faq-grid">
+      <div>
+        <p style="color:var(--ink-500);font-size:14.5px;line-height:1.6;margin:0;max-width:36ch;">Não encontrou o que procurava? Entre em contato com nossa equipe pelos canais institucionais. Atendemos em horário comercial e respondemos a todos os contatos.</p>
+        <a href="#" class="btn-ghost" style="margin-top:24px;">
+          Falar com a equipe
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="faq-list">
+        <details class="q">
+          <summary>Posso registrar manifestação anônima?<span class="plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="ans">Sim. Denúncias podem ser feitas de forma anônima. Para reclamações e solicitações de informação (LAI), recomenda-se a identificação para que a resposta retorne pelos canais corretos. Em qualquer caso, sua identidade é tratada com sigilo nos termos da lei.</div>
+        </details>
+        <details class="q">
+          <summary>Quanto tempo até receber resposta?<span class="plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="ans">O prazo legal é de até 20 dias, prorrogáveis por igual período mediante justificativa formal. Em 2025, nosso tempo médio foi de 11,4 dias.</div>
+        </details>
+        <details class="q">
+          <summary>Posso manifestar como servidor da própria SEFIN?<span class="plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="ans">Sim. A Ouvidoria atende cidadãos e servidores. Para questões internas como clima organizacional, condições de trabalho ou recursos humanos, recomendamos também os canais específicos da Pesquisa de Clima e da Gestão de Pessoas.</div>
+        </details>
+        <details class="q">
+          <summary>O que acontece se eu não concordar com a resposta?<span class="plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="ans">Você pode solicitar reanálise no prazo de até 10 dias após receber a resposta. Sua manifestação será revista por instância superior, e uma nova resposta fundamentada será enviada.</div>
+        </details>
+        <details class="q">
+          <summary>A Ouvidoria pode investigar irregularidades?<span class="plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="ans">A Ouvidoria recebe e encaminha denúncias aos órgãos de controle competentes — Controladoria, Corregedoria ou Tribunal de Contas, conforme o caso. Nossa atuação é de mediação e encaminhamento, com acompanhamento do trâmite.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Final -->
+  <section class="cta-section">
+    <div class="cta-card">
+      <div>
+        <div class="eyebrow">Outras formas de contato</div>
+        <h2>Prefere falar por outro canal?</h2>
+        <p>Além do registro online, você pode entrar em contato com a Ouvidoria pelos canais institucionais. Em todos eles, sua manifestação é registrada e recebe um número de protocolo para acompanhamento.</p>
+        <a href="#manifestar" class="btn-primary">
+          Voltar ao registro online
+          <svg class="arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="cta-channels">
+        <a href="#" class="cta-channel b">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div><div class="nm">Telefone</div><div class="ds">(92) 3533-0000 · ramal 412</div></div>
+        </a>
+        <a href="#" class="cta-channel o">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div><div class="nm">E-mail</div><div class="ds">ouvidoria.sefin@parintins.am.gov.br</div></div>
+        </a>
+        <a href="#" class="cta-channel g">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><div class="nm">Atendimento presencial</div><div class="ds">Sede SEFIN · Sala 12 · Seg a Sex 8h–14h</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="footer-inner">
+    <div class="f-brand">
+      <img src="assets/logpmp.png" alt="Prefeitura de Parintins" />
+      <p>Ouvidoria Geral da Secretaria de Finanças da Prefeitura de Parintins — canal institucional de escuta, mediação e resposta para cidadãos e servidores.</p>
+    </div>
+    <div class="f-col">
+      <h5>Acesso rápido</h5>
+      <ul>
+        <li><a href="#manifestar">Registrar manifestação</a></li>
+        <li><a href="#acompanhar">Consultar protocolo</a></li>
+        <li><a href="#transparencia">Relatórios e estatísticas</a></li>
+        <li><a href="Pesquisa Clima Organizacional.html">Pesquisa de Clima</a></li>
+        <li><a href="#">Carta de Serviços</a></li>
+        <li><a href="#">LAI · Acesso à Informação</a></li>
+      </ul>
+    </div>
+    <div class="f-col">
+      <h5>Contato institucional</h5>
+      <div class="f-contact">
+        <div class="item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Sede SEFIN · Sala 12 · Parintins · AM</span>
+        </div>
+        <div class="item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>(92) 3533-0000 · ramal 412</span>
+        </div>
+        <div class="item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>ouvidoria.sefin@parintins.am.gov.br</span>
+        </div>
+        <div class="item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Seg a Sex · 8h às 14h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="copyright">
+    © 2026 Todos os direitos reservados — Prefeitura Municipal de Parintins · CNPJ 04.329.736/0001-69 · Rua Jhonathas Pedrosa, s/n Centro · Parintins · Amazonas · CEP 69151-030
+  </div>
+</footer>
+
+</body>
+</html>

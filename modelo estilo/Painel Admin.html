@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Administrativo · Pesquisa de Clima · SEFIN Parintins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="admin-panel.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+const Icon = {
+  dash: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>,
+  survey: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>,
+  questions: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  responses: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+  reports: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>,
+  tokens: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><circle cx="7" cy="15" r="4"/><path d="m10.85 12.15 8.4-8.4M14 8l3 3M19 4l3 3"/></svg>,
+  users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  audit: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ic"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  bell: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  help: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  plus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+  copy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+  drag: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>,
+  logout: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+};
+
+function Sidebar({ active, setActive }) {
+  const nav = [
+    { id: "dash", icon: Icon.dash, label: "Visão Geral" },
+    { id: "survey", icon: Icon.survey, label: "Pesquisa de Clima", status: true },
+    { id: "questions", icon: Icon.questions, label: "Banco de Perguntas", badge: "10" },
+    { id: "responses", icon: Icon.responses, label: "Respostas", badge: "284" },
+    { id: "reports", icon: Icon.reports, label: "Relatórios" },
+    { id: "tokens", icon: Icon.tokens, label: "Tokens de Acesso" },
+  ];
+  const adm = [
+    { id: "users", icon: Icon.users, label: "Usuários", badge: "8" },
+    { id: "audit", icon: Icon.audit, label: "Auditoria" },
+    { id: "settings", icon: Icon.settings, label: "Configurações" },
+  ];
+  return (
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <img src="assets/logo.png" alt="PMP" />
+        <div className="meta">
+          <div className="e">SEFIN</div>
+          <div className="t">Painel Admin</div>
+        </div>
+      </div>
+      <div className="sb-section"><div className="lbl">Pesquisa</div></div>
+      <nav className="sb-nav">
+        {nav.map(n => (
+          <button key={n.id} className={"sb-item" + (active === n.id ? " active" : "")} onClick={() => setActive(n.id)}>
+            {n.icon}<span>{n.label}</span>
+            {n.badge && <span className="badge">{n.badge}</span>}
+            {n.status && <span className="dot-status"></span>}
+          </button>
+        ))}
+      </nav>
+      <div className="sb-section"><div className="lbl">Administração</div></div>
+      <nav className="sb-nav">
+        {adm.map(n => (
+          <button key={n.id} className={"sb-item" + (active === n.id ? " active" : "")} onClick={() => setActive(n.id)}>
+            {n.icon}<span>{n.label}</span>
+            {n.badge && <span className="badge">{n.badge}</span>}
+          </button>
+        ))}
+      </nav>
+      <div className="sb-cycle">
+        <div className="lab">Ciclo Ativo</div>
+        <div className="ti">Clima 2026</div>
+        <div className="pr">
+          <div className="pb"><i style={{width: '64%'}}></i></div>
+          <div className="stats"><span><b>284</b> respostas</span><span><b>64%</b> adesão</span></div>
+        </div>
+      </div>
+      <div className="sb-user">
+        <div className="av">MR</div>
+        <div className="info"><div className="nm">Maria Ribeiro</div><div className="ro">Administradora</div></div>
+        <a href="Admin Login.html" className="lo" title="Sair">{Icon.logout}</a>
+      </div>
+    </aside>
+  );
+}
+
+function Topbar() {
+  return (
+    <header className="topbar">
+      <div className="tb-left">
+        <div className="search">{Icon.search}<input type="text" placeholder="Buscar perguntas, usuários, relatórios..." /><span className="kbd">⌘K</span></div>
+      </div>
+      <div className="tb-right">
+        <div className="tb-cycle"><span className="ds"></span>Ciclo 2026 · em andamento</div>
+        <div className="div"></div>
+        <button className="icon-btn" title="Notificações">{Icon.bell}<span className="pip"></span></button>
+        <button className="icon-btn" title="Ajuda">{Icon.help}</button>
+      </div>
+    </header>
+  );
+}
+
+function Dashboard() {
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <div className="crumbs"><span>SEFIN</span><span className="sep">/</span><span>Pesquisa de Clima</span><span className="sep">/</span><span className="now">Visão Geral</span></div>
+          <h1>Visão Geral</h1>
+          <p className="lead">Acompanhe a adesão, distribuição de respostas e atividades recentes do ciclo 2026 em tempo real.</p>
+        </div>
+        <div style={{display: 'flex', gap: 10}}>
+          <button className="btn-secondary">{Icon.download} Exportar</button>
+          <button className="btn-primary">{Icon.plus} Novo ciclo</button>
+        </div>
+      </div>
+
+      <div className="kpis">
+        <div className="kpi b">
+          <div className="ti"><span className="lbl">Respostas Totais</span><span className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span></div>
+          <div className="num">284</div>
+          <div className="sub"><span className="delta up">+12%</span> vs. ciclo anterior</div>
+        </div>
+        <div className="kpi o">
+          <div className="ti"><span className="lbl">Adesão</span><span className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span></div>
+          <div className="num">64%</div>
+          <div className="sub">de 442 servidores</div>
+        </div>
+        <div className="kpi y">
+          <div className="ti"><span className="lbl">Tempo médio</span><span className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span></div>
+          <div className="num">11:42</div>
+          <div className="sub">minutos por pesquisa</div>
+        </div>
+        <div className="kpi r">
+          <div className="ti"><span className="lbl">Dias restantes</span><span className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span></div>
+          <div className="num">17</div>
+          <div className="sub">encerra em 21/03/2026</div>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-head">
+            <div className="left"><div className="e">Adesão semanal</div><div className="t">Respostas por semana e setor</div></div>
+            <div className="tab-bar"><button className="active">Semanal</button><button>Mensal</button><button>Setor</button></div>
+          </div>
+          <div className="card-body">
+            <div className="chart">
+              {[
+                {l:'S1', b:30, o:14, y:8, r:6},{l:'S2', b:42, o:18, y:11, r:8},
+                {l:'S3', b:55, o:22, y:14, r:10},{l:'S4', b:38, o:30, y:18, r:12},
+                {l:'S5', b:62, o:24, y:20, r:14},{l:'S6', b:48, o:28, y:22, r:16},
+                {l:'S7', b:70, o:32, y:24, r:18},{l:'S8', b:58, o:36, y:28, r:20},
+              ].map((d,i) => {
+                const total = d.b + d.o + d.y + d.r;
+                const h = Math.max(40, total * 1.1);
+                return (
+                  <div className="bar" key={i}>
+                    <span className="val">{total}</span>
+                    <div className="stack" style={{height: h}}>
+                      <div className="seg b" style={{height: (d.b/total*100)+'%'}}></div>
+                      <div className="seg o" style={{height: (d.o/total*100)+'%'}}></div>
+                      <div className="seg y" style={{height: (d.y/total*100)+'%'}}></div>
+                      <div className="seg r" style={{height: (d.r/total*100)+'%'}}></div>
+                    </div>
+                    <span className="lab">{d.l}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="legend">
+              <span className="lg"><span className="sq b"></span>Contabilidade</span>
+              <span className="lg"><span className="sq o"></span>Tributos</span>
+              <span className="lg"><span className="sq y"></span>Tesouraria</span>
+              <span className="lg"><span className="sq r"></span>Outros</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="left"><div className="e">Distribuição por setor</div><div className="t">Onde estão os respondentes</div></div></div>
+          <div className="card-body">
+            <div className="donut-wrap">
+              <div className="donut">
+                <svg viewBox="0 0 36 36" width="150" height="150">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#eef1f6" strokeWidth="3.6"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3ea3ff" strokeWidth="3.6" strokeDasharray="32 100" strokeDashoffset="0" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#b86a2b" strokeWidth="3.6" strokeDasharray="24 100" strokeDashoffset="-32" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ffb829" strokeWidth="3.6" strokeDasharray="20 100" strokeDashoffset="-56" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ea4242" strokeWidth="3.6" strokeDasharray="14 100" strokeDashoffset="-76" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0f1622" strokeWidth="3.6" strokeDasharray="10 100" strokeDashoffset="-90" transform="rotate(-90 18 18)"/>
+                </svg>
+                <div className="ctr"><div><div className="v">284</div><div className="l">Total</div></div></div>
+              </div>
+              <div className="donut-list">
+                <div className="row"><span className="sq" style={{background:'#3ea3ff'}}></span><span className="nm">Contabilidade</span><span className="v">91</span></div>
+                <div className="row"><span className="sq" style={{background:'#b86a2b'}}></span><span className="nm">Tributos</span><span className="v">68</span></div>
+                <div className="row"><span className="sq" style={{background:'#ffb829'}}></span><span className="nm">Tesouraria</span><span className="v">57</span></div>
+                <div className="row"><span className="sq" style={{background:'#ea4242'}}></span><span className="nm">Compras</span><span className="v">40</span></div>
+                <div className="row"><span className="sq" style={{background:'#0f1622'}}></span><span className="nm">Outros</span><span className="v">28</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div className="left"><div className="e">Atividade recente</div><div className="t">Últimos eventos do ciclo</div></div>
+          <div className="right"><button className="btn-secondary">Ver tudo</button></div>
+        </div>
+        <div className="card-body" style={{padding:'4px 22px'}}>
+          <div className="activity">
+            <div className="act b">
+              <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div className="tx"><div className="t">Nova resposta anônima registrada · <b>Departamento de Contabilidade</b></div><div className="m">há 4 minutos · Token GH8K-2PQR-MN3T</div></div>
+            </div>
+            <div className="act g">
+              <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+              <div className="tx"><div className="t"><b>Carlos Mendes</b> foi adicionado como Analista</div><div className="m">há 1 hora · por Maria Ribeiro</div></div>
+            </div>
+            <div className="act y">
+              <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div className="tx"><div className="t">Pergunta <b>"Reconhecimento profissional"</b> foi editada</div><div className="m">há 2 horas · alterada por Maria Ribeiro</div></div>
+            </div>
+            <div className="act r">
+              <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+              <div className="tx"><div className="t">Tentativa de reuso de token bloqueada · token <b>RT4V-9XKL-22BC</b></div><div className="m">há 3 horas · proteção ativa</div></div>
+            </div>
+            <div className="act b">
+              <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg></div>
+              <div className="tx"><div className="t">Relatório parcial <b>Adesão · Semana 7</b> exportado em PDF</div><div className="m">há 5 horas · por Pedro Souza</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const QUESTIONS = [
+  { id: 1, sec: "Ambiente de trabalho", text: "Sinto-me satisfeito(a) com o ambiente físico do meu local de trabalho.", type: "likert", required: true, status: "active" },
+  { id: 2, sec: "Ambiente de trabalho", text: "Os recursos e ferramentas que utilizo são adequados para realizar minhas tarefas.", type: "likert", required: true, status: "active" },
+  { id: 3, sec: "Ambiente de trabalho", text: "Existe um clima de respeito e cooperação entre os colegas da equipe.", type: "likert", required: true, status: "active" },
+  { id: 4, sec: "Liderança e gestão", text: "Minha chefia imediata oferece feedback claro e construtivo.", type: "likert", required: true, status: "active" },
+  { id: 5, sec: "Liderança e gestão", text: "As decisões da Secretaria são comunicadas de forma transparente.", type: "likert", required: true, status: "active" },
+  { id: 6, sec: "Desenvolvimento", text: "Tenho oportunidades reais de crescimento e capacitação profissional.", type: "likert", required: true, status: "active" },
+  { id: 7, sec: "Desenvolvimento", text: "Sinto que meu trabalho é reconhecido e valorizado.", type: "likert", required: true, status: "draft" },
+  { id: 8, sec: "Desenvolvimento", text: "Quais áreas você considera prioritárias para investimento institucional?", type: "multi", required: true, status: "active" },
+  { id: 9, sec: "Sua voz", text: "O que você gostaria que mudasse na Secretaria de Finanças?", type: "text", required: false, status: "active" },
+  { id: 10, sec: "Sua voz", text: "O que está funcionando bem e merece ser preservado?", type: "text", required: false, status: "active" },
+];
+
+function QuestionsPage({ onAdd }) {
+  const [filter, setFilter] = useState("all");
+  const filtered = QUESTIONS.filter(q => filter === "all" || q.type === filter);
+  const typeLabel = { likert: "Escala Likert", multi: "Múltipla escolha", text: "Resposta aberta" };
+  const typeClass = { likert: "lik", multi: "mul", text: "txt" };
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <div className="crumbs"><span>SEFIN</span><span className="sep">/</span><span>Pesquisa de Clima</span><span className="sep">/</span><span className="now">Banco de Perguntas</span></div>
+          <h1>Banco de Perguntas</h1>
+          <p className="lead">Gerencie as perguntas que compõem o questionário da Pesquisa de Clima Organizacional. Você pode reordenar, editar e definir quais estarão ativas no ciclo atual.</p>
+        </div>
+        <div style={{display: 'flex', gap: 10}}>
+          <button className="btn-secondary">{Icon.download} Exportar</button>
+          <button className="btn-primary" onClick={onAdd}>{Icon.plus} Nova pergunta</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="filters">
+          <button className={"filter-chip" + (filter==="all"?" active":"")} onClick={()=>setFilter("all")}>Todas <span style={{opacity:.6}}>· {QUESTIONS.length}</span></button>
+          <button className={"filter-chip" + (filter==="likert"?" active":"")} onClick={()=>setFilter("likert")}>Likert</button>
+          <button className={"filter-chip" + (filter==="multi"?" active":"")} onClick={()=>setFilter("multi")}>Múltipla escolha</button>
+          <button className={"filter-chip" + (filter==="text"?" active":"")} onClick={()=>setFilter("text")}>Aberta</button>
+          <span style={{flex:1}}></span>
+          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-500)',letterSpacing:'.04em'}}>{filtered.length} resultado{filtered.length!==1?'s':''}</span>
+        </div>
+        <div className="table-wrap">
+          <table className="tbl">
+            <thead>
+              <tr><th style={{width:42}}></th><th style={{width:50}}>#</th><th>Pergunta</th><th>Tipo</th><th>Obrigatória</th><th>Status</th><th style={{textAlign:'right'}}>Ações</th></tr>
+            </thead>
+            <tbody>
+              {filtered.map((q, i) => (
+                <tr key={q.id}>
+                  <td><button className="row-actions" style={{cursor:'grab',color:'var(--ink-300)'}}>{Icon.drag}</button></td>
+                  <td style={{fontFamily:'var(--font-mono)',color:'var(--ink-500)'}}>{String(i+1).padStart(2,'0')}</td>
+                  <td><div className="qtxt">{q.text}</div><div className="qsec">{q.sec}</div></td>
+                  <td><span className={"qtype-tag " + typeClass[q.type]}>{typeLabel[q.type]}</span></td>
+                  <td>{q.required ? <span className="pill blue"><span className="dt"></span>Sim</span> : <span className="pill gray">Opcional</span>}</td>
+                  <td>{q.status === "active" ? <span className="pill green"><span className="dt"></span>Ativa</span> : <span className="pill amber"><span className="dt"></span>Rascunho</span>}</td>
+                  <td>
+                    <div className="row-actions" style={{justifyContent:'flex-end'}}>
+                      <button title="Duplicar">{Icon.copy}</button>
+                      <button title="Editar">{Icon.edit}</button>
+                      <button className="danger" title="Excluir">{Icon.trash}</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const USERS = [
+  { id:1, nm:"Maria Ribeiro", em:"maria.ribeiro@parintins.am.gov.br", role:"Administrador", dep:"Gabinete SEFIN", status:"active", last:"hoje · 09:14", av:"MR", c:"b" },
+  { id:2, nm:"Pedro Souza", em:"pedro.souza@parintins.am.gov.br", role:"Gestor", dep:"Tecnologia da Informação", status:"active", last:"ontem · 17:42", av:"PS", c:"o" },
+  { id:3, nm:"Ana Carolina Lima", em:"ana.lima@parintins.am.gov.br", role:"Analista", dep:"Controle Interno", status:"active", last:"hoje · 08:01", av:"AL", c:"y" },
+  { id:4, nm:"Carlos Mendes", em:"carlos.mendes@parintins.am.gov.br", role:"Analista", dep:"Planejamento", status:"pending", last:"convidado", av:"CM", c:"r" },
+  { id:5, nm:"Juliana Pereira", em:"juliana.pereira@parintins.am.gov.br", role:"Visualizador", dep:"Tributos", status:"active", last:"3 dias atrás", av:"JP", c:"b" },
+  { id:6, nm:"Renata Castro", em:"renata.castro@parintins.am.gov.br", role:"Gestor", dep:"Contabilidade", status:"active", last:"hoje · 11:08", av:"RC", c:"o" },
+  { id:7, nm:"Bruno Tavares", em:"bruno.tavares@parintins.am.gov.br", role:"Analista", dep:"Tesouraria", status:"inactive", last:"30 dias atrás", av:"BT", c:"y" },
+  { id:8, nm:"Lucas Oliveira", em:"lucas.oliveira@parintins.am.gov.br", role:"Visualizador", dep:"Compras e Licitações", status:"active", last:"6 horas atrás", av:"LO", c:"r" },
+];
+
+function UsersPage({ onAdd }) {
+  const stPill = {
+    active: <span className="pill green"><span className="dt"></span>Ativo</span>,
+    pending: <span className="pill amber"><span className="dt"></span>Convite pendente</span>,
+    inactive: <span className="pill gray"><span className="dt"></span>Inativo</span>,
+  };
+  const rolePill = {
+    "Administrador": <span className="pill red"><span className="dt"></span>Administrador</span>,
+    "Gestor": <span className="pill blue"><span className="dt"></span>Gestor</span>,
+    "Analista": <span className="pill amber"><span className="dt"></span>Analista</span>,
+    "Visualizador": <span className="pill gray"><span className="dt"></span>Visualizador</span>,
+  };
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <div className="crumbs"><span>SEFIN</span><span className="sep">/</span><span>Administração</span><span className="sep">/</span><span className="now">Usuários</span></div>
+          <h1>Usuários do Painel</h1>
+          <p className="lead">Gerencie quem tem acesso à plataforma administrativa e quais permissões cada perfil possui no ciclo da pesquisa.</p>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-secondary">{Icon.download} Exportar lista</button>
+          <button className="btn-primary" onClick={onAdd}>{Icon.plus} Convidar usuário</button>
+        </div>
+      </div>
+
+      <div className="kpis">
+        <div className="kpi b"><div className="ti"><span className="lbl">Total de usuários</span></div><div className="num">8</div><div className="sub">membros ativos no painel</div></div>
+        <div className="kpi o"><div className="ti"><span className="lbl">Administradores</span></div><div className="num">1</div><div className="sub">acesso total</div></div>
+        <div className="kpi y"><div className="ti"><span className="lbl">Convites pendentes</span></div><div className="num">1</div><div className="sub">aguardando aceite</div></div>
+        <div className="kpi r"><div className="ti"><span className="lbl">Inativos</span></div><div className="num">1</div><div className="sub">sem acesso há 30+ dias</div></div>
+      </div>
+
+      <div className="card">
+        <div className="filters">
+          <button className="filter-chip active">Todos</button>
+          <button className="filter-chip">Administrador</button>
+          <button className="filter-chip">Gestor</button>
+          <button className="filter-chip">Analista</button>
+          <button className="filter-chip">Visualizador</button>
+          <span style={{flex:1}}></span>
+          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-500)',letterSpacing:'.04em'}}>{USERS.length} usuários</span>
+        </div>
+        <div className="table-wrap">
+          <table className="tbl">
+            <thead><tr><th>Servidor</th><th>Departamento</th><th>Perfil</th><th>Status</th><th>Último acesso</th><th style={{textAlign:'right'}}>Ações</th></tr></thead>
+            <tbody>
+              {USERS.map(u => (
+                <tr key={u.id}>
+                  <td><div className="user-cell"><div className={"av "+u.c}>{u.av}</div><div><div className="nm">{u.nm}</div><div className="em">{u.em}</div></div></div></td>
+                  <td>{u.dep}</td>
+                  <td>{rolePill[u.role]}</td>
+                  <td>{stPill[u.status]}</td>
+                  <td style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--ink-500)'}}>{u.last}</td>
+                  <td><div className="row-actions" style={{justifyContent:'flex-end'}}><button title="Editar">{Icon.edit}</button><button className="danger" title="Remover">{Icon.trash}</button></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function SurveyConfigPage({ onAddQuestion }) {
+  const [tab, setTab] = useState("estrutura");
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <div className="crumbs"><span>SEFIN</span><span className="sep">/</span><span>Pesquisa de Clima</span><span className="sep">/</span><span className="now">Configuração do Ciclo</span></div>
+          <h1>Pesquisa de Clima · Ciclo 2026</h1>
+          <p className="lead">Configure os parâmetros do ciclo, organize as seções de perguntas e defina o cronograma de aplicação da pesquisa entre os servidores da SEFIN.</p>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-secondary">Visualizar como servidor</button>
+          <button className="btn-primary">Salvar alterações</button>
+        </div>
+      </div>
+
+      <div className="subtabs">
+        <button className={tab==="estrutura"?"active":""} onClick={()=>setTab("estrutura")}>Estrutura</button>
+        <button className={tab==="cronograma"?"active":""} onClick={()=>setTab("cronograma")}>Cronograma</button>
+        <button className={tab==="acesso"?"active":""} onClick={()=>setTab("acesso")}>Acesso & Tokens</button>
+        <button className={tab==="comunicacao"?"active":""} onClick={()=>setTab("comunicacao")}>Comunicação</button>
+      </div>
+
+      {tab === "estrutura" && (
+        <>
+          <div className="card" style={{marginBottom:18}}>
+            <div className="card-head">
+              <div className="left"><div className="e">Ciclo ativo</div><div className="t">Identificação e parâmetros gerais</div></div>
+              <div className="right"><span className="pill green"><span className="dt"></span>Em andamento</span></div>
+            </div>
+            <div className="card-body">
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:18}}>
+                <div className="field"><label>Nome do ciclo</label><input defaultValue="Pesquisa de Clima 2026" /></div>
+                <div className="field"><label>Tema do ano</label><input defaultValue="Escuta ativa & Reconhecimento" /></div>
+                <div className="field"><label>Início</label><input type="date" defaultValue="2026-02-15" /></div>
+                <div className="field"><label>Encerramento</label><input type="date" defaultValue="2026-03-21" /></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <div className="left"><div className="e">Seções da pesquisa</div><div className="t">10 perguntas distribuídas em 4 seções</div></div>
+              <div className="right">
+                <button className="btn-secondary">{Icon.plus} Nova seção</button>
+                <button className="btn-primary" onClick={onAddQuestion}>{Icon.plus} Nova pergunta</button>
+              </div>
+            </div>
+            <div style={{padding:'4px 22px 22px'}}>
+              {[
+                { name: "Ambiente de trabalho", count: 3, color: "b" },
+                { name: "Liderança e gestão", count: 2, color: "o" },
+                { name: "Desenvolvimento e reconhecimento", count: 3, color: "y" },
+                { name: "Sua voz", count: 2, color: "r" },
+              ].map((s, i) => (
+                <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderBottom:'1px solid var(--line-2)'}}>
+                  <div style={{width:36,height:36,borderRadius:8,display:'grid',placeItems:'center',background:'var(--bg-soft)',color:'var(--ink-300)'}}>{Icon.drag}</div>
+                  <div style={{width:8,height:32,borderRadius:4, background: s.color==="b"?"var(--c-blue)": s.color==="o"?"var(--c-orange)": s.color==="y"?"var(--c-yellow)":"var(--c-red)"}}></div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:18,letterSpacing:'-.015em',color:'var(--ink-900)'}}>{s.name}</div>
+                    <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-500)',letterSpacing:'.04em',marginTop:2}}>{s.count} pergunta{s.count!==1?'s':''}</div>
+                  </div>
+                  <div className="row-actions">
+                    <button title="Editar">{Icon.edit}</button>
+                    <button className="danger" title="Excluir">{Icon.trash}</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {tab === "cronograma" && (<div className="card"><div className="card-body" style={{padding:32,textAlign:'center',color:'var(--ink-500)'}}>Configuração de cronograma — janelas de aplicação, lembretes automáticos por e-mail e prazo final.</div></div>)}
+      {tab === "acesso" && (<div className="card"><div className="card-body" style={{padding:32,textAlign:'center',color:'var(--ink-500)'}}>Configurações de geração de tokens, regras de uso único e bloqueio anti-fraude.</div></div>)}
+      {tab === "comunicacao" && (<div className="card"><div className="card-body" style={{padding:32,textAlign:'center',color:'var(--ink-500)'}}>Modelos de e-mail, banners e comunicados internos para divulgação aos servidores.</div></div>)}
+    </>
+  );
+}
+
+function NewQuestionModal({ onClose }) {
+  const [type, setType] = useState("likert");
+  const [opts, setOpts] = useState(["", ""]);
+  return (
+    <div className="overlay" onClick={(e)=>{ if(e.target.classList.contains('overlay')) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <div><div className="lbl">Banco de Perguntas</div><h3>Nova pergunta</h3></div>
+          <button className="modal-close" onClick={onClose}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Tipo de pergunta</label>
+            <div className="qtype-seg">
+              <div className={"qtype-card" + (type==="likert"?" sel":"")} onClick={()=>setType("likert")}>
+                <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg></div>
+                <div className="nm">Escala Likert</div>
+              </div>
+              <div className={"qtype-card" + (type==="multi"?" sel":"")} onClick={()=>setType("multi")}>
+                <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+                <div className="nm">Múltipla escolha</div>
+              </div>
+              <div className={"qtype-card" + (type==="text"?" sel":"")} onClick={()=>setType("text")}>
+                <div className="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="14" y2="15"/></svg></div>
+                <div className="nm">Resposta aberta</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="field"><label>Pergunta</label><textarea placeholder="Ex.: Sinto-me satisfeito(a) com o ambiente físico do meu local de trabalho." /></div>
+          <div className="field"><label>Texto de apoio (opcional)</label><input placeholder="Considere iluminação, mobiliário e equipamentos." /></div>
+          <div className="row-2">
+            <div className="field">
+              <label>Seção</label>
+              <select defaultValue=""><option value="">Selecione...</option><option>Ambiente de trabalho</option><option>Liderança e gestão</option><option>Desenvolvimento e reconhecimento</option><option>Sua voz</option></select>
+            </div>
+            <div className="field">
+              <label>Obrigatória?</label>
+              <select defaultValue="sim"><option value="sim">Sim, exigir resposta</option><option value="nao">Não, opcional</option></select>
+            </div>
+          </div>
+
+          {type === "multi" && (
+            <div className="field">
+              <label>Opções de resposta</label>
+              {opts.map((o, i) => (
+                <div className="opt-row" key={i}>
+                  <input placeholder={`Opção ${i+1}`} value={o} onChange={(e)=>{ const n=[...opts]; n[i]=e.target.value; setOpts(n); }} />
+                  <button className="rm" onClick={()=>setOpts(opts.filter((_,j)=>j!==i))}>{Icon.trash}</button>
+                </div>
+              ))}
+              <button className="add-opt" onClick={()=>setOpts([...opts, ""])}>{Icon.plus} Adicionar opção</button>
+            </div>
+          )}
+        </div>
+        <div className="modal-foot">
+          <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn-primary" onClick={onClose}>Salvar pergunta</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewUserModal({ onClose }) {
+  const [role, setRole] = useState("Analista");
+  return (
+    <div className="overlay" onClick={(e)=>{ if(e.target.classList.contains('overlay')) onClose(); }}>
+      <div className="modal">
+        <div className="modal-head">
+          <div><div className="lbl">Administração · Usuários</div><h3>Convidar novo usuário</h3></div>
+          <button className="modal-close" onClick={onClose}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div className="modal-body">
+          <div className="row-2">
+            <div className="field"><label>Nome completo</label><input placeholder="Ex.: Maria Ribeiro" /></div>
+            <div className="field"><label>Matrícula (opcional)</label><input placeholder="Ex.: 30421-7" /></div>
+          </div>
+          <div className="field"><label>E-mail institucional</label><input type="email" placeholder="nome.sobrenome@parintins.am.gov.br" /></div>
+          <div className="row-2">
+            <div className="field">
+              <label>Departamento</label>
+              <select defaultValue=""><option value="">Selecione...</option><option>Gabinete da Secretaria</option><option>Contabilidade</option><option>Tesouraria</option><option>Tributos</option><option>Planejamento</option><option>Compras e Licitações</option><option>Controle Interno</option><option>Tecnologia da Informação</option></select>
+            </div>
+            <div className="field"><label>Cargo / Função</label><input placeholder="Ex.: Analista de Gestão" /></div>
+          </div>
+
+          <div className="field">
+            <label>Perfil de acesso</label>
+            <div className="role-seg">
+              <div className={"role-card" + (role==="Administrador"?" sel":"")} onClick={()=>setRole("Administrador")}>
+                <div className="nm">Administrador</div>
+                <div className="ds">Acesso total · gerencia ciclos, usuários e configurações</div>
+              </div>
+              <div className={"role-card" + (role==="Gestor"?" sel":"")} onClick={()=>setRole("Gestor")}>
+                <div className="nm">Gestor</div>
+                <div className="ds">Acessa relatórios, edita perguntas, sem gestão de usuários</div>
+              </div>
+              <div className={"role-card" + (role==="Analista"?" sel":"")} onClick={()=>setRole("Analista")}>
+                <div className="nm">Analista</div>
+                <div className="ds">Visualiza respostas agregadas e exporta relatórios</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="field" style={{marginBottom:0}}>
+            <label>Mensagem de boas-vindas (opcional)</label>
+            <textarea placeholder="Mensagem que será incluída no e-mail de convite." />
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn-primary" onClick={onClose}>Enviar convite</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [active, setActive] = useState("dash");
+  const [modal, setModal] = useState(null);
+
+  let page;
+  if (active === "dash") page = <Dashboard />;
+  else if (active === "questions") page = <QuestionsPage onAdd={()=>setModal("question")} />;
+  else if (active === "users") page = <UsersPage onAdd={()=>setModal("user")} />;
+  else if (active === "survey") page = <SurveyConfigPage onAddQuestion={()=>setModal("question")} />;
+  else page = (
+    <div className="card"><div className="card-body" style={{padding:48,textAlign:'center'}}>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:24,marginBottom:6}}>Em construção</div>
+      <div style={{color:'var(--ink-500)'}}>Esta seção do painel será disponibilizada em breve.</div>
+    </div></div>
+  );
+
+  return (
+    <>
+      <div className="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div className="app">
+        <Sidebar active={active} setActive={setActive} />
+        <div className="main">
+          <Topbar />
+          <div className="content">{page}</div>
+        </div>
+      </div>
+      {modal === "question" && <NewQuestionModal onClose={()=>setModal(null)} />}
+      {modal === "user" && <NewUserModal onClose={()=>setModal(null)} />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

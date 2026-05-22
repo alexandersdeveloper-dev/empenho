@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Acesso Administrativo · Pesquisa de Clima · SEFIN Parintins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c-blue: #3ea3ff;
+    --c-orange: #b86a2b;
+    --c-yellow: #ffb829;
+    --c-red: #ea4242;
+
+    --ink-900: #0f1622;
+    --ink-700: #2a3344;
+    --ink-500: #5b667a;
+    --ink-400: #8590a3;
+    --ink-300: #b4bccb;
+    --line: #e3e7ee;
+    --line-2: #eef1f6;
+    --bg: #ffffff;
+    --bg-soft: #f6f8fb;
+
+    --font-sans: "Manrope", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "Fraunces", Georgia, serif;
+
+    --shadow-md: 0 6px 24px -8px rgba(15,22,34,.12), 0 2px 6px rgba(15,22,34,.05);
+    --shadow-lg: 0 24px 60px -20px rgba(15,22,34,.20), 0 6px 18px rgba(15,22,34,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100vh; background: var(--bg); color: var(--ink-900); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+  .stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; width: 100%; }
+  .stripe > i:nth-child(1) { background: var(--c-blue); }
+  .stripe > i:nth-child(2) { background: var(--c-orange); }
+  .stripe > i:nth-child(3) { background: var(--c-yellow); }
+  .stripe > i:nth-child(4) { background: var(--c-red); }
+
+  .page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+  }
+
+  /* ----- Left: brand panel ----- */
+  .brand-side {
+    position: relative;
+    background: var(--ink-900);
+    color: #fff;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .brand-side::before {
+    content: "";
+    position: absolute; left: 0; right: 0; top: 0; height: 6px;
+    background: linear-gradient(90deg, var(--c-blue) 0 25%, var(--c-orange) 25% 50%, var(--c-yellow) 50% 75%, var(--c-red) 75% 100%);
+  }
+  .brand-side::after {
+    content: "EU AMO PIN";
+    position: absolute;
+    right: -40px; bottom: -30px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 220px;
+    letter-spacing: -.03em;
+    color: rgba(255,255,255,.025);
+    line-height: .85;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .brand-top {
+    display: flex; align-items: center; gap: 18px;
+    z-index: 2; position: relative;
+  }
+  .brand-top img {
+    height: 56px; width: auto;
+    filter: brightness(0) invert(1);
+  }
+  .brand-top .div { width: 1px; height: 38px; background: rgba(255,255,255,.18); }
+  .brand-top .meta .e {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+  }
+  .brand-top .meta .t {
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: 2px;
+    color: #fff;
+  }
+
+  .brand-mid { z-index: 2; position: relative; max-width: 540px; }
+  .brand-mid .badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 6px 12px 6px 8px;
+    border-radius: 999px;
+    background: rgba(62,163,255,.14);
+    color: #8ec6ff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 28px;
+  }
+  .brand-mid .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c-blue); box-shadow: 0 0 0 3px rgba(62,163,255,.25); }
+  .brand-mid h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(34px, 3.4vw, 50px);
+    line-height: 1.05;
+    letter-spacing: -.025em;
+    margin: 0 0 22px;
+    color: #fff;
+    text-wrap: pretty;
+  }
+  .brand-mid h1 .a {
+    font-style: italic;
+    font-weight: 500;
+    background: linear-gradient(95deg, var(--c-blue), var(--c-yellow) 60%, var(--c-red));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand-mid p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255,255,255,.65);
+    max-width: 48ch;
+    margin: 0 0 36px;
+  }
+
+  .feats { display: flex; flex-direction: column; gap: 16px; }
+  .feat { display: flex; gap: 14px; align-items: start; }
+  .feat .ic {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .feat.b .ic { color: var(--c-blue); }
+  .feat.y .ic { color: var(--c-yellow); }
+  .feat.r .ic { color: var(--c-red); }
+  .feat .tx .t { font-weight: 600; font-size: 14px; color: #fff; }
+  .feat .tx .d { font-size: 13px; color: rgba(255,255,255,.55); margin-top: 3px; line-height: 1.5; }
+
+  .brand-foot { z-index: 2; position: relative; display: flex; justify-content: space-between; gap: 24px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; color: rgba(255,255,255,.4); text-transform: uppercase; }
+
+  /* ----- Right: form panel ----- */
+  .form-side {
+    background: var(--bg);
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    position: relative;
+  }
+  .form-card {
+    max-width: 460px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .crumbs {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 36px;
+  }
+  .crumbs .sep { color: var(--ink-300); }
+  .crumbs .now { color: var(--ink-900); font-weight: 600; }
+
+  .fc-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--c-blue);
+    margin-bottom: 12px;
+  }
+  .fc-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -.025em;
+    margin: 0 0 12px;
+    color: var(--ink-900);
+  }
+  .fc-sub {
+    color: var(--ink-500);
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0 0 36px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .field label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    font-weight: 500;
+  }
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-wrap svg.lead {
+    position: absolute;
+    left: 14px;
+    color: var(--ink-400);
+    pointer-events: none;
+  }
+  .input-wrap input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px 14px 44px;
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--ink-900);
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input-wrap input:focus {
+    outline: none;
+    border-color: var(--ink-900);
+    box-shadow: 0 0 0 4px rgba(15,22,34,.05);
+  }
+  .input-wrap input::placeholder { color: var(--ink-400); }
+  .toggle-pw {
+    position: absolute;
+    right: 12px;
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    color: var(--ink-500);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color .2s, background .2s;
+  }
+  .toggle-pw:hover { color: var(--ink-900); background: var(--bg-soft); }
+
+  .row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0 28px;
+  }
+  .check {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--ink-700);
+    user-select: none;
+  }
+  .check input { display: none; }
+  .check .box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--ink-300);
+    border-radius: 5px;
+    display: grid; place-items: center;
+    transition: all .15s;
+  }
+  .check input:checked + .box {
+    background: var(--ink-900);
+    border-color: var(--ink-900);
+  }
+  .check .box svg { color: #fff; opacity: 0; }
+  .check input:checked + .box svg { opacity: 1; }
+  .row-between a {
+    font-size: 13.5px;
+    color: var(--c-blue);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .2s;
+  }
+  .row-between a:hover { opacity: .7; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px 22px;
+    background: var(--ink-900);
+    color: #fff;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -.005em;
+    border: 0;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .15s, background .2s, box-shadow .2s;
+  }
+  .btn-primary:hover {
+    background: #1a2436;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+  .btn-primary .arr { transition: transform .25s; }
+  .btn-primary:hover .arr { transform: translateX(4px); }
+
+  .divider {
+    margin: 28px 0;
+    display: flex; align-items: center; gap: 14px;
+    color: var(--ink-400);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--line);
+  }
+
+  .btn-gov {
+    width: 100%;
+    padding: 14px 18px;
+    background: #fff;
+    color: var(--ink-900);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    transition: border-color .2s, background .2s, transform .15s;
+  }
+  .btn-gov:hover { border-color: var(--ink-700); background: var(--bg-soft); transform: translateY(-1px); }
+  .btn-gov .gov-mark {
+    display: inline-flex;
+    background: linear-gradient(90deg, #1d6f3c, #1d6f3c 33%, #fdb913 33%, #fdb913 66%, #1c468e 66%);
+    width: 24px; height: 14px; border-radius: 2px;
+  }
+
+  .alert-error {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    background: #fef5f5;
+    border: 1px solid #fde0e0;
+    border-radius: 10px;
+    color: #8b2424;
+    font-size: 13px;
+    display: flex; align-items: start; gap: 10px;
+  }
+  .alert-error svg { flex-shrink: 0; margin-top: 2px; color: var(--c-red); }
+
+  .foot-help {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-500);
+  }
+  .foot-help a { color: var(--c-blue); font-weight: 600; text-decoration: none; }
+
+  .form-stripe {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+  }
+
+  /* Demo hint */
+  .demo-hint {
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: #f1f7ff;
+    border: 1px solid #d6e6fb;
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: #1a5fa8;
+    line-height: 1.5;
+  }
+  .demo-hint b { font-family: var(--font-mono); }
+
+  @media (max-width: 1000px) {
+    .page { grid-template-columns: 1fr; }
+    .brand-side { padding: 36px 32px; min-height: 280px; }
+    .brand-side .feats { display: none; }
+    .brand-mid h1 { font-size: 28px; }
+    .brand-mid p { display: none; }
+    .form-side { padding: 36px 32px; }
+  }
+  @media (max-width: 540px) {
+    .brand-top { gap: 12px; }
+    .brand-top img { height: 44px; }
+    .fc-title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+function LoginPage() {
+  const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function submit(e) {
+    e.preventDefault();
+    setError("");
+    if (!email || !pw) {
+      setError("Informe seu e-mail institucional e senha para continuar.");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      window.location.href = "Painel Admin.html";
+    }, 700);
+  }
+
+  return (
+    <div className="page">
+      <aside className="brand-side">
+        <div className="brand-top">
+          <img src="assets/logo.png" alt="Prefeitura de Parintins" />
+          <div className="div"></div>
+          <div className="meta">
+            <div className="e">Secretaria de Finanças</div>
+            <div className="t">Painel Administrativo</div>
+          </div>
+        </div>
+
+        <div className="brand-mid">
+          <div className="badge"><span className="dot"></span> Acesso restrito · SEFIN 2026</div>
+          <h1>Gestão de escuta <span className="a">institucional</span> com responsabilidade.</h1>
+          <p>Plataforma exclusiva para administradores autorizados acompanharem a Pesquisa de Clima Organizacional, emitirem relatórios e gerirem o ciclo de participação dos servidores.</p>
+
+          <div className="feats">
+            <div className="feat b">
+              <div className="ic">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9.7 8 11 4.5-1.3 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div className="tx">
+                <div className="t">Sigilo absoluto dos respondentes</div>
+                <div className="d">Nenhum administrador acessa identificadores individuais — somente dados agregados.</div>
+              </div>
+            </div>
+            <div className="feat y">
+              <div className="ic">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>
+              </div>
+              <div className="tx">
+                <div className="t">Relatórios em tempo real</div>
+                <div className="d">Acompanhamento da adesão por setor, vínculo e tempo de serviço.</div>
+              </div>
+            </div>
+            <div className="feat r">
+              <div className="ic">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div className="tx">
+                <div className="t">Gestão de equipe administrativa</div>
+                <div className="d">Crie usuários, atribua perfis e mantenha trilha de auditoria completa.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="brand-foot">
+          <span>SEFIN · Parintins · AM</span>
+          <span>v 2.6.1</span>
+        </div>
+      </aside>
+
+      <section className="form-side">
+        <div className="form-card">
+          <div className="crumbs">
+            <span>SEFIN</span>
+            <span className="sep">/</span>
+            <span>Pesquisa de Clima</span>
+            <span className="sep">/</span>
+            <span className="now">Acesso administrativo</span>
+          </div>
+
+          <div className="fc-eyebrow">Entrar no painel</div>
+          <h2 className="fc-title">Bem-vindo de volta.</h2>
+          <p className="fc-sub">Acesse com suas credenciais institucionais para gerenciar a Pesquisa de Clima Organizacional 2026.</p>
+
+          {error && (
+            <div className="alert-error">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={submit} noValidate>
+            <div className="field">
+              <label htmlFor="email">E-mail institucional</label>
+              <div className="input-wrap">
+                <svg className="lead" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input id="email" type="email" placeholder="seu.nome@parintins.am.gov.br" autoComplete="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="pw">Senha</label>
+              <div className="input-wrap">
+                <svg className="lead" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input id="pw" type={showPw ? "text" : "password"} placeholder="••••••••••" autoComplete="current-password" value={pw} onChange={(e)=>setPw(e.target.value)} />
+                <button type="button" className="toggle-pw" onClick={()=>setShowPw(s=>!s)} aria-label="Mostrar senha">
+                  {showPw ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s3-8 11-8 11 8 11 8-3 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="row-between">
+              <label className="check">
+                <input type="checkbox" checked={remember} onChange={()=>setRemember(r=>!r)} />
+                <span className="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Manter conectado</span>
+              </label>
+              <a href="#" onClick={(e)=>e.preventDefault()}>Esqueci minha senha</a>
+            </div>
+
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Validando..." : "Entrar no painel"}
+              {!loading && <svg className="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>}
+            </button>
+
+            <div className="divider"><span>ou continuar com</span></div>
+
+            <button type="button" className="btn-gov" onClick={(e)=>e.preventDefault()}>
+              <span className="gov-mark"></span>
+              Acessar com gov.br
+            </button>
+
+            <div className="demo-hint">
+              <b>Modo demonstração:</b> qualquer e-mail e senha válidos avançam para o painel administrativo.
+            </div>
+          </form>
+
+          <div className="foot-help">
+            Problemas para acessar? Fale com a <a href="#" onClick={(e)=>e.preventDefault()}>Equipe de TI</a>.
+          </div>
+        </div>
+        <div className="form-stripe stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </section>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<LoginPage />);
+</script>
+</body>
+</html>
