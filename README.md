@@ -6,22 +6,22 @@ Prefeitura Municipal de Parintins · Sistema online multiusuário
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Frontend | React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui |
-| Backend | NestJS 10 + TypeScript |
+| Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
+| Backend | Supabase Edge Functions (Deno) |
 | Banco | Supabase (PostgreSQL 15) |
 | Monorepo | pnpm workspaces + Turborepo |
-| CI/CD | GitHub Actions → Railway (API) + Vercel (Web) |
+| CI/CD | GitHub Actions → Vercel (Web) |
 
 ## Estrutura
 
 ```
 apps/
-  api/     — NestJS backend
   web/     — React frontend
 packages/
   shared/  — Zod schemas, tipos e utilitários compartilhados
 supabase/
-  migrations/   — SQL migrations (schema, RLS, triggers)
+  functions/     — Edge Functions (empenho-mutate, usuario-mutate, import)
+  migrations/    — SQL migrations (schema, RLS, triggers)
 scripts/
   migrar-sqlite-supabase.js   — migração de dados do sistema legado
 ```
@@ -43,13 +43,8 @@ pnpm install
 ### 3. Configurar variáveis de ambiente
 
 ```bash
-# Backend
-cp apps/api/.env.example apps/api/.env
-# Preencha SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET
-
-# Frontend
 cp apps/web/.env.example apps/web/.env
-# Preencha VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL
+# Preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
 ```
 
 ### 4. Aplicar migrations no Supabase
@@ -58,6 +53,7 @@ No painel Supabase (SQL Editor), execute em ordem:
 1. `supabase/migrations/001_schema_inicial.sql`
 2. `supabase/migrations/002_rls_policies.sql`
 3. `supabase/migrations/003_auth_trigger.sql`
+4. `supabase/migrations/004_audit_triggers.sql`
 
 ### 5. Migrar dados do sistema legado (opcional)
 
@@ -71,17 +67,8 @@ node scripts/migrar-sqlite-supabase.js
 ### 6. Executar em desenvolvimento
 
 ```bash
-# Ambos simultaneamente
-pnpm dev
-
-# Separadamente
-pnpm dev:api   # http://localhost:3001
 pnpm dev:web   # http://localhost:5173
 ```
-
-## API
-
-Documentação Swagger disponível em `http://localhost:3001/api/docs` (apenas em desenvolvimento).
 
 ## Roles (RBAC)
 
@@ -103,5 +90,5 @@ O sistema legado usa login/senha simples (sem e-mail). Para migrar:
 
 ## Deploy
 
-- **API (Railway):** `railway up --service api`
 - **Web (Vercel):** push automático via GitHub Actions
+- **Edge Functions:** `npx supabase functions deploy <nome> --project-ref <ref>`

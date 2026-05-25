@@ -8,7 +8,6 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "dev:api": "turbo run dev --filter=@ficha-empenho/api",
     "dev:web": "turbo run dev --filter=@ficha-empenho/web"
   },
   "devDependencies": {
