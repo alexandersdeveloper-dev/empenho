@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/shared/lib/apiClient';
+import { supabase } from '@/shared/lib/supabaseClient';
 import type { AuditLog, ApiMeta } from '@ficha-empenho/shared';
 
 const OPERACAO_PILL: Record<string, { bg: string; color: string }> = {
@@ -24,19 +24,31 @@ export function AuditPage() {
   const [ate, setAte] = useState('');
   const [expandido, setExpandido] = useState<number | null>(null);
 
+  const LIMIT = 50;
+
   const { data, isLoading } = useQuery<{ data: AuditLog[]; meta: ApiMeta }>({
     queryKey: ['audit', { page, tabela, operacao, de, ate }],
     queryFn: async () => {
-      const { data } = await apiClient.get('/audit', {
-        params: {
-          page, limit: 50,
-          tabela: tabela || undefined,
-          operacao: operacao || undefined,
-          de: de || undefined,
-          ate: ate || undefined,
-        },
-      });
-      return data;
+      const from = (page - 1) * LIMIT;
+      const to = from + LIMIT - 1;
+
+      let query = supabase
+        .from('audit_log')
+        .select('*, usuario:perfis(id, nome)', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (tabela) query = query.eq('tabela', tabela);
+      if (operacao) query = query.eq('operacao', operacao);
+      if (de) query = query.gte('created_at', de);
+      if (ate) query = query.lte('created_at', ate + 'T23:59:59');
+
+      const { data: rows, error, count } = await query;
+      if (error) throw new Error(error.message);
+
+      const total = count ?? 0;
+      const meta: ApiMeta = { page, limit: LIMIT, total, totalPages: Math.max(1, Math.ceil(total / LIMIT)) };
+      return { data: (rows ?? []) as AuditLog[], meta };
     },
     staleTime: 30_000,
   });
@@ -175,7 +187,9 @@ export function AuditPage() {
                       <td className="px-4 py-3 col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#5b667a' }}>
                         {log.registro_id}
                       </td>
-                      <td className="px-4 py-3 text-ink-500 text-xs col-hide-mobile">{log.usuario_id ?? '—'}</td>
+                      <td className="px-4 py-3 text-ink-500 text-xs col-hide-mobile">
+                        {log.usuario?.nome ?? log.usuario_id ?? '—'}
+                      </td>
                       <td className="px-4 py-3 text-ink-500 text-xs col-hide-mobile">{log.ip ?? '—'}</td>
                       <td className="px-4 py-3 text-right">
                         {(log.dados_antes || log.dados_depois) && (

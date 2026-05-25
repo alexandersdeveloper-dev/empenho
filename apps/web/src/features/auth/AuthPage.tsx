@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/lib/supabaseClient';
 import { useAuthStore } from '@/shared/lib/authStore';
-import { apiClient } from '@/shared/lib/apiClient';
 import { LoginSchema, type LoginDto } from '@ficha-empenho/shared';
 
 const S = {
@@ -118,16 +117,14 @@ export function AuthPage() {
 
       if (!session.session) throw new Error('Login falhou');
 
-      const res = await apiClient.get('/users/me').catch(async () => {
-        const { data: p } = await supabase
-          .from('perfis')
-          .select('*, departamento:departamentos(id,nome,sigla)')
-          .eq('id', session.session!.user.id)
-          .single();
-        return { data: { ...p, email: session.session!.user.email } };
-      });
+      const { data: p, error } = await supabase
+        .from('perfis')
+        .select('*, departamento:departamentos(id,nome,sigla)')
+        .eq('id', session.session.user.id)
+        .single();
+      if (error) throw new Error('Perfil não encontrado');
 
-      setUser(res.data);
+      setUser({ ...p, email: session.session.user.email });
       setLoading(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Credenciais inválidas';

@@ -10,7 +10,7 @@ import {
   type CriarUsuarioDto,
   type DepartamentoDto,
 } from '@ficha-empenho/shared';
-import { apiClient } from '@/shared/lib/apiClient';
+import { supabase } from '@/shared/lib/supabaseClient';
 import { useAuthStore } from '@/shared/lib/authStore';
 import type { Perfil, ConfigQr } from '@ficha-empenho/shared';
 
@@ -65,8 +65,9 @@ function QrConfigSection() {
   const { data: config } = useQuery<ConfigQr>({
     queryKey: ['config-qr'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: ConfigQr }>('/config/qr');
-      return data.data;
+      const { data, error } = await supabase.from('config_qr').select('*').eq('id', 1).single();
+      if (error) throw new Error(error.message);
+      return data as ConfigQr;
     },
   });
 
@@ -82,7 +83,11 @@ function QrConfigSection() {
 
   const salvar = useMutation({
     mutationFn: async () => {
-      await apiClient.patch('/config/qr', { campos: camposSelecionados.join(','), separador });
+      const { error } = await supabase
+        .from('config_qr')
+        .update({ campos: camposSelecionados.join(','), separador })
+        .eq('id', 1);
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['config-qr'] }); toast.success('Configuração de QR salva'); },
     onError: () => toast.error('Erro ao salvar'),
@@ -154,7 +159,15 @@ function CamposObrigatoriosSection() {
   const qc = useQueryClient();
   const { data } = useQuery<{ campos: string }>({
     queryKey: ['campos-obrigatorios'],
-    queryFn: async () => { const { data } = await apiClient.get('/config/obrigatorios'); return data; },
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campos_obrigatorios')
+        .select('campos')
+        .eq('id', 1)
+        .single();
+      if (error) throw new Error(error.message);
+      return data as { campos: string };
+    },
   });
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -165,7 +178,13 @@ function CamposObrigatoriosSection() {
   }
 
   const salvar = useMutation({
-    mutationFn: async () => { await apiClient.patch('/config/obrigatorios', { campos: selecionados.join(',') }); },
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('campos_obrigatorios')
+        .update({ campos: selecionados.join(',') })
+        .eq('id', 1);
+      if (error) throw new Error(error.message);
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['campos-obrigatorios'] }); toast.success('Campos obrigatórios salvos'); },
     onError: () => toast.error('Erro ao salvar'),
   });
@@ -204,8 +223,12 @@ function SecretariasSection() {
   const { data: secretarias = [], isLoading } = useQuery<Secretaria[]>({
     queryKey: ['departamentos'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/departamentos');
-      return Array.isArray(data) ? data : [];
+      const { data, error } = await supabase
+        .from('departamentos')
+        .select('*')
+        .order('nome');
+      if (error) throw new Error(error.message);
+      return (data ?? []) as Secretaria[];
     },
   });
 
@@ -225,7 +248,8 @@ function SecretariasSection() {
 
   const criar = useMutation({
     mutationFn: async (dto: DepartamentoDto) => {
-      await apiClient.post('/departamentos', dto);
+      const { error } = await supabase.from('departamentos').insert({ ...dto, ativo: true });
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departamentos'] });
@@ -238,7 +262,8 @@ function SecretariasSection() {
 
   const editar = useMutation({
     mutationFn: async ({ id, dto }: { id: number; dto: DepartamentoDto }) => {
-      await apiClient.patch(`/departamentos/${id}`, dto);
+      const { error } = await supabase.from('departamentos').update(dto).eq('id', id);
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departamentos'] });
@@ -250,7 +275,8 @@ function SecretariasSection() {
 
   const toggleAtivo = useMutation({
     mutationFn: async ({ id, ativo }: { id: number; ativo: boolean }) => {
-      await apiClient.patch(`/departamentos/${id}`, { ativo });
+      const { error } = await supabase.from('departamentos').update({ ativo }).eq('id', id);
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departamentos'] });
@@ -421,21 +447,35 @@ function UsuariosSection() {
   const { data: usuarios = [], isLoading } = useQuery<Perfil[]>({
     queryKey: ['usuarios'],
     queryFn: async () => {
-      const { data } = await apiClient.get<Perfil[]>('/users');
-      return data;
+      const { data, error } = await supabase
+        .from('perfis')
+        .select('*, departamento:departamentos(id, nome, sigla)')
+        .order('nome');
+      if (error) throw new Error(error.message);
+      return (data ?? []) as Perfil[];
     },
   });
 
   const { data: secretarias = [] } = useQuery<Array<{ id: number; nome: string }>>({
     queryKey: ['departamentos'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/departamentos');
-      return Array.isArray(data) ? data : [];
+      const { data, error } = await supabase
+        .from('departamentos')
+        .select('id, nome')
+        .eq('ativo', true)
+        .order('nome');
+      if (error) throw new Error(error.message);
+      return data ?? [];
     },
   });
 
   const criar = useMutation({
-    mutationFn: async (dto: CriarUsuarioDto) => { await apiClient.post('/users', dto); },
+    mutationFn: async (dto: CriarUsuarioDto) => {
+      const { error } = await supabase.functions.invoke('usuario-mutate', {
+        body: { action: 'criar', ...dto },
+      });
+      if (error) throw error;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['usuarios'] });
       toast.success('Usuário criado');
@@ -443,17 +483,19 @@ function UsuariosSection() {
       reset();
     },
     onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? 'Erro ao criar usuário';
-      toast.error(msg);
+      toast.error((err as Error).message ?? 'Erro ao criar usuário');
     },
   });
 
   const desativar = useMutation({
-    mutationFn: async (id: string) => { await apiClient.delete(`/users/${id}`); },
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.functions.invoke('usuario-mutate', {
+        body: { action: 'desativar', id },
+      });
+      if (error) throw error;
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['usuarios'] }); toast.success('Usuário desativado'); },
-    onError: () => toast.error('Erro ao desativar usuário'),
+    onError: (err: unknown) => { toast.error((err as Error).message ?? 'Erro ao desativar usuário'); },
   });
 
   const {

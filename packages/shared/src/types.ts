@@ -170,6 +170,7 @@ export type AuditLog = {
   dados_antes: Record<string, unknown> | null;
   dados_depois: Record<string, unknown> | null;
   usuario_id: string | null;
+  usuario?: { id: string; nome: string } | null;
   ip: string | null;
   created_at: string;
 };

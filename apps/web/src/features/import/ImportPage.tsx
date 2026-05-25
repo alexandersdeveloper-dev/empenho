@@ -1,55 +1,55 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/shared/lib/apiClient';
+import { supabase } from '@/shared/lib/supabaseClient';
 
 type UploadState = 'idle' | 'uploading' | 'done' | 'error';
 
-const IMPORTS: Array<{ key: string; label: string; endpoint: string; description: string }> = [
+const IMPORTS: Array<{ key: string; label: string; tipo: string; description: string }> = [
   {
     key: 'classificacao',
     label: 'Classificação Orçamentária',
-    endpoint: '/import/classificacao',
+    tipo: 'classificacao',
     description: 'Colunas: numero_ficha, projeto_atividade, dotacao, stn',
   },
   {
     key: 'credores',
     label: 'Credores',
-    endpoint: '/import/credores',
+    tipo: 'credores',
     description: 'Colunas: numero, nome',
   },
   {
     key: 'subelementos',
     label: 'Sub-elementos',
-    endpoint: '/import/subelementos',
+    tipo: 'subelementos',
     description: 'Colunas: natureza, sub, descricao',
   },
   {
     key: 'retencoes',
     label: 'Retenções',
-    endpoint: '/import/retencoes',
+    tipo: 'retencoes',
     description: 'Colunas: codigo, nome. Substitui todos os registros.',
   },
   {
     key: 'formas_pagamento',
     label: 'Formas de Pagamento',
-    endpoint: '/import/formas-pagamento',
+    tipo: 'formas_pagamento',
     description: 'Colunas: codigo, descricao. Substitui todos os registros.',
   },
   {
     key: 'efd',
     label: 'Códigos EFD',
-    endpoint: '/import/efd',
+    tipo: 'efd',
     description: 'Colunas: codigo, descricao',
   },
 ];
 
 function UploadCard({
   label,
-  endpoint,
+  tipo,
   description,
 }: {
   label: string;
-  endpoint: string;
+  tipo: string;
   description: string;
 }) {
   const [state, setState] = useState<UploadState>('idle');
@@ -73,19 +73,17 @@ function UploadCard({
     setResult(null);
     const form = new FormData();
     form.append('file', file);
+    form.append('tipo', tipo);
 
     try {
-      const { data } = await apiClient.post(endpoint, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data, error } = await supabase.functions.invoke('import', { body: form });
+      if (error) throw error;
       setState('done');
       setResult(data);
       toast.success(`${label}: importação concluída`);
     } catch (err: unknown) {
       setState('error');
-      const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? 'Erro na importação';
+      const msg = (err as Error).message ?? 'Erro na importação';
       setResult({ message: msg });
       toast.error(msg);
     } finally {
@@ -156,8 +154,8 @@ export function ImportPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {IMPORTS.map(({ key, ...imp }) => (
-          <UploadCard key={key} {...imp} />
+        {IMPORTS.map(({ key, label, tipo, description }) => (
+          <UploadCard key={key} label={label} tipo={tipo} description={description} />
         ))}
       </div>
     </div>

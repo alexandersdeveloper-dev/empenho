@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { supabase } from '@/shared/lib/supabaseClient';
 import { useAuthStore } from '@/shared/lib/authStore';
-import { apiClient } from '@/shared/lib/apiClient';
 import { AuthPage } from '@/features/auth/AuthPage';
 import { MainLayout } from './MainLayout';
 
@@ -9,20 +8,15 @@ export function App() {
   const { user, isLoading, setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
-    // Carrega sessão inicial
     supabase.auth.getSession().then(async ({ data }) => {
       if (data.session) {
         try {
-          const { data: perfil } = await apiClient.get('/users/me').catch(async () => {
-            // fallback: busca perfil via Supabase diretamente
-            const { data: p } = await supabase
-              .from('perfis')
-              .select('*, departamento:departamentos(id,nome,sigla)')
-              .eq('id', data.session!.user.id)
-              .single();
-            return { data: { ...p, email: data.session!.user.email } };
-          });
-          setUser(perfil);
+          const { data: p } = await supabase
+            .from('perfis')
+            .select('*, departamento:departamentos(id,nome,sigla)')
+            .eq('id', data.session.user.id)
+            .single();
+          setUser({ ...p, email: data.session.user.email });
         } catch {
           setUser(null);
         }

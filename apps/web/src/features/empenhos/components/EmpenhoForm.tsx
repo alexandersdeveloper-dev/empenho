@@ -3,7 +3,7 @@ import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { EmpenhoSchema, type EmpenhoDto, normalizarNatureza, padSubelemento, formatCurrencyBR, parseCurrencyBR } from '@ficha-empenho/shared';
-import { apiClient } from '@/shared/lib/apiClient';
+import { supabase } from '@/shared/lib/supabaseClient';
 import { useCriarEmpenho, useAtualizarEmpenho, useFormasPagamento } from '../hooks/useEmpenhos';
 import { Combobox } from '@/shared/components/Combobox';
 import { cn } from '@/shared/lib/cn';
@@ -135,7 +135,11 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     setValue('subelemento_descricao', '');
 
     try {
-      const { data } = await apiClient.get(`/classificacao/ficha/${encodeURIComponent(v)}`);
+      const { data } = await supabase
+        .from('classificacao_orcamentaria')
+        .select('projeto_atividade, dotacao, stn')
+        .eq('numero_ficha', v)
+        .maybeSingle();
       if (data?.dotacao || data?.projeto_atividade || data?.stn) {
         setValue('projeto_atividade', data.projeto_atividade ?? '');
         setValue('dotacao', data.dotacao ?? '');
@@ -164,8 +168,12 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
 
     const natureza = normalizarNatureza(dotacaoStr);
     try {
-      const { data } = await apiClient.get('/subelementos', { params: { natureza } });
-      const items: Array<{ sub: string; descricao: string }> = (data?.items ?? []).map(
+      const { data: rows } = await supabase
+        .from('subelementos')
+        .select('sub, descricao')
+        .eq('natureza', natureza)
+        .order('sub');
+      const items: Array<{ sub: string; descricao: string }> = (rows ?? []).map(
         (x: { sub: string; descricao: string }) => ({
           sub: padSubelemento(x.sub),
           descricao: x.descricao ?? '',
@@ -232,8 +240,10 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   // ─── Credor autocomplete ──────────────────────────────────────────────────────
 
   async function searchCredores(q: string) {
-    const { data } = await apiClient.get('/credores', { params: { q } });
-    return (data as Array<{ id: number; numero: string | null; nome: string }>).map((r) => ({
+    let query = supabase.from('credores').select('id, numero, nome').limit(20);
+    if (q) query = query.or(`nome.ilike.%${q}%,numero.ilike.%${q}%`);
+    const { data } = await query;
+    return (data ?? []).map((r) => ({
       label: (r.numero ? r.numero + ' — ' : '') + r.nome,
       value: String(r.id),
       meta: r,
@@ -256,7 +266,11 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   async function handleCredorNumeroBlur(numero: string) {
     if (!numero) return;
     try {
-      const { data } = await apiClient.get(`/credores/numero/${encodeURIComponent(numero)}`);
+      const { data } = await supabase
+        .from('credores')
+        .select('id, nome')
+        .eq('numero', numero)
+        .maybeSingle();
       if (data?.nome) {
         setValue('credor_id', data.id);
         setValue('credor_nome', data.nome);
@@ -268,8 +282,10 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   // ─── Retenção autocomplete ───────────────────────────────────────────────────
 
   async function searchRetencoes(q: string) {
-    const { data } = await apiClient.get('/config/retencoes', { params: { q } });
-    return (data as Array<{ nome: string; codigo: string }>).map((r) => ({
+    let query = supabase.from('retencoes').select('nome, codigo').limit(20);
+    if (q) query = query.or(`nome.ilike.%${q}%,codigo.ilike.%${q}%`);
+    const { data } = await query;
+    return (data ?? []).map((r) => ({
       label: (r.codigo ? r.codigo + ' — ' : '') + r.nome,
       value: r.codigo,
       meta: r,
@@ -277,8 +293,10 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   }
 
   async function searchEfd(q: string) {
-    const { data } = await apiClient.get('/subelementos/efd', { params: { q } });
-    return (data as Array<{ codigo: string; descricao: string }>).map((r) => ({
+    let query = supabase.from('efd').select('codigo, descricao').limit(20);
+    if (q) query = query.ilike('codigo', `%${q}%`);
+    const { data } = await query;
+    return (data ?? []).map((r) => ({
       label: r.codigo + (r.descricao ? ' — ' + r.descricao : ''),
       value: r.codigo,
     }));
@@ -589,7 +607,11 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                           const v = e.target.value.trim();
                           if (!v) return;
                           try {
-                            const { data } = await apiClient.get(`/config/retencoes/${encodeURIComponent(v)}`);
+                            const { data } = await supabase
+                              .from('retencoes')
+                              .select('nome')
+                              .eq('codigo', v)
+                              .maybeSingle();
                             if (data?.nome) setValue(`descontos.${i}.tipo`, data.nome);
                           } catch { /* manual */ }
                         }}

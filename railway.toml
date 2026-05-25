@@ -1,8 +1,0 @@
-[build]
-builder = "nixpacks"
-buildCommand = "pnpm install && pnpm --filter @ficha-empenho/shared build && pnpm --filter @ficha-empenho/api build"
-
-[deploy]
-startCommand = "node apps/api/dist/main"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3

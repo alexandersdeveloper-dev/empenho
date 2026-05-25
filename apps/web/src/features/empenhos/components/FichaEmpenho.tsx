@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import { buildQrText, formatCurrencyBR } from '@ficha-empenho/shared';
-import { apiClient } from '@/shared/lib/apiClient';
+import { supabase } from '@/shared/lib/supabaseClient';
 import type { Empenho, ConfigQr, Desconto, Parcela } from '@ficha-empenho/shared';
 
 type Props = {
@@ -61,8 +61,9 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
   const { data: configQr } = useQuery<ConfigQr>({
     queryKey: ['config-qr'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: ConfigQr }>('/config/qr');
-      return data.data;
+      const { data, error } = await supabase.from('config_qr').select('*').eq('id', 1).single();
+      if (error) throw new Error(error.message);
+      return data as ConfigQr;
     },
     staleTime: 60 * 60_000,
   });
