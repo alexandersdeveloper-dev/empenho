@@ -3,23 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   }
 }
