@@ -238,15 +238,23 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
           fontFamily: SANS,
         }}
       >
-        {/* Header — banda escura */}
-        <header style={{ background: C.ink900, padding: '10mm 14mm 9mm' }}>
+        {/* Faixa institucional — 4 cores da gestão */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', height: 6 }}>
+          <div style={{ background: '#3ea3ff' }} />
+          <div style={{ background: '#b86a2b' }} />
+          <div style={{ background: '#ffb829' }} />
+          <div style={{ background: '#ea4242' }} />
+        </div>
+
+        {/* Header — fundo branco */}
+        <header style={{ background: C.white, padding: '8mm 14mm 7mm', borderBottom: `1.5px solid ${C.line}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{
                 fontFamily: DISPLAY,
                 fontSize: 16,
                 fontWeight: 600,
-                color: C.white,
+                color: C.ink900,
                 letterSpacing: '-0.01em',
                 lineHeight: 1.2,
               }}>
@@ -255,7 +263,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
               <div style={{
                 fontFamily: MONO,
                 fontSize: 8,
-                color: 'rgba(255,255,255,0.45)',
+                color: C.ink400,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 marginTop: 5,
@@ -267,7 +275,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
               <div style={{
                 fontFamily: MONO,
                 fontSize: 7,
-                color: 'rgba(255,255,255,0.45)',
+                color: C.ink400,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 marginBottom: 4,
@@ -278,9 +286,9 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
                 fontFamily: MONO,
                 fontSize: 16,
                 fontWeight: 700,
-                color: C.white,
+                color: C.ink900,
                 letterSpacing: '0.04em',
-                borderBottom: '1.5px solid rgba(255,255,255,0.25)',
+                borderBottom: `1.5px solid ${C.line}`,
                 paddingBottom: 3,
                 minWidth: 120,
               }}>
@@ -289,9 +297,6 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
             </div>
           </div>
         </header>
-
-        {/* Faixa de acento */}
-        <div style={{ height: 2.5, background: C.blue }} />
 
         {/* Conteúdo */}
         <div style={{ padding: '9mm 14mm 10mm' }}>
