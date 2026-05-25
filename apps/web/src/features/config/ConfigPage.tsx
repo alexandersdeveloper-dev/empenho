@@ -3,43 +3,44 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { QR_CAMPOS_DISPONIVEIS, CriarUsuarioSchema, type CriarUsuarioDto } from '@ficha-empenho/shared';
+import {
+  QR_CAMPOS_DISPONIVEIS,
+  CriarUsuarioSchema,
+  DepartamentoSchema,
+  type CriarUsuarioDto,
+  type DepartamentoDto,
+} from '@ficha-empenho/shared';
 import { apiClient } from '@/shared/lib/apiClient';
 import { useAuthStore } from '@/shared/lib/authStore';
 import type { Perfil, ConfigQr } from '@ficha-empenho/shared';
 
-type Tab = 'qr' | 'obrigatorios' | 'usuarios';
+type Tab = 'qr' | 'obrigatorios' | 'usuarios' | 'secretarias';
 
-// ─── QR Config ──────────────────────────────────────────────────────────────
+// ─── Helpers de estilo ────────────────────────────────────────────────────────
+
+const fieldCls = 'w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-ink-900 focus:ring-1 focus:ring-ink-300 outline-none bg-white text-ink-900 placeholder:text-ink-400 transition';
+const labelCls = 'block text-xs font-medium text-ink-500 mb-1';
+const errorCls = 'text-xs text-accent-red mt-0.5';
+
+const thStyle: React.CSSProperties = {
+  fontFamily: '"IBM Plex Mono", monospace',
+  fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase',
+  color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee',
+};
+
+// ─── QR Config ────────────────────────────────────────────────────────────────
 
 const CAMPOS_LABELS: Record<string, string> = {
-  id: 'ID',
-  numero_ficha: 'Nº Ficha',
-  projeto_atividade: 'Projeto/Atividade',
-  dotacao: 'Dotação',
-  stn: 'STN',
-  subelemento_codigo: 'Sub-elemento Cód.',
-  subelemento_descricao: 'Sub-elemento Desc.',
-  credor_id: 'Credor ID',
-  credor_numero: 'Credor Nº',
-  credor_nome: 'Credor Nome',
-  tipo_empenho: 'Tipo Empenho',
-  historico: 'Histórico',
-  valor_empenho: 'Valor Empenho',
-  emenda: 'Emenda',
-  exercicio: 'Exercício',
-  numero_contrato: 'Nº Contrato',
-  numero_convenio: 'Nº Convênio',
-  data_empenho: 'Data Empenho',
-  usuario_id: 'Usuário ID',
-  usuario_nome: 'Usuário Nome',
-  created_at: 'Criado Em',
-  updated_at: 'Atualizado Em',
-  data_liquidacao: 'Data Liquidação',
-  data_pagamento: 'Data Pagamento',
-  conta_liquidacao: 'Conta (Liq.)',
-  numero_op_liquidacao: 'Nº OP (Liq.)',
-  forma_pagamento_liquidacao: 'Forma Pgto (Liq.)',
+  id: 'ID', numero_ficha: 'Nº Ficha', projeto_atividade: 'Projeto/Atividade',
+  dotacao: 'Dotação', stn: 'STN', subelemento_codigo: 'Sub-elemento Cód.',
+  subelemento_descricao: 'Sub-elemento Desc.', credor_id: 'Credor ID',
+  credor_numero: 'Credor Nº', credor_nome: 'Credor Nome', tipo_empenho: 'Tipo Empenho',
+  historico: 'Histórico', valor_empenho: 'Valor Empenho', emenda: 'Emenda',
+  exercicio: 'Exercício', numero_contrato: 'Nº Contrato', numero_convenio: 'Nº Convênio',
+  data_empenho: 'Data Empenho', usuario_id: 'Usuário ID', usuario_nome: 'Usuário Nome',
+  created_at: 'Criado Em', updated_at: 'Atualizado Em', data_liquidacao: 'Data Liquidação',
+  data_pagamento: 'Data Pagamento', conta_liquidacao: 'Conta (Liq.)',
+  numero_op_liquidacao: 'Nº OP (Liq.)', forma_pagamento_liquidacao: 'Forma Pgto (Liq.)',
 };
 
 const CAMPOS_OBRIGATORIOS_OPTS = [
@@ -56,15 +57,11 @@ const CAMPOS_OBRIGATORIOS_OPTS = [
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  superadmin: 'Superadmin',
-  admin: 'Admin',
-  user: 'Usuário',
-  viewer: 'Visualizador',
+  superadmin: 'Superadmin', admin: 'Admin', user: 'Usuário', viewer: 'Visualizador',
 };
 
 function QrConfigSection() {
   const qc = useQueryClient();
-
   const { data: config } = useQuery<ConfigQr>({
     queryKey: ['config-qr'],
     queryFn: async () => {
@@ -85,15 +82,9 @@ function QrConfigSection() {
 
   const salvar = useMutation({
     mutationFn: async () => {
-      await apiClient.patch('/config/qr', {
-        campos: camposSelecionados.join(','),
-        separador,
-      });
+      await apiClient.patch('/config/qr', { campos: camposSelecionados.join(','), separador });
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['config-qr'] });
-      toast.success('Configuração de QR salva');
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['config-qr'] }); toast.success('Configuração de QR salva'); },
     onError: () => toast.error('Erro ao salvar'),
   });
 
@@ -102,113 +93,56 @@ function QrConfigSection() {
       prev.includes(campo) ? prev.filter((c) => c !== campo) : [...prev, campo],
     );
   }
-
   function moverCima(idx: number) {
     if (idx === 0) return;
-    setCamposSelecionados((prev) => {
-      const next = [...prev];
-      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-      return next;
-    });
+    setCamposSelecionados((prev) => { const n = [...prev]; [n[idx-1], n[idx]] = [n[idx], n[idx-1]]; return n; });
   }
-
   function moverBaixo(idx: number) {
     setCamposSelecionados((prev) => {
       if (idx >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-      return next;
+      const n = [...prev]; [n[idx], n[idx+1]] = [n[idx+1], n[idx]]; return n;
     });
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Campos disponíveis */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Campos disponíveis</h3>
-        <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-72 overflow-y-auto">
+        <h3 className="text-sm font-semibold text-ink-700 mb-2">Campos disponíveis</h3>
+        <div className="rounded-lg border border-line divide-y divide-line max-h-72 overflow-y-auto">
           {QR_CAMPOS_DISPONIVEIS.map((campo) => (
-            <label
-              key={campo}
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 text-sm"
-            >
-              <input
-                type="checkbox"
-                checked={camposSelecionados.includes(campo)}
-                onChange={() => toggle(campo)}
-                className="rounded text-ink-900"
-              />
-              <span>{CAMPOS_LABELS[campo] ?? campo}</span>
-              <span className="text-gray-400 text-xs ml-auto font-mono">{campo}</span>
+            <label key={campo} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-bg-soft text-sm">
+              <input type="checkbox" checked={camposSelecionados.includes(campo)} onChange={() => toggle(campo)} className="rounded" />
+              <span className="text-ink-700">{CAMPOS_LABELS[campo] ?? campo}</span>
+              <span className="text-ink-400 text-xs ml-auto font-mono">{campo}</span>
             </label>
           ))}
         </div>
       </div>
-
-      {/* Ordem e separador */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">
-          Campos selecionados (na ordem)
-        </h3>
+        <h3 className="text-sm font-semibold text-ink-700 mb-2">Campos selecionados (na ordem)</h3>
         {camposSelecionados.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">Nenhum campo selecionado</p>
+          <p className="text-sm text-ink-400 italic">Nenhum campo selecionado</p>
         ) : (
-          <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-64 overflow-y-auto mb-3">
+          <ul className="rounded-lg border border-line divide-y divide-line max-h-64 overflow-y-auto mb-3">
             {camposSelecionados.map((campo, i) => (
-              <li
-                key={campo}
-                className="flex items-center gap-2 px-3 py-2 text-sm"
-              >
-                <span className="text-gray-400 w-5 text-right text-xs">{i + 1}.</span>
-                <span className="flex-1">{CAMPOS_LABELS[campo] ?? campo}</span>
+              <li key={campo} className="flex items-center gap-2 px-3 py-2 text-sm">
+                <span className="text-ink-400 w-5 text-right text-xs">{i+1}.</span>
+                <span className="flex-1 text-ink-700">{CAMPOS_LABELS[campo] ?? campo}</span>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => moverCima(i)}
-                    disabled={i === 0}
-                    className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
-                    title="Mover para cima"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    onClick={() => moverBaixo(i)}
-                    disabled={i === camposSelecionados.length - 1}
-                    className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs px-1"
-                    title="Mover para baixo"
-                  >
-                    ▼
-                  </button>
-                  <button
-                    onClick={() => toggle(campo)}
-                    className="text-red-400 hover:text-red-600 text-xs px-1"
-                    title="Remover"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => moverCima(i)} disabled={i===0} className="text-ink-400 hover:text-ink-700 disabled:opacity-30 text-xs px-1">▲</button>
+                  <button onClick={() => moverBaixo(i)} disabled={i===camposSelecionados.length-1} className="text-ink-400 hover:text-ink-700 disabled:opacity-30 text-xs px-1">▼</button>
+                  <button onClick={() => toggle(campo)} className="text-accent-red hover:text-red-700 text-xs px-1">×</button>
                 </div>
               </li>
             ))}
           </ul>
         )}
-
         <div className="mb-4">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Separador
-          </label>
-          <input
-            value={separador}
-            onChange={(e) => setSeparador(e.target.value)}
-            className="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-ink-900 outline-none font-mono"
-            placeholder=";"
-          />
-          <p className="text-xs text-gray-400 mt-1">Use \t para tabulação</p>
+          <label className={labelCls}>Separador</label>
+          <input value={separador} onChange={(e) => setSeparador(e.target.value)} className="w-32 rounded-lg border border-line px-3 py-1.5 text-sm focus:border-ink-900 outline-none font-mono" placeholder=";" />
+          <p className="text-xs text-ink-400 mt-1">Use \t para tabulação</p>
         </div>
-
-        <button
-          onClick={() => salvar.mutate()}
-          disabled={salvar.isPending}
-          className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
-        >
+        <button onClick={() => salvar.mutate()} disabled={salvar.isPending} className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60">
           {salvar.isPending ? 'Salvando…' : 'Salvar configuração QR'}
         </button>
       </div>
@@ -218,15 +152,10 @@ function QrConfigSection() {
 
 function CamposObrigatoriosSection() {
   const qc = useQueryClient();
-
   const { data } = useQuery<{ campos: string }>({
     queryKey: ['campos-obrigatorios'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/config/obrigatorios');
-      return data;
-    },
+    queryFn: async () => { const { data } = await apiClient.get('/config/obrigatorios'); return data; },
   });
-
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -236,53 +165,253 @@ function CamposObrigatoriosSection() {
   }
 
   const salvar = useMutation({
-    mutationFn: async () => {
-      await apiClient.patch('/config/obrigatorios', { campos: selecionados.join(',') });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['campos-obrigatorios'] });
-      toast.success('Campos obrigatórios salvos');
-    },
+    mutationFn: async () => { await apiClient.patch('/config/obrigatorios', { campos: selecionados.join(',') }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['campos-obrigatorios'] }); toast.success('Campos obrigatórios salvos'); },
     onError: () => toast.error('Erro ao salvar'),
   });
 
   function toggle(key: string) {
-    setSelecionados((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
+    setSelecionados((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
   }
 
   return (
     <div className="max-w-md">
-      <p className="text-sm text-gray-500 mb-4">
-        Campos marcados serão obrigatórios ao salvar um empenho (exceto no modo Superávit).
-      </p>
-      <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 mb-4">
+      <p className="text-sm text-ink-500 mb-4">Campos marcados serão obrigatórios ao salvar um empenho (exceto no modo Superávit).</p>
+      <div className="rounded-lg border border-line divide-y divide-line mb-4">
         {CAMPOS_OBRIGATORIOS_OPTS.map(({ key, label }) => (
-          <label
-            key={key}
-            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50"
-          >
-            <input
-              type="checkbox"
-              checked={selecionados.includes(key)}
-              onChange={() => toggle(key)}
-              className="rounded text-ink-900"
-            />
-            <span className="text-sm">{label}</span>
+          <label key={key} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-bg-soft">
+            <input type="checkbox" checked={selecionados.includes(key)} onChange={() => toggle(key)} className="rounded" />
+            <span className="text-sm text-ink-700">{label}</span>
           </label>
         ))}
       </div>
-      <button
-        onClick={() => salvar.mutate()}
-        disabled={salvar.isPending}
-        className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
-      >
+      <button onClick={() => salvar.mutate()} disabled={salvar.isPending} className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60">
         {salvar.isPending ? 'Salvando…' : 'Salvar'}
       </button>
     </div>
   );
 }
+
+// ─── Secretarias ──────────────────────────────────────────────────────────────
+
+type Secretaria = { id: number; nome: string; sigla: string | null; ativo: boolean };
+
+function SecretariasSection() {
+  const qc = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+
+  const { data: secretarias = [], isLoading } = useQuery<Secretaria[]>({
+    queryKey: ['departamentos'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/departamentos');
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const {
+    register: registerAdd,
+    handleSubmit: handleAdd,
+    reset: resetAdd,
+    formState: { errors: errorsAdd, isSubmitting: isAddSubmitting },
+  } = useForm<DepartamentoDto>({ resolver: zodResolver(DepartamentoSchema) });
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleEdit,
+    reset: resetEdit,
+    formState: { errors: errorsEdit, isSubmitting: isEditSubmitting },
+  } = useForm<DepartamentoDto>({ resolver: zodResolver(DepartamentoSchema) });
+
+  const criar = useMutation({
+    mutationFn: async (dto: DepartamentoDto) => {
+      await apiClient.post('/departamentos', dto);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departamentos'] });
+      toast.success('Secretaria criada');
+      setShowForm(false);
+      resetAdd();
+    },
+    onError: () => toast.error('Erro ao criar secretaria'),
+  });
+
+  const editar = useMutation({
+    mutationFn: async ({ id, dto }: { id: number; dto: DepartamentoDto }) => {
+      await apiClient.patch(`/departamentos/${id}`, dto);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departamentos'] });
+      toast.success('Secretaria atualizada');
+      setEditId(null);
+    },
+    onError: () => toast.error('Erro ao atualizar secretaria'),
+  });
+
+  const toggleAtivo = useMutation({
+    mutationFn: async ({ id, ativo }: { id: number; ativo: boolean }) => {
+      await apiClient.patch(`/departamentos/${id}`, { ativo });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departamentos'] });
+      toast.success('Status atualizado');
+    },
+    onError: () => toast.error('Erro ao atualizar status'),
+  });
+
+  function startEdit(s: Secretaria) {
+    setEditId(s.id);
+    resetEdit({ nome: s.nome, sigla: s.sigla ?? '', ativo: s.ativo });
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-ink-500">Secretarias disponíveis para associar aos usuários.</p>
+        <button
+          onClick={() => { setShowForm(!showForm); resetAdd(); setEditId(null); }}
+          className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition"
+        >
+          {showForm ? 'Cancelar' : '+ Nova Secretaria'}
+        </button>
+      </div>
+
+      {/* Formulário de criação */}
+      {showForm && (
+        <form
+          onSubmit={handleAdd((dto) => criar.mutateAsync(dto))}
+          className="rounded-xl border border-line p-4 mb-5 bg-bg-soft grid grid-cols-1 sm:grid-cols-3 gap-4"
+        >
+          <h3 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: 13, fontWeight: 600, color: '#0f1622', gridColumn: '1 / -1', margin: 0 }}>
+            Nova Secretaria
+          </h3>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Nome <span className="text-accent-red">*</span></label>
+            <input {...registerAdd('nome')} className={fieldCls} placeholder="Ex: Secretaria de Finanças" />
+            {errorsAdd.nome && <p className={errorCls}>{errorsAdd.nome.message}</p>}
+          </div>
+          <div>
+            <label className={labelCls}>Sigla</label>
+            <input {...registerAdd('sigla')} className={fieldCls} placeholder="Ex: SEFIN" maxLength={10} />
+            {errorsAdd.sigla && <p className={errorCls}>{errorsAdd.sigla.message}</p>}
+          </div>
+          <div className="sm:col-span-3 flex justify-end">
+            <button
+              type="submit"
+              disabled={isAddSubmitting}
+              className="rounded-lg bg-ink-900 text-white px-5 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
+            >
+              {isAddSubmitting ? 'Criando…' : 'Criar Secretaria'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Tabela */}
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-line bg-white">
+          <table className="w-full text-sm">
+            <thead style={{ background: '#f6f8fb' }}>
+              <tr>
+                <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
+                <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>Sigla</th>
+                <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
+                <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {secretarias.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-10 text-center text-ink-400 text-sm">
+                    Nenhuma secretaria cadastrada
+                  </td>
+                </tr>
+              )}
+              {secretarias.map((s) => (
+                editId === s.id ? (
+                  /* Linha de edição inline */
+                  <tr key={s.id} style={{ borderBottom: '1px solid #eef1f6', background: '#f6f8fb' }}>
+                    <td className="px-3 py-2" colSpan={2}>
+                      <form
+                        id={`edit-form-${s.id}`}
+                        onSubmit={handleEdit((dto) => editar.mutateAsync({ id: s.id, dto }))}
+                        className="flex gap-2 flex-wrap"
+                      >
+                        <div className="flex-1 min-w-[160px]">
+                          <input {...registerEdit('nome')} className={fieldCls} placeholder="Nome" />
+                          {errorsEdit.nome && <p className={errorCls}>{errorsEdit.nome.message}</p>}
+                        </div>
+                        <div className="w-28">
+                          <input {...registerEdit('sigla')} className={fieldCls} placeholder="Sigla" maxLength={10} />
+                        </div>
+                      </form>
+                    </td>
+                    <td className="px-4 py-2 text-center col-hide-sm" />
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          type="submit"
+                          form={`edit-form-${s.id}`}
+                          disabled={isEditSubmitting}
+                          className="px-2.5 py-1.5 rounded-lg bg-ink-900 text-white text-xs font-semibold hover:bg-ink-700 transition disabled:opacity-60"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => setEditId(null)}
+                          className="px-2.5 py-1.5 rounded-lg border border-line text-ink-700 text-xs font-medium hover:bg-bg-soft transition"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  /* Linha normal */
+                  <tr key={s.id} className={`hover:bg-bg-soft transition ${!s.ativo ? 'opacity-50' : ''}`} style={{ borderBottom: '1px solid #eef1f6' }}>
+                    <td className="px-4 py-3 font-medium text-ink-900">{s.nome}</td>
+                    <td className="px-4 py-3 text-ink-500 font-mono text-xs col-hide-sm">{s.sigla ?? '—'}</td>
+                    <td className="px-4 py-3 text-center col-hide-sm">
+                      {s.ativo
+                        ? <span style={{ color: '#1f7a3f', fontWeight: 600, fontSize: 12 }}>Sim</span>
+                        : <span style={{ color: '#8b2424', fontSize: 12 }}>Não</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          onClick={() => startEdit(s)}
+                          className="px-2.5 py-1.5 rounded-lg text-accent-blue hover:bg-[#eaf4ff] text-xs font-medium transition"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(s.ativo ? `Desativar "${s.nome}"?` : `Ativar "${s.nome}"?`)) {
+                              toggleAtivo.mutate({ id: s.id, ativo: !s.ativo });
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition hover:bg-bg-soft-2 text-ink-500"
+                        >
+                          {s.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Usuários ─────────────────────────────────────────────────────────────────
 
 function UsuariosSection() {
   const qc = useQueryClient();
@@ -297,22 +426,21 @@ function UsuariosSection() {
     },
   });
 
-  const { data: departamentos = [] } = useQuery<Array<{ id: number; nome: string }>>({
+  const { data: secretarias = [] } = useQuery<Array<{ id: number; nome: string }>>({
     queryKey: ['departamentos'],
     queryFn: async () => {
       const { data } = await apiClient.get('/departamentos');
-      return data;
+      return Array.isArray(data) ? data : [];
     },
   });
 
   const criar = useMutation({
-    mutationFn: async (dto: CriarUsuarioDto) => {
-      await apiClient.post('/users', dto);
-    },
+    mutationFn: async (dto: CriarUsuarioDto) => { await apiClient.post('/users', dto); },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['usuarios'] });
       toast.success('Usuário criado');
       setShowForm(false);
+      reset();
     },
     onError: (err: unknown) => {
       const msg =
@@ -323,70 +451,61 @@ function UsuariosSection() {
   });
 
   const desativar = useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/users/${id}`);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['usuarios'] });
-      toast.success('Usuário desativado');
-    },
+    mutationFn: async (id: string) => { await apiClient.delete(`/users/${id}`); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['usuarios'] }); toast.success('Usuário desativado'); },
     onError: () => toast.error('Erro ao desativar usuário'),
   });
 
   const {
-    register,
-    handleSubmit,
-    reset,
+    register, handleSubmit, reset,
     formState: { errors, isSubmitting },
   } = useForm<CriarUsuarioDto>({
     resolver: zodResolver(CriarUsuarioSchema),
     defaultValues: { role: 'user' },
   });
 
-  const onSubmit = (dto: CriarUsuarioDto) => criar.mutateAsync(dto);
-
-  const isCriar = showForm;
-
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">Gerencie os usuários do sistema.</p>
+        <p className="text-sm text-ink-500">Gerencie os usuários do sistema.</p>
         <button
           onClick={() => { setShowForm(!showForm); reset(); }}
           className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition"
         >
-          {isCriar ? 'Cancelar' : '+ Novo Usuário'}
+          {showForm ? 'Cancelar' : '+ Novo Usuário'}
         </button>
       </div>
 
       {showForm && (
         <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="rounded-lg border border-gray-200 p-4 mb-6 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-4"
+          onSubmit={handleSubmit((dto) => criar.mutateAsync(dto))}
+          className="rounded-xl border border-line p-4 mb-6 bg-bg-soft grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <h3 className="md:col-span-2 text-sm font-semibold text-gray-700">Novo Usuário</h3>
+          <h3 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: 13, fontWeight: 600, color: '#0f1622', gridColumn: '1 / -1', margin: 0 }}>
+            Novo Usuário
+          </h3>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nome completo</label>
-            <input {...register('nome')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
-            {errors.nome && <p className="text-xs text-red-500 mt-0.5">{errors.nome.message}</p>}
+            <label className={labelCls}>Nome completo</label>
+            <input {...register('nome')} className={fieldCls} />
+            {errors.nome && <p className={errorCls}>{errors.nome.message}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">E-mail</label>
-            <input type="email" {...register('email')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
-            {errors.email && <p className="text-xs text-red-500 mt-0.5">{errors.email.message}</p>}
+            <label className={labelCls}>E-mail</label>
+            <input type="email" {...register('email')} className={fieldCls} />
+            {errors.email && <p className={errorCls}>{errors.email.message}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Senha</label>
-            <input type="password" {...register('password')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
-            {errors.password && <p className="text-xs text-red-500 mt-0.5">{errors.password.message}</p>}
+            <label className={labelCls}>Senha</label>
+            <input type="password" {...register('password')} className={fieldCls} />
+            {errors.password && <p className={errorCls}>{errors.password.message}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Perfil</label>
-            <select {...register('role')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900 bg-white">
+            <label className={labelCls}>Perfil</label>
+            <select {...register('role')} className={fieldCls}>
               <option value="viewer">Visualizador</option>
               <option value="user">Usuário</option>
               <option value="admin">Admin</option>
@@ -394,11 +513,14 @@ function UsuariosSection() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Departamento</label>
-            <select {...register('departamento_id', { setValueAs: (v) => v ? Number(v) : null })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900 bg-white">
-              <option value="">— nenhum —</option>
-              {departamentos.map((d) => (
+          <div className="md:col-span-2">
+            <label className={labelCls}>Secretaria</label>
+            <select
+              {...register('departamento_id', { setValueAs: (v) => v ? Number(v) : null })}
+              className={fieldCls}
+            >
+              <option value="">— nenhuma —</option>
+              {secretarias.map((d) => (
                 <option key={d.id} value={d.id}>{d.nome}</option>
               ))}
             </select>
@@ -408,7 +530,7 @@ function UsuariosSection() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-xl bg-ink-900 text-white px-5 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
+              className="rounded-lg bg-ink-900 text-white px-5 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
             >
               {isSubmitting ? 'Criando…' : 'Criar usuário'}
             </button>
@@ -421,21 +543,25 @@ function UsuariosSection() {
           <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-xl border border-line bg-white">
           <table className="w-full text-sm">
             <thead style={{ background: '#f6f8fb' }}>
               <tr>
-                <th className="px-4 py-3 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Nome</th>
-                <th className="px-4 py-3 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>E-mail</th>
-                <th className="px-4 py-3 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Perfil</th>
-                <th className="px-4 py-3 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Departamento</th>
-                <th className="px-4 py-3 text-center col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Ativo</th>
-                <th className="px-4 py-3 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Ações</th>
+                <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
+                <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>E-mail</th>
+                <th className="px-4 py-3 text-left" style={thStyle}>Perfil</th>
+                <th className="px-4 py-3 text-left col-hide-mobile" style={thStyle}>Secretaria</th>
+                <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
+                <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {usuarios.map((u) => (
-                <tr key={u.id} className={`hover:bg-bg-soft transition ${!u.ativo ? 'opacity-50' : ''}`} style={{ borderBottom: '1px solid #eef1f6' }}>
+                <tr
+                  key={u.id}
+                  className={`hover:bg-bg-soft transition ${!u.ativo ? 'opacity-50' : ''}`}
+                  style={{ borderBottom: '1px solid #eef1f6' }}
+                >
                   <td className="px-4 py-3 font-medium text-ink-900 text-sm">{u.nome}</td>
                   <td className="px-4 py-3 text-ink-500 text-sm col-hide-sm truncate max-w-[180px]">{u.email}</td>
                   <td className="px-4 py-3">
@@ -447,18 +573,14 @@ function UsuariosSection() {
                     {(u.departamento as { nome?: string } | undefined)?.nome ?? '—'}
                   </td>
                   <td className="px-4 py-3 text-center col-hide-sm">
-                    {u.ativo ? (
-                      <span style={{ color: '#1f7a3f', fontWeight: 600, fontSize: 12 }}>Sim</span>
-                    ) : (
-                      <span style={{ color: '#8b2424', fontSize: 12 }}>Não</span>
-                    )}
+                    {u.ativo
+                      ? <span style={{ color: '#1f7a3f', fontWeight: 600, fontSize: 12 }}>Sim</span>
+                      : <span style={{ color: '#8b2424', fontSize: 12 }}>Não</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {u.id !== currentUser?.id && u.ativo && (
                       <button
-                        onClick={() => {
-                          if (confirm(`Desativar ${u.nome}?`)) desativar.mutate(u.id);
-                        }}
+                        onClick={() => { if (confirm(`Desativar ${u.nome}?`)) desativar.mutate(u.id); }}
                         className="text-accent-red hover:underline text-xs font-medium"
                       >
                         Desativar
@@ -475,13 +597,18 @@ function UsuariosSection() {
   );
 }
 
+// ─── ConfigPage ───────────────────────────────────────────────────────────────
+
 export function ConfigPage() {
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === 'superadmin';
   const [tab, setTab] = useState<Tab>('qr');
 
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: 'qr', label: 'QR Code' },
     { key: 'obrigatorios', label: 'Campos Obrigatórios' },
     { key: 'usuarios', label: 'Usuários' },
+    ...(isSuperAdmin ? [{ key: 'secretarias' as Tab, label: 'Secretarias' }] : []),
   ];
 
   return (
@@ -495,7 +622,6 @@ export function ConfigPage() {
         </p>
       </div>
 
-      {/* Scrollable tab bar */}
       <div className="tabs-scroll mb-6" style={{ borderBottom: '1px solid #e3e7ee' }}>
         <div className="flex gap-0 min-w-max">
           {tabs.map((t) => (
@@ -503,20 +629,14 @@ export function ConfigPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               style={{
-                padding: '10px 18px',
-                fontSize: 13.5,
-                fontWeight: 600,
+                padding: '10px 18px', fontSize: 13.5, fontWeight: 600,
                 fontFamily: 'Manrope, system-ui, sans-serif',
-                borderTop: 'none',
-                borderLeft: 'none',
-                borderRight: 'none',
+                border: 'none',
                 borderBottom: `2px solid ${tab === t.key ? '#0f1622' : 'transparent'}`,
                 marginBottom: -1,
                 color: tab === t.key ? '#0f1622' : '#5b667a',
-                background: 'transparent',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'color .15s',
+                background: 'transparent', cursor: 'pointer',
+                whiteSpace: 'nowrap', transition: 'color .15s',
               }}
             >
               {t.label}
@@ -528,6 +648,7 @@ export function ConfigPage() {
       {tab === 'qr' && <QrConfigSection />}
       {tab === 'obrigatorios' && <CamposObrigatoriosSection />}
       {tab === 'usuarios' && <UsuariosSection />}
+      {tab === 'secretarias' && isSuperAdmin && <SecretariasSection />}
     </div>
   );
 }
