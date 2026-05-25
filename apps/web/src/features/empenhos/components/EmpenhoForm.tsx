@@ -10,7 +10,7 @@ import { cn } from '@/shared/lib/cn';
 import type { Empenho } from '@ficha-empenho/shared';
 
 type Props = {
-  empenho?: Empenho; // preenchido ao editar
+  empenho?: Empenho;
   onSuccess?: (empenho: Empenho) => void;
   onCancel?: () => void;
 };
@@ -32,7 +32,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   const atualizar = useAtualizarEmpenho();
   const { data: formasPagamento = [] } = useFormasPagamento();
 
-  // Sub-elemento: subs válidos para a natureza atual
   const [subsAtuais, setSubsAtuais] = useState<Array<{ sub: string; descricao: string }>>([]);
   const [naturezaAtual, setNaturezaAtual] = useState('');
   const [showSubSugestoes, setShowSubSugestoes] = useState(false);
@@ -45,7 +44,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     handleSubmit,
     setValue,
     getValues,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<EmpenhoDto>({
     resolver: zodResolver(EmpenhoSchema),
@@ -96,31 +94,26 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   const isSuperavit = exercicio === 2;
   const isGlobal = tipoEmpenho === 3;
 
-  // Total descontos e valor líquido
   const totalDescontos = (descontosWatch ?? []).reduce(
     (sum, d) => sum + (Number(d?.valor) || 0),
     0,
   );
   const valorLiquido = Math.max(0, (Number(valorEmpenho) || 0) - totalDescontos);
 
-  // Sincroniza valor líquido no campo de liquidação
   useEffect(() => {
     setValue('liquidacao.valor', valorLiquido);
   }, [valorLiquido, setValue]);
 
-  // Descontos (linhas dinâmicas)
   const { fields: descontoFields, append: addDesconto, remove: removeDesconto } = useFieldArray({
     control,
     name: 'descontos',
   });
 
-  // Parcelas (linhas dinâmicas dentro da liquidação)
   const { fields: parcelaFields, append: addParcela, remove: removeParcela } = useFieldArray({
     control,
     name: 'liquidacao.parcelas',
   });
 
-  // Credor: estado local para o campo de busca visível
   const [credorBusca, setCredorBusca] = useState(empenho?.credor_nome ?? '');
 
   // ─── Classificação orçamentária ───────────────────────────────────────────────
@@ -138,7 +131,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       return;
     }
 
-    // Limpa sub ao trocar de ficha (pode ter natureza diferente)
     setValue('subelemento_codigo', '');
     setValue('subelemento_descricao', '');
 
@@ -159,7 +151,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     }
   }
 
-  // Superávit destrava classificação
   useEffect(() => {
     if (isSuperavit) setClassificacaoTravada(false);
   }, [isSuperavit]);
@@ -189,11 +180,10 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         if (found) setValue('subelemento_descricao', found.descricao);
       }
     } catch {
-      // silencioso — modo manual
+      // modo manual silencioso
     }
   }
 
-  // Carrega subs ao editar (se já tem dotação)
   useEffect(() => {
     if (isEdit && empenho?.dotacao) {
       carregarSubs(empenho.dotacao, true);
@@ -275,7 +265,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     } catch { /* credor não cadastrado, modo manual */ }
   }
 
-  // ─── Retenção autocomplete (descontos) ───────────────────────────────────────
+  // ─── Retenção autocomplete ───────────────────────────────────────────────────
 
   async function searchRetencoes(q: string) {
     const { data } = await apiClient.get('/config/retencoes', { params: { q } });
@@ -306,7 +296,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       }
       onSuccess?.(result);
     } catch {
-      // erro já tratado pelo hook (toast)
+      // erro já tratado pelo hook
     }
   };
 
@@ -328,11 +318,18 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     if (next instanceof HTMLInputElement && next.type !== 'checkbox') next.select?.();
   }
 
-  // ─── Render helpers ───────────────────────────────────────────────────────────
+  // ─── Style helpers ────────────────────────────────────────────────────────────
 
-  const fieldCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none disabled:bg-gray-50 read-only:bg-gray-50';
-  const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
-  const errorCls = 'text-xs text-red-500 mt-0.5';
+  const fieldCls = 'w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-ink-900 focus:ring-1 focus:ring-ink-300 outline-none disabled:bg-bg-soft read-only:bg-bg-soft text-ink-900 placeholder:text-ink-400 transition';
+  const labelCls = 'block text-xs font-medium text-ink-500 mb-1';
+  const errorCls = 'text-xs text-accent-red mt-0.5';
+
+  const sectionHead: React.CSSProperties = {
+    fontSize: 13, fontWeight: 600, color: '#2a3344',
+    fontFamily: 'Manrope, system-ui, sans-serif',
+    borderBottom: '1px solid #e3e7ee', paddingBottom: 8, marginBottom: 12,
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  };
 
   function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
     return (
@@ -348,11 +345,11 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown} className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-800">
+      <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 'clamp(20px, 3.5vw, 24px)', letterSpacing: '-0.02em', color: '#0f1622', margin: 0 }}>
         {isEdit ? `Editar Empenho ${empenho.codigo_interno}` : 'Novo Empenho'}
       </h2>
 
-      {/* ── Exercício e Tipo ─────────────────────────────────────────── */}
+      {/* ── Exercício e Tipo ──────────────────────────────────────────────── */}
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Field label="Exercício" error={errors.exercicio?.message}>
           <select {...register('exercicio', { valueAsNumber: true })} className={fieldCls}>
@@ -379,9 +376,9 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </Field>
       </section>
 
-      {/* ── Classificação Orçamentária ───────────────────────────────── */}
+      {/* ── Classificação Orçamentária ────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Classificação Orçamentária</h3>
+        <h3 style={sectionHead}>Classificação Orçamentária</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Field label="Nº da Ficha">
             <input
@@ -442,15 +439,15 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                   autoComplete="off"
                 />
                 {showSubSugestoes && subsFiltradas.length > 0 && (
-                  <ul className="absolute z-50 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto text-sm">
+                  <ul className="absolute z-50 mt-1 w-64 rounded-lg border border-line bg-white shadow-md max-h-52 overflow-y-auto text-sm">
                     {subsFiltradas.map((s) => (
                       <li
                         key={s.sub}
                         onMouseDown={(e) => { e.preventDefault(); selecionarSub(s); }}
-                        className="cursor-pointer px-3 py-2 hover:bg-brand-50 hover:text-brand-700"
+                        className="cursor-pointer px-3 py-2 hover:bg-bg-soft hover:text-ink-900 transition"
                       >
-                        <span className="font-mono mr-2">{s.sub}</span>
-                        <span className="text-gray-600">{s.descricao}</span>
+                        <span className="font-mono mr-2 text-ink-700">{s.sub}</span>
+                        <span className="text-ink-500">{s.descricao}</span>
                       </li>
                     ))}
                   </ul>
@@ -462,7 +459,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                   if (!naturezaAtual) { toast.info('Informe a ficha para carregar sub-elementos'); return; }
                   setShowSubSugestoes(true);
                 }}
-                className="rounded-lg border border-gray-300 px-2.5 text-gray-500 hover:bg-gray-50"
+                className="rounded-lg border border-line px-2.5 text-ink-500 hover:bg-bg-soft transition"
                 title="Ver sub-elementos disponíveis"
               >
                 🔍
@@ -478,9 +475,9 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </div>
       </section>
 
-      {/* ── Credor ──────────────────────────────────────────────────────── */}
+      {/* ── Credor ───────────────────────────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Credor</h3>
+        <h3 style={sectionHead}>Credor</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Field label="Nº do Credor">
             <input
@@ -506,9 +503,9 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </div>
       </section>
 
-      {/* ── Dados do Empenho ─────────────────────────────────────────────── */}
+      {/* ── Dados do Empenho ──────────────────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Dados do Empenho</h3>
+        <h3 style={sectionHead}>Dados do Empenho</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Field label="Histórico / Objeto">
@@ -539,7 +536,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
             />
           </Field>
 
-          {/* Contrato/Convênio — apenas tipo Global */}
           {isGlobal && (
             <>
               <Field label="Nº Contrato">
@@ -553,36 +549,35 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </div>
       </section>
 
-      {/* ── Descontos / Retenções ─────────────────────────────────────────── */}
+      {/* ── Descontos / Retenções ─────────────────────────────────────────────── */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700 border-b pb-1 flex-1">Descontos / Retenções</h3>
+        <h3 style={sectionHead}>
+          <span>Descontos / Retenções</span>
           <button
             type="button"
             onClick={() => addDesconto({ tipo: '', codigo: '', valor: 0, efd_codigo: '', ord: descontoFields.length })}
-            className="ml-4 text-xs rounded-lg border border-brand-300 text-brand-600 px-3 py-1.5 hover:bg-brand-50 transition"
+            className="text-xs rounded-lg border border-line text-ink-700 px-3 py-1.5 hover:bg-bg-soft transition font-medium"
           >
             + Adicionar
           </button>
-        </div>
+        </h3>
 
         {descontoFields.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+          <div className="overflow-x-auto rounded-lg border border-line">
+            <table className="w-full text-sm" style={{ minWidth: 420 }}>
+              <thead style={{ background: '#f6f8fb' }}>
                 <tr>
-                  <th className="px-3 py-2 text-left w-32">Código</th>
-                  <th className="px-3 py-2 text-left">Tipo / Retenção</th>
-                  <th className="px-3 py-2 text-right w-36">Valor (R$)</th>
-                  <th className="px-3 py-2 text-left w-36">Código EFD</th>
-                  <th className="px-3 py-2 w-10"></th>
+                  <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 110 }}>Código</th>
+                  <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Tipo / Retenção</th>
+                  <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
+                  <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Código EFD</th>
+                  <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody style={{ borderTop: 0 }}>
                 {descontoFields.map((field, i) => (
-                  <tr key={field.id}>
-                    {/* Código */}
-                    <td className="px-3 py-2">
+                  <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
+                    <td className="px-3 py-2 col-hide-sm">
                       <input
                         {...register(`descontos.${i}.codigo`)}
                         className={fieldCls}
@@ -597,7 +592,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                         }}
                       />
                     </td>
-                    {/* Tipo/Retenção (combobox) */}
                     <td className="px-3 py-2">
                       <Controller
                         control={control}
@@ -616,7 +610,6 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                         )}
                       />
                     </td>
-                    {/* Valor */}
                     <td className="px-3 py-2">
                       <Controller
                         control={control}
@@ -634,8 +627,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                         )}
                       />
                     </td>
-                    {/* EFD */}
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 col-hide-mobile">
                       <Controller
                         control={control}
                         name={`descontos.${i}.efd_codigo`}
@@ -650,12 +642,12 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                         )}
                       />
                     </td>
-                    {/* Remover */}
                     <td className="px-3 py-2 text-center">
                       <button
                         type="button"
                         onClick={() => removeDesconto(i)}
-                        className="text-red-400 hover:text-red-600 text-lg leading-none"
+                        className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
+                        aria-label="Remover desconto"
                       >
                         ×
                       </button>
@@ -667,21 +659,20 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           </div>
         )}
 
-        {/* Totais */}
-        <div className="mt-3 flex justify-end gap-8 text-sm">
-          <span className="text-gray-500">
-            Total descontos: <span className="font-medium text-gray-800">R$ {formatCurrencyBR(totalDescontos)}</span>
+        <div className="mt-3 flex flex-wrap justify-end gap-6 text-sm">
+          <span className="text-ink-500">
+            Total descontos: <span className="font-medium text-ink-900">R$ {formatCurrencyBR(totalDescontos)}</span>
           </span>
-          <span className="text-gray-500">
-            Valor líquido: <span className="font-semibold text-brand-700">R$ {formatCurrencyBR(valorLiquido)}</span>
+          <span className="text-ink-500">
+            Valor líquido: <span className="font-semibold text-accent-blue">R$ {formatCurrencyBR(valorLiquido)}</span>
           </span>
         </div>
       </section>
 
-      {/* ── Liquidação ───────────────────────────────────────────────────── */}
+      {/* ── Liquidação ────────────────────────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-1">Liquidação</h3>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg border border-gray-200 p-4">
+        <h3 style={{ ...sectionHead, justifyContent: 'flex-start' }}>Liquidação</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg border border-line p-4 bg-bg-soft">
           <Field label="Valor Liquidado (R$)">
             <Controller
               control={control}
@@ -732,34 +723,34 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         {/* Parcelas */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-600">Parcelas</span>
+            <span className="text-xs font-semibold text-ink-500 uppercase tracking-wide" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em' }}>Parcelas</span>
             <button
               type="button"
               onClick={() =>
                 addParcela({ valor: 0, data: '', forma_pagamento: '', conta: '', numero_op: '', ord: parcelaFields.length })
               }
-              className="text-xs rounded border border-gray-300 text-gray-600 px-2.5 py-1 hover:bg-gray-50"
+              className="text-xs rounded-lg border border-line text-ink-700 px-2.5 py-1.5 hover:bg-bg-soft transition font-medium"
             >
               + Parcela
             </button>
           </div>
 
           {parcelaFields.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-gray-100">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+            <div className="overflow-x-auto rounded-lg border border-line">
+              <table className="w-full text-sm" style={{ minWidth: 360 }}>
+                <thead style={{ background: '#f6f8fb' }}>
                   <tr>
-                    <th className="px-3 py-2 text-right w-36">Valor (R$)</th>
-                    <th className="px-3 py-2 text-left w-36">Data</th>
-                    <th className="px-3 py-2 text-left">Forma</th>
-                    <th className="px-3 py-2 text-left">Conta</th>
-                    <th className="px-3 py-2 text-left">N.º O.P.</th>
-                    <th className="px-3 py-2 w-10"></th>
+                    <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
+                    <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Data</th>
+                    <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Forma</th>
+                    <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Conta</th>
+                    <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>N.º O.P.</th>
+                    <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {parcelaFields.map((field, i) => (
-                    <tr key={field.id}>
+                    <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
                       <td className="px-3 py-2">
                         <Controller
                           control={control}
@@ -779,7 +770,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                       <td className="px-3 py-2">
                         <input type="date" {...register(`liquidacao.parcelas.${i}.data`)} className={fieldCls} />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 col-hide-mobile">
                         <select {...register(`liquidacao.parcelas.${i}.forma_pagamento`)} className={fieldCls}>
                           <option value="">—</option>
                           {formasPagamento.map((f) => (
@@ -789,17 +780,18 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                           ))}
                         </select>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 col-hide-mobile">
                         <input {...register(`liquidacao.parcelas.${i}.conta`)} className={fieldCls} />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 col-hide-sm">
                         <input {...register(`liquidacao.parcelas.${i}.numero_op`)} className={fieldCls} />
                       </td>
                       <td className="px-3 py-2 text-center">
                         <button
                           type="button"
                           onClick={() => removeParcela(i)}
-                          className="text-red-400 hover:text-red-600 text-lg leading-none"
+                          className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
+                          aria-label="Remover parcela"
                         >
                           ×
                         </button>
@@ -813,13 +805,13 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </div>
       </section>
 
-      {/* ── Ações ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-3 pt-2 border-t">
+      {/* ── Ações ──────────────────────────────────────────────────────────────── */}
+      <div className="form-actions-bar flex items-center justify-end gap-3">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition"
+            className="rounded-lg border border-line px-4 py-2 text-sm text-ink-700 hover:bg-bg-soft transition font-medium"
           >
             Cancelar
           </button>
@@ -827,7 +819,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-brand-600 text-white px-6 py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-50"
+          className="rounded-lg bg-ink-900 text-white px-6 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-50"
         >
           {isSubmitting ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Empenho'}
         </button>

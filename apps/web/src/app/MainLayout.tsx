@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useAuthStore } from '@/shared/lib/authStore';
 import { EmpenhosPage } from '@/features/empenhos/components/EmpenhosPage';
 import { ConfigPage } from '@/features/config/ConfigPage';
@@ -97,7 +97,9 @@ function IconMenu() {
 function NavItem({ icon, label, active, onClick }: { icon: ReactNode; label: string; active: boolean; onClick: () => void }) {
   return (
     <button
+      className="nav-item"
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       style={{
         display: 'flex', alignItems: 'center', gap: 11,
         padding: '10px 12px', borderRadius: 8, width: '100%',
@@ -112,14 +114,19 @@ function NavItem({ icon, label, active, onClick }: { icon: ReactNode; label: str
       onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink700; } }}
     >
       <span style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>{icon}</span>
-      {label}
+      <span className="sidebar-label">{label}</span>
     </button>
   );
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute: (r: Route) => void; isAdmin: boolean; onClose: () => void }) {
+function Sidebar({
+  route, setRoute, isAdmin, isOpen, onClose,
+}: {
+  route: Route; setRoute: (r: Route) => void;
+  isAdmin: boolean; isOpen: boolean; onClose: () => void;
+}) {
   const { user, logout } = useAuthStore();
   const initials = user?.nome
     ? user.nome.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -131,21 +138,27 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
   }
 
   return (
-    <aside className="app-sidebar no-print" style={{
-      background: '#fff',
-      borderRight: `1px solid ${C.line}`,
-      display: 'flex', flexDirection: 'column',
-      width: 256, height: '100vh',
-      position: 'sticky', top: 0,
-    }}>
+    <aside
+      className={`app-sidebar no-print${isOpen ? ' is-open' : ''}`}
+      style={{
+        background: '#fff',
+        borderRight: `1px solid ${C.line}`,
+        display: 'flex', flexDirection: 'column',
+        width: 256, height: '100vh',
+        position: 'sticky', top: 0,
+      }}
+    >
       {/* Brand */}
-      <div style={{
-        padding: '18px 18px 14px',
-        borderBottom: `1px solid ${C.line2}`,
-        display: 'flex', alignItems: 'center', gap: 12, overflow: 'hidden',
-      }}>
+      <div
+        className="sidebar-brand"
+        style={{
+          padding: '18px 18px 14px',
+          borderBottom: `1px solid ${C.line2}`,
+          display: 'flex', alignItems: 'center', gap: 12, overflow: 'hidden',
+        }}
+      >
         <img src="/logo.png" alt="PMP" style={{ height: 28, width: 'auto', flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="sidebar-brand-text" style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink500 }}>
             SEFIN
           </div>
@@ -153,11 +166,12 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
             Fichas de Empenho
           </div>
         </div>
-        {/* Close button (only visible on mobile via CSS) */}
+        {/* Close button — visible on mobile only via .hamburger CSS */}
         <button
           className="hamburger"
           onClick={onClose}
           title="Fechar menu"
+          aria-label="Fechar menu"
           style={{
             width: 30, height: 30, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -170,7 +184,7 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
 
       {/* Nav: Principal */}
       <div style={{ padding: '16px 16px 4px' }}>
-        <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink400, padding: '0 8px 6px' }}>
+        <div className="sidebar-section-title" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink400, padding: '0 8px 6px' }}>
           Principal
         </div>
       </div>
@@ -183,7 +197,7 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
       {isAdmin && (
         <>
           <div style={{ padding: '16px 16px 4px' }}>
-            <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink400, padding: '0 8px 6px' }}>
+            <div className="sidebar-section-title" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink400, padding: '0 8px 6px' }}>
               Administração
             </div>
           </div>
@@ -198,11 +212,14 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
       <div style={{ flex: 1 }} />
 
       {/* User */}
-      <div style={{ borderTop: `1px solid ${C.line2}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div
+        className="sidebar-user"
+        style={{ borderTop: `1px solid ${C.line2}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}
+      >
         <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.ink900, color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
           {initials}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: C.ink900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {user?.nome ?? 'Usuário'}
           </div>
@@ -213,7 +230,8 @@ function Sidebar({ route, setRoute, isAdmin, onClose }: { route: Route; setRoute
         <button
           onClick={() => logout()}
           title="Sair"
-          style={{ width: 30, height: 30, borderRadius: 8, display: 'grid', placeItems: 'center', color: C.ink500, background: 'transparent', border: 0, cursor: 'pointer', transition: 'background .2s, color .2s' }}
+          aria-label="Sair da conta"
+          style={{ width: 30, height: 30, borderRadius: 8, display: 'grid', placeItems: 'center', color: C.ink500, background: 'transparent', border: 0, cursor: 'pointer', transition: 'background .2s, color .2s', flexShrink: 0 }}
           onMouseEnter={e => { e.currentTarget.style.background = C.bgSoft; e.currentTarget.style.color = C.red; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink500; }}
         >
@@ -239,21 +257,26 @@ function Topbar({ route, onNovo, onMenuOpen }: { route: Route; onNovo: () => voi
   const showNovo = route === 'empenhos' || route === 'inicio';
 
   return (
-    <header className="topbar-pad" style={{
-      background: '#fff',
-      borderBottom: `1px solid ${C.line}`,
-      padding: '14px 32px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-      position: 'sticky', top: 0, zIndex: 20,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Hamburger — only visible on mobile via CSS */}
+    <header
+      className="topbar-pad"
+      style={{
+        background: '#fff',
+        borderBottom: `1px solid ${C.line}`,
+        padding: '14px 32px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        position: 'sticky', top: 0, zIndex: 20,
+        minWidth: 0,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, overflow: 'hidden' }}>
+        {/* Hamburger — visible on mobile only */}
         <button
           className="hamburger"
           onClick={onMenuOpen}
           title="Abrir menu"
+          aria-label="Abrir menu de navegação"
           style={{
-            width: 36, height: 36, borderRadius: 8,
+            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
             border: `1px solid ${C.line}`,
             background: 'transparent', cursor: 'pointer',
             color: C.ink700,
@@ -265,12 +288,12 @@ function Topbar({ route, onNovo, onMenuOpen }: { route: Route; onNovo: () => voi
           <IconMenu />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+          <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink500, whiteSpace: 'nowrap' }}>
             SEFIN
           </span>
-          <span style={{ color: C.ink400 }}>/</span>
-          <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink900, fontWeight: 600 }}>
+          <span style={{ color: C.ink400, flexShrink: 0 }}>/</span>
+          <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink900, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {routeLabels[route]}
           </span>
         </div>
@@ -280,7 +303,7 @@ function Topbar({ route, onNovo, onMenuOpen }: { route: Route; onNovo: () => voi
         <button
           onClick={onNovo}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
+            display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
             padding: '9px 16px', background: C.ink900, color: '#fff',
             borderRadius: 10, fontWeight: 600, fontSize: 13,
             letterSpacing: '-0.005em', border: 0, cursor: 'pointer',
@@ -314,7 +337,7 @@ function InicioPage({ onNovo }: { onNovo: () => void }) {
         <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink500, marginBottom: 10 }}>
           Prefeitura Municipal de Parintins
         </div>
-        <h1 className="text-[28px] sm:text-[32px] md:text-[36px]" style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, letterSpacing: '-0.025em', margin: '0 0 8px', lineHeight: 1.05, color: C.ink900 }}>
+        <h1 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 'clamp(22px, 4vw, 36px)', letterSpacing: '-0.025em', margin: '0 0 8px', lineHeight: 1.05, color: C.ink900 }}>
           Olá, {firstName}.
         </h1>
         <p style={{ color: C.ink500, fontSize: 14.5, margin: 0 }}>
@@ -322,7 +345,7 @@ function InicioPage({ onNovo }: { onNovo: () => void }) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
         <button
           onClick={onNovo}
           style={{
@@ -358,26 +381,41 @@ export function MainLayout() {
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const handleNovo = () => { setRoute('novo-empenho'); setSidebarOpen(false); };
 
+  // ESC key closes the mobile sidebar
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    return () => document.body.classList.remove('sidebar-open');
+  }, [sidebarOpen]);
+
   return (
     <div className="app-layout">
       {/* Mobile backdrop */}
       <div
         className={`app-backdrop${sidebarOpen ? ' is-open' : ''}`}
         onClick={() => setSidebarOpen(false)}
-        aria-hidden
+        aria-hidden="true"
       />
 
       <Sidebar
         route={route}
         setRoute={setRoute}
         isAdmin={isAdmin}
+        isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-
-      {/* Override sidebar open state on mobile */}
-      {sidebarOpen && (
-        <style>{`.app-sidebar { transform: translateX(0) !important; }`}</style>
-      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, background: C.bgSoft }}>
         <Topbar route={route} onNovo={handleNovo} onMenuOpen={() => setSidebarOpen(true)} />

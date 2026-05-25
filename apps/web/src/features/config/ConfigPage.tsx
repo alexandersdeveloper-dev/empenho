@@ -423,34 +423,34 @@ function UsuariosSection() {
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
+            <thead style={{ background: '#f6f8fb' }}>
               <tr>
-                <th className="px-4 py-3 text-left">Nome</th>
-                <th className="px-4 py-3 text-left">E-mail</th>
-                <th className="px-4 py-3 text-left">Perfil</th>
-                <th className="px-4 py-3 text-left">Departamento</th>
-                <th className="px-4 py-3 text-center">Ativo</th>
-                <th className="px-4 py-3 text-right">Ações</th>
+                <th className="px-4 py-3 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Nome</th>
+                <th className="px-4 py-3 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>E-mail</th>
+                <th className="px-4 py-3 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Perfil</th>
+                <th className="px-4 py-3 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Departamento</th>
+                <th className="px-4 py-3 text-center col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Ativo</th>
+                <th className="px-4 py-3 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {usuarios.map((u) => (
-                <tr key={u.id} className={`hover:bg-gray-50 ${!u.ativo ? 'opacity-50' : ''}`}>
-                  <td className="px-4 py-3 font-medium">{u.nome}</td>
-                  <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                <tr key={u.id} className={`hover:bg-bg-soft transition ${!u.ativo ? 'opacity-50' : ''}`} style={{ borderBottom: '1px solid #eef1f6' }}>
+                  <td className="px-4 py-3 font-medium text-ink-900 text-sm">{u.nome}</td>
+                  <td className="px-4 py-3 text-ink-500 text-sm col-hide-sm truncate max-w-[180px]">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-xs font-medium">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 999, background: '#eaf4ff', color: '#1a5fa8', fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 500 }}>
                       {ROLE_LABELS[u.role] ?? u.role}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-ink-500 text-sm col-hide-mobile">
                     {(u.departamento as { nome?: string } | undefined)?.nome ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center col-hide-sm">
                     {u.ativo ? (
-                      <span className="text-green-600 font-medium">Sim</span>
+                      <span style={{ color: '#1f7a3f', fontWeight: 600, fontSize: 12 }}>Sim</span>
                     ) : (
-                      <span className="text-red-500">Não</span>
+                      <span style={{ color: '#8b2424', fontSize: 12 }}>Não</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -459,7 +459,7 @@ function UsuariosSection() {
                         onClick={() => {
                           if (confirm(`Desativar ${u.nome}?`)) desativar.mutate(u.id);
                         }}
-                        className="text-red-500 hover:underline text-xs"
+                        className="text-accent-red hover:underline text-xs font-medium"
                       >
                         Desativar
                       </button>

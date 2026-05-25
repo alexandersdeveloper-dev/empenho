@@ -147,7 +147,7 @@ export function EmpenhosPage() {
                   <th className="px-4 py-3 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>
                     Data
                   </th>
-                  <th className="px-4 py-3 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>
+                  <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>
                     Ações
                   </th>
                 </tr>
@@ -178,17 +178,17 @@ export function EmpenhosPage() {
                     <td className="px-4 py-3 text-ink-500 col-hide-mobile text-sm">
                       {e.data_empenho ?? '—'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2.5">
                       <div className="flex gap-1 justify-end">
                         <button
                           onClick={() => { setEditId(e.id); setView('ficha'); }}
-                          className="px-2 py-1 rounded-lg text-ink-500 hover:bg-bg-soft-2 hover:text-ink-900 text-xs font-medium transition"
+                          className="px-2.5 py-1.5 rounded-lg text-ink-500 hover:bg-bg-soft-2 hover:text-ink-900 text-xs font-medium transition"
                         >
                           Ficha
                         </button>
                         <button
                           onClick={() => { setEditId(e.id); setView('form'); }}
-                          className="px-2 py-1 rounded-lg text-accent-blue hover:bg-[#eaf4ff] text-xs font-medium transition"
+                          className="px-2.5 py-1.5 rounded-lg text-accent-blue hover:bg-[#eaf4ff] text-xs font-medium transition"
                         >
                           Editar
                         </button>
@@ -196,7 +196,7 @@ export function EmpenhosPage() {
                           onClick={() => {
                             if (confirm('Excluir este empenho?')) excluir.mutate(e.id);
                           }}
-                          className="px-2 py-1 rounded-lg text-accent-red hover:bg-[#fef5f5] text-xs font-medium transition"
+                          className="hidden sm:inline-flex px-2.5 py-1.5 rounded-lg text-accent-red hover:bg-[#fef5f5] text-xs font-medium transition"
                         >
                           Excluir
                         </button>
