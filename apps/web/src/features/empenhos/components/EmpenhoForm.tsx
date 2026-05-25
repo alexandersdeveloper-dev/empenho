@@ -65,13 +65,13 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           exercicio: (empenho.exercicio as 1 | 2) ?? 1,
           numero_contrato: empenho.numero_contrato ?? '',
           numero_convenio: empenho.numero_convenio ?? '',
-          data_empenho: empenho.data_empenho ?? '',
+          data_empenho: empenho.data_empenho ?? null,
           descontos: empenho.descontos ?? [],
           liquidacao: empenho.liquidacao
             ? {
                 valor: empenho.liquidacao.valor,
-                data_liquidacao: empenho.liquidacao.data_liquidacao ?? '',
-                data_pagamento: empenho.liquidacao.data_pagamento ?? '',
+                data_liquidacao: empenho.liquidacao.data_liquidacao ?? null,
+                data_pagamento: empenho.liquidacao.data_pagamento ?? null,
                 numero_op: empenho.liquidacao.numero_op ?? '',
                 forma_pagamento: empenho.liquidacao.forma_pagamento ?? '',
                 conta: empenho.liquidacao.conta ?? '',

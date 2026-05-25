@@ -3,9 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmpenhoFiltrosSchema = exports.PaginationSchema = exports.ConfigQrSchema = exports.QR_CAMPOS_DISPONIVEIS = exports.EmpenhoSchema = exports.ExercicioEnum = exports.TipoEmpenhoEnum = exports.LiquidacaoSchema = exports.ParcelaSchema = exports.DescontoSchema = exports.FormaPagamentoSchema = exports.RetencaoSchema = exports.SubelementoSchema = exports.ClassificacaoSchema = exports.CredorSchema = exports.DepartamentoSchema = exports.AtualizarUsuarioSchema = exports.CriarUsuarioSchema = exports.RoleEnum = exports.LoginSchema = void 0;
 const zod_1 = require("zod");
 const dateString = zod_1.z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')
-    .nullable()
+    .preprocess((v) => (v === '' ? null : v), zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD').nullable())
     .optional();
 const currencyValue = zod_1.z.coerce.number().min(0).default(0);
 exports.LoginSchema = zod_1.z.object({

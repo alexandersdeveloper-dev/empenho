@@ -3,9 +3,10 @@ import { z } from 'zod';
 // ─── Primitivos reutilizáveis ────────────────────────────────────────────────
 
 const dateString = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')
-  .nullable()
+  .preprocess(
+    (v) => (v === '' ? null : v),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD').nullable(),
+  )
   .optional();
 
 const currencyValue = z.coerce.number().min(0).default(0);
