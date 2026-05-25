@@ -59,17 +59,17 @@ export function Combobox({
         placeholder={placeholder}
         disabled={disabled}
         className={cn(
-          'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none disabled:bg-gray-50',
+          'w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-ink-900 focus:ring-1 focus:ring-ink-300 outline-none disabled:bg-bg-soft text-ink-900 placeholder:text-ink-400 transition',
           className,
         )}
       />
       {open && options.length > 0 && (
-        <ul className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto text-sm">
+        <ul className="absolute z-50 mt-1 w-full rounded-lg border border-line bg-white shadow-lg max-h-52 overflow-y-auto text-sm">
           {options.map((opt, i) => (
             <li
               key={i}
               onMouseDown={(e) => { e.preventDefault(); select(opt); }}
-              className="cursor-pointer px-3 py-2 hover:bg-brand-50 hover:text-brand-700"
+              className="cursor-pointer px-3 py-2 hover:bg-bg-soft hover:text-ink-900 text-ink-700 transition"
             >
               {opt.label}
             </li>

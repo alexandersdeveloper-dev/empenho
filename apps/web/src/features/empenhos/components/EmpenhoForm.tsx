@@ -459,10 +459,13 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                   if (!naturezaAtual) { toast.info('Informe a ficha para carregar sub-elementos'); return; }
                   setShowSubSugestoes(true);
                 }}
-                className="rounded-lg border border-line px-2.5 text-ink-500 hover:bg-bg-soft transition"
+                className="rounded-lg border border-line px-2.5 text-ink-500 hover:bg-bg-soft transition flex items-center justify-center"
                 title="Ver sub-elementos disponíveis"
+                aria-label="Ver sub-elementos disponíveis"
               >
-                🔍
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
               </button>
             </div>
             <input
@@ -705,7 +708,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           <Field label="Forma de Pagamento">
             <select {...register('liquidacao.forma_pagamento')} className={fieldCls}>
               <option value="">—</option>
-              {formasPagamento.map((f) => (
+              {Array.isArray(formasPagamento) && formasPagamento.map((f) => (
                 <option key={f.codigo} value={f.codigo}>
                   {f.descricao || f.codigo}
                 </option>
@@ -773,7 +776,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                       <td className="px-3 py-2 col-hide-mobile">
                         <select {...register(`liquidacao.parcelas.${i}.forma_pagamento`)} className={fieldCls}>
                           <option value="">—</option>
-                          {formasPagamento.map((f) => (
+                          {Array.isArray(formasPagamento) && formasPagamento.map((f) => (
                             <option key={f.codigo} value={f.codigo}>
                               {f.descricao || f.codigo}
                             </option>

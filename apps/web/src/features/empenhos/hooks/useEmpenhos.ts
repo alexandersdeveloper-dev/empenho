@@ -126,7 +126,7 @@ export function useFormasPagamento() {
     queryKey: ['formas-pagamento'],
     queryFn: async () => {
       const { data } = await apiClient.get('/config/formas-pagamento');
-      return data as Array<{ codigo: string; descricao: string }>;
+      return Array.isArray(data) ? data as Array<{ codigo: string; descricao: string }> : [];
     },
     staleTime: 60 * 60_000,
   });

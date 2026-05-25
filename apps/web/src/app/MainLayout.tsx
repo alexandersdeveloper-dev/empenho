@@ -4,6 +4,7 @@ import { EmpenhosPage } from '@/features/empenhos/components/EmpenhosPage';
 import { ConfigPage } from '@/features/config/ConfigPage';
 import { ImportPage } from '@/features/import/ImportPage';
 import { AuditPage } from '@/features/audit/AuditPage';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 
 type Route = 'inicio' | 'empenhos' | 'novo-empenho' | 'config' | 'import' | 'audit';
 
@@ -92,6 +93,22 @@ function IconMenu() {
   );
 }
 
+function IconChevronLeft() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  );
+}
+
+function IconChevronRight() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  );
+}
+
 // ── Nav item ──────────────────────────────────────────────────────────────────
 
 function NavItem({ icon, label, active, onClick }: { icon: ReactNode; label: string; active: boolean; onClick: () => void }) {
@@ -122,10 +139,11 @@ function NavItem({ icon, label, active, onClick }: { icon: ReactNode; label: str
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 function Sidebar({
-  route, setRoute, isAdmin, isOpen, onClose,
+  route, setRoute, isAdmin, isOpen, onClose, isCollapsed, onToggle,
 }: {
   route: Route; setRoute: (r: Route) => void;
   isAdmin: boolean; isOpen: boolean; onClose: () => void;
+  isCollapsed: boolean; onToggle: () => void;
 }) {
   const { user, logout } = useAuthStore();
   const initials = user?.nome
@@ -218,6 +236,29 @@ function Sidebar({
       )}
 
       <div style={{ flex: 1 }} />
+
+      {/* Desktop collapse toggle — hidden on mobile via .sidebar-toggle class */}
+      <div
+        className="sidebar-toggle"
+        style={{ padding: '6px 12px 2px', justifyContent: 'flex-end' }}
+      >
+        <button
+          onClick={onToggle}
+          title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+          aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+          style={{
+            width: 30, height: 30, borderRadius: 8,
+            display: 'grid', placeItems: 'center',
+            color: C.ink500, background: 'transparent',
+            border: `1px solid ${C.line}`, cursor: 'pointer',
+            transition: 'background .2s, color .2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.bgSoft; e.currentTarget.style.color = C.ink900; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink500; }}
+        >
+          {isCollapsed ? <IconChevronRight /> : <IconChevronLeft />}
+        </button>
+      </div>
 
       {/* User */}
       <div
@@ -385,9 +426,20 @@ export function MainLayout() {
   const { user } = useAuthStore();
   const [route, setRoute] = useState<Route>('inicio');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('sidebar-collapsed') === 'true'; } catch { return false; }
+  });
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const handleNovo = () => { setRoute('novo-empenho'); setSidebarOpen(false); };
+
+  function toggleCollapse() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('sidebar-collapsed', String(next)); } catch { /* */ }
+      return next;
+    });
+  }
 
   // ESC key closes the mobile sidebar
   useEffect(() => {
@@ -409,7 +461,7 @@ export function MainLayout() {
   }, [sidebarOpen]);
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
       {/* Mobile backdrop */}
       <div
         className={`app-backdrop${sidebarOpen ? ' is-open' : ''}`}
@@ -423,17 +475,21 @@ export function MainLayout() {
         isAdmin={isAdmin}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggle={toggleCollapse}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, background: C.bgSoft }}>
         <Topbar route={route} onNovo={handleNovo} onMenuOpen={() => setSidebarOpen(true)} />
 
         <main className="content-pad" style={{ padding: '24px 32px 56px', flex: 1 }}>
-          {route === 'inicio' && <InicioPage onNovo={handleNovo} />}
-          {(route === 'empenhos' || route === 'novo-empenho') && <EmpenhosPage />}
-          {route === 'config' && isAdmin && <ConfigPage />}
-          {route === 'import' && isAdmin && <ImportPage />}
-          {route === 'audit' && isAdmin && <AuditPage />}
+          <ErrorBoundary key={route}>
+            {route === 'inicio' && <InicioPage onNovo={handleNovo} />}
+            {(route === 'empenhos' || route === 'novo-empenho') && <EmpenhosPage />}
+            {route === 'config' && isAdmin && <ConfigPage />}
+            {route === 'import' && isAdmin && <ImportPage />}
+            {route === 'audit' && isAdmin && <AuditPage />}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

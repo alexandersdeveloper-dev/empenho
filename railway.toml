@@ -1,10 +1,8 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm --filter @ficha-empenho/shared build && pnpm --filter @ficha-empenho/api build"
+buildCommand = "pnpm install && pnpm --filter @ficha-empenho/shared build && pnpm --filter @ficha-empenho/api build"
 
 [deploy]
 startCommand = "node apps/api/dist/main"
-healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 30
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 5
+restartPolicyMaxRetries = 3

@@ -84,6 +84,7 @@
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 100dvh;
+  transition: grid-template-columns 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Sidebar base */
@@ -92,7 +93,11 @@
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Sidebar toggle button: hidden by default; shown on desktop only */
+.sidebar-toggle { display: none; }
 
 /* Backdrop: hidden by default */
 .app-backdrop {
@@ -110,34 +115,69 @@
 /* Hamburger button: hidden by default (desktop) */
 .hamburger { display: none; }
 
-/* ── Tablet (768–1023px): icon-only collapsed sidebar ─────────────────────── */
+/* ── Tablet (768–1023px): always icon-only sidebar ───────────────────────── */
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .app-layout { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
   .app-sidebar { width: var(--sidebar-w-collapsed) !important; }
 
-  /* Hide text-only elements */
   .sidebar-label,
   .sidebar-brand-text,
   .sidebar-section-title,
   .sidebar-user-info { display: none !important; }
 
-  /* Center nav items */
   .nav-item {
     justify-content: center !important;
     padding: 10px !important;
     gap: 0 !important;
   }
 
-  /* Center brand area */
   .sidebar-brand {
     justify-content: center !important;
     padding: 16px 10px !important;
     gap: 0 !important;
   }
 
-  /* Center + stack user area */
   .sidebar-user {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 12px 8px !important;
+  }
+}
+
+/* ── Desktop (≥ 1024px): optional collapse via .sidebar-collapsed class ─── */
+
+@media (min-width: 1024px) {
+  .sidebar-toggle { display: flex; }
+
+  .app-layout.sidebar-collapsed {
+    grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+  }
+
+  .app-layout.sidebar-collapsed .app-sidebar {
+    width: var(--sidebar-w-collapsed) !important;
+  }
+
+  .app-layout.sidebar-collapsed .sidebar-label,
+  .app-layout.sidebar-collapsed .sidebar-brand-text,
+  .app-layout.sidebar-collapsed .sidebar-section-title,
+  .app-layout.sidebar-collapsed .sidebar-user-info { display: none !important; }
+
+  .app-layout.sidebar-collapsed .nav-item {
+    justify-content: center !important;
+    padding: 10px !important;
+    gap: 0 !important;
+  }
+
+  .app-layout.sidebar-collapsed .sidebar-brand {
+    justify-content: center !important;
+    padding: 16px 10px !important;
+    gap: 0 !important;
+  }
+
+  .app-layout.sidebar-collapsed .sidebar-user {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
