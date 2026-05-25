@@ -157,7 +157,15 @@ function Sidebar({
           display: 'flex', alignItems: 'center', gap: 12, overflow: 'hidden',
         }}
       >
-        <img src="/logo.png" alt="PMP" style={{ height: 28, width: 'auto', flexShrink: 0 }} />
+        <div style={{
+          width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+          background: C.ink900,
+          display: 'grid', placeItems: 'center',
+          fontFamily: '"IBM Plex Mono", monospace',
+          fontWeight: 700, fontSize: 9.5, letterSpacing: '0.04em', color: '#fff',
+        }}>
+          PM
+        </div>
         <div className="sidebar-brand-text" style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.ink500 }}>
             SEFIN

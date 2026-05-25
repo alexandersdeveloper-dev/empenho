@@ -124,7 +124,7 @@ function IconAlert() {
 const features = [
   { icon: <IconShield />, color: S.blue, title: 'Acesso seguro e auditado', desc: 'Todas as operações registradas com trilha de auditoria completa.' },
   { icon: <IconChart />, color: S.yellow, title: 'Relatórios em tempo real', desc: 'Acompanhamento por departamento, exercício e categoria de despesa.' },
-  { icon: <IconUsers />, color: S.red, title: 'Controle de usuários', desc: 'Atribua perfis e gerencie permissões por secretaria.' },
+  { icon: <IconUsers />, color: S.red, title: 'Controle de usuários', desc: 'Gerenciamento de permissões por Secretarias' },
 ];
 
 export function AuthPage() {
@@ -188,26 +188,24 @@ export function AuthPage() {
       }}>
         <div style={stripe} />
 
-        {/* Watermark */}
-        <div aria-hidden style={{
-          position: 'absolute', right: -40, bottom: -30,
-          fontFamily: 'Fraunces, Georgia, serif', fontWeight: 700,
-          fontSize: 200, letterSpacing: '-0.03em',
-          color: 'rgba(255,255,255,0.025)', lineHeight: 0.85,
-          pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap',
-        }}>
-          PARINTINS
-        </div>
-
-        {/* Logo + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative', zIndex: 2 }}>
-          <img src="/logo.png" alt="Prefeitura de Parintins" style={{ height: 56, width: 'auto', filter: 'brightness(0) invert(1)' }} />
-          <div style={{ width: 1, height: 38, background: 'rgba(255,255,255,0.18)' }} />
+        {/* Logo mark + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, position: 'relative', zIndex: 2 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(255,255,255,0.1)',
+            border: '1.5px solid rgba(255,255,255,0.18)',
+            display: 'grid', placeItems: 'center',
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontWeight: 700, fontSize: 13, letterSpacing: '0.04em', color: '#fff',
+          }}>
+            PM
+          </div>
+          <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
           <div>
             <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
               Secretaria de Finanças
             </div>
-            <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>Fichas de Empenho</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, color: '#fff' }}>Fichas de Empenho</div>
           </div>
         </div>
 
@@ -231,11 +229,7 @@ export function AuthPage() {
             letterSpacing: '-0.025em', margin: '0 0 22px', color: '#fff',
           }}>
             Gestão de empenhos da{' '}
-            <span style={{
-              fontStyle: 'italic', fontWeight: 500,
-              background: `linear-gradient(95deg, ${S.blue}, ${S.yellow} 60%, ${S.red})`,
-              WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-            }}>
+            <span style={{ fontStyle: 'italic', fontWeight: 500, color: 'rgba(255,255,255,0.82)' }}>
               administração municipal
             </span>
             .
