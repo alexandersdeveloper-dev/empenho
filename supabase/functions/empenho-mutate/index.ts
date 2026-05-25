@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 function json(body: unknown, status = 200) {
@@ -29,6 +30,12 @@ function normalizarNatureza(s: string | null | undefined): string {
 function padSubelemento(sub: string | null | undefined): string {
   if (!sub) return '';
   return String(sub).trim().padStart(2, '0');
+}
+
+function toDateOrNull(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const s = String(v).trim();
+  return s === '' ? null : s;
 }
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -167,8 +174,8 @@ async function salvarLiquidacao(
     .insert({
       empenho_id: empenhoId,
       valor: liquidacao.valor ?? 0,
-      data_liquidacao: liquidacao.data_liquidacao ?? null,
-      data_pagamento: liquidacao.data_pagamento ?? null,
+      data_liquidacao: toDateOrNull(liquidacao.data_liquidacao),
+      data_pagamento: toDateOrNull(liquidacao.data_pagamento),
       numero_op: liquidacao.numero_op ?? null,
       forma_pagamento: liquidacao.forma_pagamento ?? null,
       conta: liquidacao.conta ?? null,
@@ -186,7 +193,7 @@ async function salvarLiquidacao(
     const rows = parcelas.map((p, i) => ({
       liquidacao_id: liq.id,
       valor: p.valor ?? 0,
-      data: p.data ?? null,
+      data: toDateOrNull(p.data),
       forma_pagamento: p.forma_pagamento ?? null,
       conta: p.conta ?? null,
       numero_op: p.numero_op ?? null,
@@ -264,7 +271,7 @@ serve(async (req) => {
           exercicio: dto.exercicio,
           numero_contrato: dto.numero_contrato ?? null,
           numero_convenio: dto.numero_convenio ?? null,
-          data_empenho: dto.data_empenho ?? null,
+          data_empenho: toDateOrNull(dto.data_empenho),
           usuario_id: perfil.id,
           usuario_nome: perfil.nome,
         })
@@ -329,7 +336,7 @@ serve(async (req) => {
           exercicio: dto.exercicio,
           numero_contrato: dto.numero_contrato ?? null,
           numero_convenio: dto.numero_convenio ?? null,
-          data_empenho: dto.data_empenho ?? null,
+          data_empenho: toDateOrNull(dto.data_empenho),
         })
         .eq('id', id);
 

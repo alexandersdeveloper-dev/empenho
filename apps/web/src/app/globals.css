@@ -284,6 +284,23 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.skeleton-bone {
+  background: linear-gradient(90deg, #f1f3f7 25%, #e4e8ee 50%, #f1f3f7 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 6px;
+}
+
 /* ── Print ────────────────────────────────────────────────────────────────── */
 
 @media print {

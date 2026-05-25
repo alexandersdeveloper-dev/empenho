@@ -67,11 +67,14 @@ export function useEmpenho(id: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('empenhos')
-        .select('*, descontos(*), liquidacoes(*, parcelas(*)), departamento:departamentos(*), credor:credores(*)')
+        .select('*, descontos(*), liquidacoes:liquidacoes(*, parcelas(*)), departamento:departamentos(*), credor:credores(*)')
         .eq('id', id)
         .single();
       if (error) throw new Error(error.message);
-      return data as Empenho;
+      // PostgREST returns related rows as arrays; normalize liquidacoes[] → liquidacao
+      const raw = data as Record<string, unknown>;
+      const liquidacoes = raw.liquidacoes as import('@ficha-empenho/shared').Liquidacao[] | undefined;
+      return { ...raw, liquidacao: liquidacoes?.[0] } as Empenho;
     },
     enabled: !!id,
   });

@@ -3,7 +3,9 @@ import { useEmpenhos, useEmpenho, useExcluirEmpenho } from '../hooks/useEmpenhos
 import { formatCurrencyBR } from '@ficha-empenho/shared';
 import type { Empenho } from '@ficha-empenho/shared';
 import { EmpenhoForm } from './EmpenhoForm';
+import { EmpenhoFormSkeleton } from './EmpenhoFormSkeleton';
 import { FichaEmpenho } from './FichaEmpenho';
+import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
 
 function FichaView({
   fichaId,
@@ -39,11 +41,7 @@ function FormView({
   const { data: empenho, isLoading } = useEmpenho(editId ?? 0);
 
   if (editId && isLoading) {
-    return (
-      <div className="flex justify-center py-20">
-        <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
-      </div>
-    );
+    return <EmpenhoFormSkeleton />;
   }
 
   return (
@@ -66,6 +64,7 @@ export function EmpenhosPage() {
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'list' | 'form' | 'ficha'>('list');
   const [editId, setEditId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; codigo: string } | null>(null);
 
   const { data, isLoading } = useEmpenhos({ q: q || undefined, page, limit: 50 });
   const excluir = useExcluirEmpenho();
@@ -193,9 +192,7 @@ export function EmpenhosPage() {
                           Editar
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Excluir este empenho?')) excluir.mutate(e.id);
-                          }}
+                          onClick={() => setDeleteTarget({ id: e.id, codigo: e.codigo_interno })}
                           className="hidden sm:inline-flex px-2.5 py-1.5 rounded-lg text-accent-red hover:bg-[#fef5f5] text-xs font-medium transition"
                         >
                           Excluir
@@ -234,6 +231,19 @@ export function EmpenhosPage() {
           )}
         </>
       )}
+
+      <ConfirmDeleteModal
+        open={deleteTarget !== null}
+        codigoInterno={deleteTarget?.codigo ?? ''}
+        isLoading={excluir.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          excluir.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+          });
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
