@@ -136,7 +136,7 @@ function QrConfigSection() {
                 type="checkbox"
                 checked={camposSelecionados.includes(campo)}
                 onChange={() => toggle(campo)}
-                className="rounded text-brand-600"
+                className="rounded text-ink-900"
               />
               <span>{CAMPOS_LABELS[campo] ?? campo}</span>
               <span className="text-gray-400 text-xs ml-auto font-mono">{campo}</span>
@@ -198,7 +198,7 @@ function QrConfigSection() {
           <input
             value={separador}
             onChange={(e) => setSeparador(e.target.value)}
-            className="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none font-mono"
+            className="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-ink-900 outline-none font-mono"
             placeholder=";"
           />
           <p className="text-xs text-gray-400 mt-1">Use \t para tabulação</p>
@@ -207,7 +207,7 @@ function QrConfigSection() {
         <button
           onClick={() => salvar.mutate()}
           disabled={salvar.isPending}
-          className="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-60"
+          className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
         >
           {salvar.isPending ? 'Salvando…' : 'Salvar configuração QR'}
         </button>
@@ -267,7 +267,7 @@ function CamposObrigatoriosSection() {
               type="checkbox"
               checked={selecionados.includes(key)}
               onChange={() => toggle(key)}
-              className="rounded text-brand-600"
+              className="rounded text-ink-900"
             />
             <span className="text-sm">{label}</span>
           </label>
@@ -276,7 +276,7 @@ function CamposObrigatoriosSection() {
       <button
         onClick={() => salvar.mutate()}
         disabled={salvar.isPending}
-        className="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-60"
+        className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
       >
         {salvar.isPending ? 'Salvando…' : 'Salvar'}
       </button>
@@ -353,7 +353,7 @@ function UsuariosSection() {
         <p className="text-sm text-gray-500">Gerencie os usuários do sistema.</p>
         <button
           onClick={() => { setShowForm(!showForm); reset(); }}
-          className="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 transition"
+          className="rounded-xl bg-ink-900 text-white px-4 py-2 text-sm font-semibold hover:bg-ink-700 transition"
         >
           {isCriar ? 'Cancelar' : '+ Novo Usuário'}
         </button>
@@ -368,25 +368,25 @@ function UsuariosSection() {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Nome completo</label>
-            <input {...register('nome')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+            <input {...register('nome')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
             {errors.nome && <p className="text-xs text-red-500 mt-0.5">{errors.nome.message}</p>}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">E-mail</label>
-            <input type="email" {...register('email')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+            <input type="email" {...register('email')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
             {errors.email && <p className="text-xs text-red-500 mt-0.5">{errors.email.message}</p>}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Senha</label>
-            <input type="password" {...register('password')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
+            <input type="password" {...register('password')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900" />
             {errors.password && <p className="text-xs text-red-500 mt-0.5">{errors.password.message}</p>}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Perfil</label>
-            <select {...register('role')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-white">
+            <select {...register('role')} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900 bg-white">
               <option value="viewer">Visualizador</option>
               <option value="user">Usuário</option>
               <option value="admin">Admin</option>
@@ -396,7 +396,7 @@ function UsuariosSection() {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Departamento</label>
-            <select {...register('departamento_id', { setValueAs: (v) => v ? Number(v) : null })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-white">
+            <select {...register('departamento_id', { setValueAs: (v) => v ? Number(v) : null })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-ink-900 bg-white">
               <option value="">— nenhum —</option>
               {departamentos.map((d) => (
                 <option key={d.id} value={d.id}>{d.nome}</option>
@@ -408,7 +408,7 @@ function UsuariosSection() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-lg bg-brand-600 text-white px-5 py-2 text-sm font-medium hover:bg-brand-700 transition disabled:opacity-60"
+              className="rounded-xl bg-ink-900 text-white px-5 py-2 text-sm font-semibold hover:bg-ink-700 transition disabled:opacity-60"
             >
               {isSubmitting ? 'Criando…' : 'Criar usuário'}
             </button>
@@ -418,7 +418,7 @@ function UsuariosSection() {
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="h-7 w-7 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -486,22 +486,43 @@ export function ConfigPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Configurações</h2>
+      <div className="mb-5">
+        <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 4px', color: '#0f1622' }}>
+          Configurações
+        </h2>
+        <p style={{ fontSize: 14, color: '#5b667a', margin: 0 }}>
+          Personalize campos, QR codes e acesso de usuários.
+        </p>
+      </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition ${
-              tab === t.key
-                ? 'border-brand-600 text-brand-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Scrollable tab bar */}
+      <div className="tabs-scroll mb-6" style={{ borderBottom: '1px solid #e3e7ee' }}>
+        <div className="flex gap-0 min-w-max">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                padding: '10px 18px',
+                fontSize: 13.5,
+                fontWeight: 600,
+                fontFamily: 'Manrope, system-ui, sans-serif',
+                borderTop: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderBottom: `2px solid ${tab === t.key ? '#0f1622' : 'transparent'}`,
+                marginBottom: -1,
+                color: tab === t.key ? '#0f1622' : '#5b667a',
+                background: 'transparent',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'color .15s',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === 'qr' && <QrConfigSection />}

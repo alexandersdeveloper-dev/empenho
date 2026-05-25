@@ -173,10 +173,10 @@ export function AuthPage() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 1fr', minHeight: '100vh' }}>
+    <div className="auth-layout">
 
       {/* ── Left: brand panel ── */}
-      <aside style={{
+      <aside className="auth-brand" style={{
         position: 'relative',
         background: S.ink900,
         color: '#fff',
@@ -279,9 +279,8 @@ export function AuthPage() {
       </aside>
 
       {/* ── Right: form panel ── */}
-      <section style={{
+      <section className="auth-form-pad" style={{
         background: '#fff',
-        padding: '56px 64px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -305,7 +304,7 @@ export function AuthPage() {
           <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.blue, marginBottom: 12 }}>
             Entrar no sistema
           </div>
-          <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 38, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '0 0 12px', color: S.ink900 }}>
+          <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '0 0 12px', color: S.ink900 }} className="text-[28px] sm:text-[34px] md:text-[38px]">
             Bem-vindo de volta.
           </h2>
           <p style={{ color: S.ink500, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 36px' }}>

@@ -114,13 +114,13 @@ function UploadCard({
         <button
           onClick={() => inputRef.current?.click()}
           disabled={state === 'uploading'}
-          className="rounded-lg border border-brand-600 text-brand-700 px-4 py-1.5 text-sm font-medium hover:bg-brand-50 transition disabled:opacity-60"
+          className="rounded-xl border border-ink-900 text-ink-900 px-4 py-1.5 text-sm font-semibold hover:bg-bg-soft transition disabled:opacity-60"
         >
           {state === 'uploading' ? 'Enviando…' : 'Selecionar arquivo'}
         </button>
 
         {state === 'uploading' && (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-ink-900 border-t-transparent" />
         )}
       </div>
 
@@ -146,15 +146,18 @@ function UploadCard({
 export function ImportPage() {
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-1">Importar Dados</h2>
-      <p className="text-sm text-gray-500 mb-6">
-        Faça upload de planilhas Excel (.xlsx/.xls) ou CSV para popular as tabelas do sistema.
-        Campos em branco na planilha são ignorados.
-      </p>
+      <div className="mb-5">
+        <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 4px', color: '#0f1622' }}>
+          Importar Dados
+        </h2>
+        <p style={{ fontSize: 14, color: '#5b667a', margin: 0 }}>
+          Faça upload de planilhas Excel (.xlsx/.xls) ou CSV para popular as tabelas do sistema.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {IMPORTS.map((imp) => (
-          <UploadCard key={imp.key} {...imp} />
+        {IMPORTS.map(({ key, ...imp }) => (
+          <UploadCard key={key} {...imp} />
         ))}
       </div>
     </div>

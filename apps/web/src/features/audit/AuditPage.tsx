@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/shared/lib/apiClient';
 import type { AuditLog, ApiMeta } from '@ficha-empenho/shared';
 
-const OPERACAO_BADGE: Record<string, string> = {
-  INSERT: 'bg-green-50 text-green-700',
-  UPDATE: 'bg-yellow-50 text-yellow-700',
-  DELETE: 'bg-red-50 text-red-700',
+const OPERACAO_PILL: Record<string, { bg: string; color: string }> = {
+  INSERT: { bg: '#effaf2', color: '#1f7a3f' },
+  UPDATE: { bg: '#fff5dd', color: '#8a5a08' },
+  DELETE: { bg: '#fef5f5', color: '#8b2424' },
 };
 
 function dataBR(s: string) {
@@ -29,8 +29,7 @@ export function AuditPage() {
     queryFn: async () => {
       const { data } = await apiClient.get('/audit', {
         params: {
-          page,
-          limit: 50,
+          page, limit: 50,
           tabela: tabela || undefined,
           operacao: operacao || undefined,
           de: de || undefined,
@@ -44,124 +43,145 @@ export function AuditPage() {
 
   const logs = data?.data ?? [];
   const meta = data?.meta;
+  const hasFilters = !!(tabela || operacao || de || ate);
 
   function resetFiltros() {
-    setTabela('');
-    setOperacao('');
-    setDe('');
-    setAte('');
-    setPage(1);
+    setTabela(''); setOperacao(''); setDe(''); setAte(''); setPage(1);
   }
+
+  const inputClass = "rounded-xl border border-line px-3 py-2 text-sm bg-white text-ink-900 outline-none focus:border-ink-900 transition w-full";
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Log de Auditoria</h2>
+      {/* Header */}
+      <div className="mb-5">
+        <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 4px', color: '#0f1622' }}>
+          Log de Auditoria
+        </h2>
+        <p style={{ fontSize: 14, color: '#5b667a', margin: 0 }}>
+          Histórico completo de operações no sistema.
+        </p>
+      </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-3 mb-4 items-end">
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Tabela</label>
-          <input
-            value={tabela}
-            onChange={(e) => { setTabela(e.target.value); setPage(1); }}
-            placeholder="ex: empenhos"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 w-40"
-          />
+      {/* Filters */}
+      <div className="rounded-xl border border-line bg-white p-4 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-ink-500 mb-1.5" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Tabela
+            </label>
+            <input
+              value={tabela}
+              onChange={(e) => { setTabela(e.target.value); setPage(1); }}
+              placeholder="ex: empenhos"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-500 mb-1.5" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Operação
+            </label>
+            <select
+              value={operacao}
+              onChange={(e) => { setOperacao(e.target.value); setPage(1); }}
+              className={inputClass}
+            >
+              <option value="">Todas</option>
+              <option value="INSERT">INSERT</option>
+              <option value="UPDATE">UPDATE</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-500 mb-1.5" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              De
+            </label>
+            <input type="date" value={de} onChange={(e) => { setDe(e.target.value); setPage(1); }} className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-500 mb-1.5" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Até
+            </label>
+            <input type="date" value={ate} onChange={(e) => { setAte(e.target.value); setPage(1); }} className={inputClass} />
+          </div>
         </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Operação</label>
-          <select
-            value={operacao}
-            onChange={(e) => { setOperacao(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-white"
-          >
-            <option value="">Todas</option>
-            <option value="INSERT">INSERT</option>
-            <option value="UPDATE">UPDATE</option>
-            <option value="DELETE">DELETE</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">De</label>
-          <input
-            type="date"
-            value={de}
-            onChange={(e) => { setDe(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Até</label>
-          <input
-            type="date"
-            value={ate}
-            onChange={(e) => { setAte(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
-        {(tabela || operacao || de || ate) && (
-          <button
-            onClick={resetFiltros}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            Limpar filtros
-          </button>
+        {hasFilters && (
+          <div className="mt-3 pt-3 border-t border-line-2">
+            <button onClick={resetFiltros} className="text-sm text-accent-blue hover:underline font-medium">
+              Limpar filtros
+            </button>
+          </div>
         )}
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="h-7 w-7 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-xl border border-line bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
+              <thead style={{ background: '#f6f8fb' }}>
                 <tr>
-                  <th className="px-4 py-3 text-left">Data/Hora</th>
-                  <th className="px-4 py-3 text-left">Tabela</th>
-                  <th className="px-4 py-3 text-left">Operação</th>
-                  <th className="px-4 py-3 text-left">Registro</th>
-                  <th className="px-4 py-3 text-left">Usuário</th>
-                  <th className="px-4 py-3 text-left">IP</th>
-                  <th className="px-4 py-3 text-right">Detalhes</th>
+                  {[
+                    { label: 'Data/Hora', className: '' },
+                    { label: 'Tabela', className: 'col-hide-mobile' },
+                    { label: 'Operação', className: '' },
+                    { label: 'Registro', className: 'col-hide-sm' },
+                    { label: 'Usuário', className: 'col-hide-mobile' },
+                    { label: 'IP', className: 'col-hide-mobile' },
+                    { label: 'Detalhes', className: '' },
+                  ].map(({ label, className }) => (
+                    <th
+                      key={label}
+                      className={`px-4 py-3 text-left ${className}`}
+                      style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', whiteSpace: 'nowrap' }}
+                    >
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={7} className="px-4 py-10 text-center text-ink-400 text-sm">
                       Nenhum registro encontrado
                     </td>
                   </tr>
                 )}
                 {logs.map((log) => (
                   <>
-                    <tr key={log.id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                    <tr key={log.id} className="hover:bg-bg-soft transition" style={{ borderBottom: '1px solid #eef1f6' }}>
+                      <td className="px-4 py-3 text-ink-500 whitespace-nowrap text-xs">
                         {dataBR(log.created_at)}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs">{log.tabela}</td>
+                      <td className="px-4 py-3 col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#2a3344' }}>
+                        {log.tabela}
+                      </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            OPERACAO_BADGE[log.operacao] ?? 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          padding: '3px 10px', borderRadius: 999,
+                          fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 500,
+                          ...(OPERACAO_PILL[log.operacao] ?? { bg: '#f0f3f8', color: '#5b667a' }),
+                          background: (OPERACAO_PILL[log.operacao] ?? { bg: '#f0f3f8' }).bg,
+                          color: (OPERACAO_PILL[log.operacao] ?? { color: '#5b667a' }).color,
+                        }}>
                           {log.operacao}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs">{log.registro_id}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{log.usuario_id ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{log.ip ?? '—'}</td>
+                      <td className="px-4 py-3 col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#5b667a' }}>
+                        {log.registro_id}
+                      </td>
+                      <td className="px-4 py-3 text-ink-500 text-xs col-hide-mobile">{log.usuario_id ?? '—'}</td>
+                      <td className="px-4 py-3 text-ink-500 text-xs col-hide-mobile">{log.ip ?? '—'}</td>
                       <td className="px-4 py-3 text-right">
                         {(log.dados_antes || log.dados_depois) && (
                           <button
-                            onClick={() =>
-                              setExpandido(expandido === log.id ? null : log.id)
-                            }
-                            className="text-brand-600 hover:underline text-xs"
+                            onClick={() => setExpandido(expandido === log.id ? null : log.id)}
+                            className="text-xs font-medium text-accent-blue hover:underline"
                           >
                             {expandido === log.id ? 'Ocultar' : 'Ver'}
                           </button>
@@ -170,23 +190,20 @@ export function AuditPage() {
                     </tr>
                     {expandido === log.id && (
                       <tr key={`${log.id}-detail`}>
-                        <td
-                          colSpan={7}
-                          className="px-4 py-3 bg-gray-50 border-t border-gray-100"
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                        <td colSpan={7} className="px-4 py-3" style={{ background: '#f6f8fb', borderBottom: '1px solid #eef1f6' }}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {log.dados_antes && (
                               <div>
-                                <p className="text-gray-500 font-sans mb-1 font-semibold">Antes:</p>
-                                <pre className="bg-white rounded border border-gray-200 p-2 overflow-x-auto text-xs">
+                                <p className="text-xs font-semibold text-ink-500 mb-1.5">Antes:</p>
+                                <pre className="bg-white rounded-lg border border-line p-3 overflow-x-auto text-xs text-ink-700" style={{ fontFamily: '"IBM Plex Mono", monospace' }}>
                                   {JSON.stringify(log.dados_antes, null, 2)}
                                 </pre>
                               </div>
                             )}
                             {log.dados_depois && (
                               <div>
-                                <p className="text-gray-500 font-sans mb-1 font-semibold">Depois:</p>
-                                <pre className="bg-white rounded border border-gray-200 p-2 overflow-x-auto text-xs">
+                                <p className="text-xs font-semibold text-ink-500 mb-1.5">Depois:</p>
+                                <pre className="bg-white rounded-lg border border-line p-3 overflow-x-auto text-xs text-ink-700" style={{ fontFamily: '"IBM Plex Mono", monospace' }}>
                                   {JSON.stringify(log.dados_depois, null, 2)}
                                 </pre>
                               </div>
@@ -202,22 +219,20 @@ export function AuditPage() {
           </div>
 
           {meta && meta.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-              <span>
-                {meta.total} registros · Página {meta.page} de {meta.totalPages}
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 text-sm text-ink-500">
+              <span>{meta.total} registros · Página {meta.page} de {meta.totalPages}</span>
               <div className="flex gap-2">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-lg border border-line bg-white hover:border-ink-700 disabled:opacity-40 transition text-ink-700 text-sm font-medium"
                 >
                   Anterior
                 </button>
                 <button
                   disabled={page === meta.totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-lg border border-line bg-white hover:border-ink-700 disabled:opacity-40 transition text-ink-700 text-sm font-medium"
                 >
                   Próxima
                 </button>
