@@ -39,34 +39,6 @@ const stripeBottom: CSSProperties = {
   height: 6,
 };
 
-function IconShield() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2 4 5v6c0 5 3.5 9.7 8 11 4.5-1.3 8-6 8-11V5l-8-3z"/>
-      <path d="m9 12 2 2 4-4"/>
-    </svg>
-  );
-}
-
-function IconChart() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18"/>
-      <path d="m7 14 4-4 4 4 5-5"/>
-    </svg>
-  );
-}
-
-function IconUsers() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-  );
-}
-
 function IconMail() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -120,12 +92,6 @@ function IconAlert() {
     </svg>
   );
 }
-
-const features = [
-  { icon: <IconShield />, color: S.blue, title: 'Acesso seguro e auditado', desc: 'Todas as operações registradas com trilha de auditoria completa.' },
-  { icon: <IconChart />, color: S.yellow, title: 'Relatórios em tempo real', desc: 'Acompanhamento por departamento, exercício e categoria de despesa.' },
-  { icon: <IconUsers />, color: S.red, title: 'Controle de usuários', desc: 'Gerenciamento de permissões por Secretarias' },
-];
 
 export function AuthPage() {
   const [showPw, setShowPw] = useState(false);
@@ -210,23 +176,23 @@ export function AuthPage() {
         </div>
 
         {/* Mid content */}
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 540 }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 520 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 10,
-            padding: '6px 12px 6px 8px', borderRadius: 999,
-            background: 'rgba(62,163,255,0.14)', color: '#8ec6ff',
+            padding: '6px 14px 6px 10px', borderRadius: 999,
+            background: 'rgba(62,163,255,0.12)', color: '#8ec6ff',
             fontFamily: '"IBM Plex Mono", monospace', fontSize: 11,
             letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 500,
-            marginBottom: 28,
+            marginBottom: 32,
           }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: S.blue, boxShadow: '0 0 0 3px rgba(62,163,255,0.25)', display: 'inline-block' }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: S.blue, boxShadow: '0 0 0 3px rgba(62,163,255,0.22)', display: 'inline-block', flexShrink: 0 }} />
             Acesso restrito · SEFIN 2026
           </div>
 
           <h1 style={{
             fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600,
-            fontSize: 'clamp(32px, 3.2vw, 48px)', lineHeight: 1.05,
-            letterSpacing: '-0.025em', margin: '0 0 22px', color: '#fff',
+            fontSize: 'clamp(34px, 3.4vw, 52px)', lineHeight: 1.05,
+            letterSpacing: '-0.028em', margin: '0 0 24px', color: '#fff',
           }}>
             Gestão de empenhos da{' '}
             <span style={{ fontStyle: 'italic', fontWeight: 500, color: 'rgba(255,255,255,0.82)' }}>
@@ -235,29 +201,9 @@ export function AuthPage() {
             .
           </h1>
 
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: 'rgba(255,255,255,0.65)', maxWidth: '48ch', margin: '0 0 36px' }}>
+          <p style={{ fontSize: 16.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.6)', maxWidth: '44ch', margin: 0 }}>
             Plataforma oficial para registro, controle e acompanhamento das fichas de empenho da Prefeitura Municipal de Parintins.
           </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {features.map(f => (
-              <div key={f.title} style={{ display: 'flex', gap: 14, alignItems: 'start' }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  display: 'grid', placeItems: 'center',
-                  flexShrink: 0, color: f.color,
-                }}>
-                  {f.icon}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{f.title}</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 3, lineHeight: 1.5 }}>{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Footer */}
