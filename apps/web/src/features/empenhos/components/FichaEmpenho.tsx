@@ -30,32 +30,139 @@ function dataBR(d: string | null | undefined): string {
 }
 
 function v(x: string | number | null | undefined): string {
-  return x != null && x !== '' ? String(x) : '_____________';
+  return x != null && x !== '' ? String(x) : '—';
 }
-
 function vt(x: string | number | null | undefined): string {
   return x != null && x !== '' ? String(x) : '';
 }
 
-function CampoClassif({
+// ─── Design tokens (inline, print-safe) ───────────────────────────────────────
+
+const C = {
+  ink900: '#0f1622',
+  ink700: '#2a3344',
+  ink500: '#5b667a',
+  ink400: '#8590a3',
+  ink300: '#b4bccb',
+  line:   '#e3e7ee',
+  bg:     '#f6f8fb',
+  blue:   '#3ea3ff',
+  white:  '#ffffff',
+};
+
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+const SANS = 'Manrope, system-ui, sans-serif';
+const DISPLAY = 'Fraunces, Georgia, serif';
+
+// ─── Campo individual da grade ────────────────────────────────────────────────
+
+function Campo({
   label,
   valor,
-  span,
+  mono = false,
+  style,
 }: {
   label: string;
   valor: string;
-  span?: string;
+  mono?: boolean;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div
-      className={`border-b border-black px-1 pb-0.5 ${span ?? ''}`}
-      style={{ lineHeight: 1.1 }}
-    >
-      <span className="block text-[9px] font-semibold uppercase text-gray-600">{label}</span>
-      <b className="text-[11px] font-semibold break-words">{valor}</b>
+    <div style={{ borderBottom: `1px solid ${C.line}`, paddingBottom: 4, paddingTop: 2, ...style }}>
+      <div style={{
+        fontFamily: MONO,
+        fontSize: 7,
+        fontWeight: 500,
+        textTransform: 'uppercase',
+        letterSpacing: '0.12em',
+        color: C.ink400,
+        marginBottom: 2,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: mono ? MONO : SANS,
+        fontSize: mono ? 10 : 10.5,
+        fontWeight: 600,
+        color: C.ink900,
+        lineHeight: 1.2,
+        wordBreak: 'break-word',
+      }}>
+        {valor}
+      </div>
     </div>
   );
 }
+
+// ─── Cabeçalho de seção ───────────────────────────────────────────────────────
+
+function SecaoHeader({ titulo }: { titulo: string }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 7,
+      marginBottom: 8,
+      paddingBottom: 5,
+      borderBottom: `1.5px solid ${C.line}`,
+    }}>
+      <div style={{ width: 3, height: 13, background: C.ink900, borderRadius: 2, flexShrink: 0 }} />
+      <span style={{
+        fontFamily: MONO,
+        fontSize: 8,
+        fontWeight: 500,
+        textTransform: 'uppercase',
+        letterSpacing: '0.16em',
+        color: C.ink500,
+      }}>
+        {titulo}
+      </span>
+    </div>
+  );
+}
+
+// ─── Th de tabela ─────────────────────────────────────────────────────────────
+
+function Th({ children, align = 'left', w }: { children: React.ReactNode; align?: string; w?: string }) {
+  return (
+    <th style={{
+      padding: '4px 6px',
+      background: C.bg,
+      borderBottom: `1.5px solid ${C.line}`,
+      borderRight: `1px solid ${C.line}`,
+      fontFamily: MONO,
+      fontSize: 7.5,
+      fontWeight: 500,
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+      color: C.ink500,
+      textAlign: align as React.CSSProperties['textAlign'],
+      width: w,
+      whiteSpace: 'nowrap',
+    }}>
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, align = 'left', style }: { children: React.ReactNode; align?: string; style?: React.CSSProperties }) {
+  return (
+    <td style={{
+      padding: '4px 6px',
+      borderBottom: `1px solid ${C.line}`,
+      borderRight: `1px solid ${C.line}`,
+      fontFamily: MONO,
+      fontSize: 9.5,
+      color: C.ink700,
+      textAlign: align as React.CSSProperties['textAlign'],
+      ...style,
+    }}>
+      {children}
+    </td>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 
 export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
   const { data: configQr } = useQuery<ConfigQr>({
@@ -74,10 +181,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
 
   const hasEfd = descontos.some((d) => d.efd_codigo);
   const totalDesc = descontos.reduce((s, d) => s + (d.valor ?? 0), 0);
-
-  // Blank rows to always show at least 3 discount rows
   const blankDescRows = Math.max(0, 3 - descontos.length);
-  // Parcelas: always at least 3 rows
   const nParc = Math.max(3, parcelas.length);
 
   const qrText =
@@ -100,25 +204,27 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
 
   return (
     <>
-      {/* ── Botões (não imprimem) ─────────────────────────────────────────── */}
-      <div className="print:hidden max-w-[210mm] mx-auto mb-4 flex gap-3 flex-wrap">
+      {/* ── Barra de ações (não imprime) ──────────────────────────────────── */}
+      <div className="print:hidden max-w-[210mm] mx-auto mb-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={onVoltar}
-          className="text-sm text-brand-600 hover:underline"
+          className="text-sm text-ink-500 hover:text-ink-900 transition flex items-center gap-1.5"
         >
-          ← Voltar para lista
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Voltar
         </button>
         <button
           onClick={onEditar}
-          className="text-sm text-brand-600 hover:underline"
+          className="text-sm text-accent-blue hover:underline"
         >
           Editar
         </button>
         <button
           onClick={() => window.print()}
-          className="ml-auto rounded-lg bg-brand-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-brand-700 transition"
+          className="ml-auto rounded-xl bg-ink-900 text-white px-5 py-2 text-sm font-semibold hover:bg-ink-700 transition flex items-center gap-2"
         >
-          Imprimir
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir / PDF
         </button>
       </div>
 
@@ -127,347 +233,382 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
         className="mx-auto bg-white"
         style={{
           maxWidth: '210mm',
-          minHeight: '277mm',
-          padding: '12mm',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          fontFamily: "'Segoe UI', system-ui, sans-serif",
+          minHeight: '297mm',
+          boxShadow: '0 4px 32px rgba(15,22,34,.12)',
+          fontFamily: SANS,
         }}
       >
-        {/* Header */}
-        <header
-          className="flex justify-between items-start mb-4 pb-3"
-          style={{ borderBottom: '2px solid #0d47a1' }}
-        >
-          <div>
-            <h1 className="m-0 text-[1.1rem] font-bold" style={{ color: '#0d47a1' }}>
-              Prefeitura Municipal de Parintins
-            </h1>
-            <p className="mt-1 text-[0.85rem] text-gray-500 m-0">Sistema de Fichas de Empenho</p>
-          </div>
-          <div className="flex items-center gap-2 whitespace-nowrap mt-1">
-            <label className="text-[13px] font-bold">Nº DO EMPENHO</label>
-            <div style={{ width: 160, height: 16, borderBottom: '1.5px solid #000' }} />
+        {/* Header — banda escura */}
+        <header style={{ background: C.ink900, padding: '10mm 14mm 9mm' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{
+                fontFamily: DISPLAY,
+                fontSize: 16,
+                fontWeight: 600,
+                color: C.white,
+                letterSpacing: '-0.01em',
+                lineHeight: 1.2,
+              }}>
+                Prefeitura Municipal de Parintins
+              </div>
+              <div style={{
+                fontFamily: MONO,
+                fontSize: 8,
+                color: 'rgba(255,255,255,0.45)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                marginTop: 5,
+              }}>
+                Sistema de Fichas de Empenho
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{
+                fontFamily: MONO,
+                fontSize: 7,
+                color: 'rgba(255,255,255,0.45)',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                marginBottom: 4,
+              }}>
+                Código do Empenho
+              </div>
+              <div style={{
+                fontFamily: MONO,
+                fontSize: 16,
+                fontWeight: 700,
+                color: C.white,
+                letterSpacing: '0.04em',
+                borderBottom: '1.5px solid rgba(255,255,255,0.25)',
+                paddingBottom: 3,
+                minWidth: 120,
+              }}>
+                {empenho.codigo_interno}
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Classificação Orçamentária */}
-        <section className="mb-3">
-          <h3 className="m-0 mb-1.5 text-[0.9rem] font-semibold" style={{ color: '#0d47a1' }}>
-            Classificação Orçamentária
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(12, 1fr)',
-              gap: '4px 10px',
-            }}
-          >
-            <CampoClassif label="Nº Ficha" valor={v(empenho.numero_ficha)} span="col-span-2" />
-            <CampoClassif label="Data Emp." valor={dataBR(empenho.data_empenho)} span="col-span-2" />
-            <CampoClassif label="Dotação" valor={v(empenho.dotacao)} span="col-span-4" />
-            <CampoClassif label="STN" valor={v(empenho.stn)} span="col-span-2" />
-            <CampoClassif
-              label="Emenda"
-              valor={empenho.emenda ? (EMENDA_LABEL[empenho.emenda] ?? String(empenho.emenda)) : '—'}
-              span="col-span-2"
-            />
-            <CampoClassif
-              label="Exercício"
-              valor={EXERCICIO_LABEL[empenho.exercicio] ?? '—'}
-              span="col-span-2"
-            />
-            <CampoClassif
-              label="Projeto/Atividade"
-              valor={v(empenho.projeto_atividade)}
-              span="col-span-6"
-            />
-            <CampoClassif
-              label="Sub-elemento"
-              valor={
-                empenho.subelemento_codigo
-                  ? empenho.subelemento_codigo +
-                    (empenho.subelemento_descricao ? ' - ' + empenho.subelemento_descricao : '')
-                  : v(empenho.subelemento_descricao)
-              }
-              span="col-span-4"
-            />
-            <CampoClassif label="Nº Credor" valor={v(empenho.credor_numero)} span="col-span-2" />
-            <CampoClassif label="Credor" valor={v(empenho.credor_nome)} span="col-span-6" />
-            <CampoClassif
-              label="Tipo Emp."
-              valor={TIPO_LABEL[empenho.tipo_empenho] ?? '—'}
-              span="col-span-3"
-            />
-            <CampoClassif
-              label="Valor Empenho"
-              valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
-              span="col-span-4"
-            />
-          </div>
-        </section>
+        {/* Faixa de acento */}
+        <div style={{ height: 2.5, background: C.blue }} />
 
-        {/* Histórico */}
-        <section className="mb-3">
-          <h3 className="m-0 mb-1.5 text-[0.9rem] font-semibold" style={{ color: '#0d47a1' }}>
-            Histórico do Empenho
-          </h3>
-          <div
-            className="text-[0.85rem] whitespace-pre-wrap break-words"
-            style={{
-              border: '1px solid #eee',
-              padding: '0.5rem',
-              minHeight: '2rem',
-            }}
-          >
-            {v(empenho.historico)}
-          </div>
-        </section>
+        {/* Conteúdo */}
+        <div style={{ padding: '9mm 14mm 10mm' }}>
 
-        {/* Descontos */}
-        <section className="mb-3">
-          <h3 className="m-0 mb-1.5 text-[0.9rem] font-semibold" style={{ color: '#0d47a1' }}>
-            Descontos
-          </h3>
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '0.8rem',
-              tableLayout: 'fixed',
-            }}
-          >
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    padding: '4px 6px',
-                    border: '1px solid #ddd',
-                    background: '#e3f2fd',
-                    width: hasEfd ? '15%' : '20%',
-                    textAlign: 'left',
-                  }}
-                >
-                  Nº do Código
-                </th>
-                <th
-                  style={{
-                    padding: '4px 6px',
-                    border: '1px solid #ddd',
-                    background: '#e3f2fd',
-                    width: hasEfd ? '45%' : '55%',
-                    textAlign: 'left',
-                  }}
-                >
-                  Tipo
-                </th>
-                <th
-                  style={{
-                    padding: '4px 6px',
-                    border: '1px solid #ddd',
-                    background: '#e3f2fd',
-                    width: hasEfd ? '20%' : '25%',
-                    textAlign: 'right',
-                  }}
-                >
-                  Valor (R$)
-                </th>
-                {hasEfd && (
-                  <th
-                    style={{
-                      padding: '4px 6px',
-                      border: '1px solid #ddd',
-                      background: '#e3f2fd',
-                      width: '20%',
-                      textAlign: 'center',
-                    }}
-                  >
-                    EFD
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {descontos.map((d) => (
-                <tr key={d.id}>
-                  <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>{vt(d.codigo)}</td>
-                  <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>{vt(d.tipo)}</td>
-                  <td
-                    style={{
-                      padding: '3px 5px',
-                      border: '1px solid #ddd',
-                      textAlign: 'right',
-                    }}
-                  >
-                    {d.valor != null ? `R$ ${formatCurrencyBR(d.valor)}` : ''}
-                  </td>
-                  {hasEfd && (
-                    <td
-                      style={{
-                        padding: '3px 5px',
-                        border: '1px solid #ddd',
-                        textAlign: 'center',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {vt(d.efd_codigo)}
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {Array.from({ length: blankDescRows }).map((_, i) => (
-                <tr key={`blank-${i}`}>
-                  <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>&nbsp;</td>
-                  <td style={{ padding: '3px 5px', border: '1px solid #ddd' }} />
-                  <td style={{ padding: '3px 5px', border: '1px solid #ddd' }} />
-                  {hasEfd && <td style={{ padding: '3px 5px', border: '1px solid #ddd' }} />}
-                </tr>
-              ))}
-              <tr style={{ background: '#f5f5f5' }}>
-                <td
-                  colSpan={hasEfd ? 3 : 2}
-                  style={{ padding: '3px 5px', border: '1px solid #ddd', fontWeight: 600 }}
-                >
-                  Total Descontos
-                </td>
-                <td
-                  style={{
-                    padding: '3px 5px',
-                    border: '1px solid #ddd',
-                    fontWeight: 600,
-                    textAlign: 'right',
-                  }}
-                >
-                  R$ {formatCurrencyBR(totalDesc)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+          {/* ── Classificação Orçamentária ──────────────────────────────────── */}
+          <section style={{ marginBottom: 10 }}>
+            <SecaoHeader titulo="Classificação Orçamentária" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px 10px' }}>
 
-        {/* Liquidação */}
-        <section className="mb-3">
-          <h3 className="m-0 mb-1.5 text-[0.9rem] font-semibold" style={{ color: '#0d47a1' }}>
-            Liquidação
-          </h3>
-          <div
-            style={{
-              padding: '0.5rem',
-              background: '#fafafa',
-              borderRadius: 4,
-            }}
-          >
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '0.4rem 0.75rem',
-                marginBottom: '0.35rem',
-              }}
-            >
-              {(
-                [
-                  ['Valor Líquido', liquidacao?.valor != null ? `R$ ${formatCurrencyBR(liquidacao.valor)}` : ''],
-                  ['Data Liquidação', dataBR(liquidacao?.data_liquidacao)],
-                  ['Data Pagamento', dataBR(liquidacao?.data_pagamento)],
-                  ['Conta', vt(liquidacao?.conta)],
-                  ['Forma Pagamento', vt(liquidacao?.forma_pagamento)],
-                  ['Nº OP', vt(liquidacao?.numero_op)],
-                ] as [string, string][]
-              ).map(([label, val]) => (
-                <div key={label} className="flex flex-col">
-                  <span className="text-[0.7rem] text-gray-500">{label}</span>
-                  <span className="text-[0.85rem]">{val}</span>
-                </div>
-              ))}
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Nº Ficha" valor={v(empenho.numero_ficha)} mono />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Data do Empenho" valor={dataBR(empenho.data_empenho) || '—'} mono />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Tipo" valor={TIPO_LABEL[empenho.tipo_empenho] ?? '—'} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Exercício" valor={EXERCICIO_LABEL[empenho.exercicio] ?? '—'} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo
+                  label="Emenda"
+                  valor={empenho.emenda ? (EMENDA_LABEL[empenho.emenda] ?? String(empenho.emenda)) : '—'}
+                />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Código Interno" valor={v(empenho.codigo_interno)} mono />
+              </div>
+
+              <div style={{ gridColumn: 'span 5' }}>
+                <Campo label="Dotação (Natureza da Despesa)" valor={v(empenho.dotacao)} mono />
+              </div>
+              <div style={{ gridColumn: 'span 3' }}>
+                <Campo label="Fonte (STN)" valor={v(empenho.stn)} mono />
+              </div>
+              <div style={{ gridColumn: 'span 4' }}>
+                <Campo
+                  label="Sub-elemento"
+                  valor={
+                    empenho.subelemento_codigo
+                      ? empenho.subelemento_codigo + (empenho.subelemento_descricao ? ' — ' + empenho.subelemento_descricao : '')
+                      : v(empenho.subelemento_descricao)
+                  }
+                  mono
+                />
+              </div>
+
+              <div style={{ gridColumn: 'span 8' }}>
+                <Campo label="Projeto / Atividade" valor={v(empenho.projeto_atividade)} />
+              </div>
+              <div style={{ gridColumn: 'span 4' }}>
+                <Campo
+                  label="Valor do Empenho"
+                  valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
+                  mono
+                  style={{ borderBottom: `1.5px solid ${C.ink900}` }}
+                />
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo label="Nº do Credor" valor={v(empenho.credor_numero)} mono />
+              </div>
+              <div style={{ gridColumn: 'span 10' }}>
+                <Campo label="Nome do Credor" valor={v(empenho.credor_nome)} />
+              </div>
+
+              {(empenho.numero_contrato || empenho.numero_convenio) && (
+                <>
+                  <div style={{ gridColumn: 'span 4' }}>
+                    <Campo label="Nº do Contrato" valor={v(empenho.numero_contrato)} mono />
+                  </div>
+                  <div style={{ gridColumn: 'span 4' }}>
+                    <Campo label="Nº do Convênio" valor={v(empenho.numero_convenio)} mono />
+                  </div>
+                </>
+              )}
             </div>
+          </section>
 
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.75rem',
-              }}
-            >
+          {/* ── Histórico ────────────────────────────────────────────────────── */}
+          <section style={{ marginBottom: 10 }}>
+            <SecaoHeader titulo="Histórico / Objeto" />
+            <div style={{
+              fontFamily: SANS,
+              fontSize: 10,
+              color: C.ink700,
+              lineHeight: 1.6,
+              minHeight: 32,
+              padding: '5px 7px',
+              border: `1px solid ${C.line}`,
+              borderRadius: 4,
+              background: '#fafbfc',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}>
+              {vt(empenho.historico) || <span style={{ color: C.ink300 }}>—</span>}
+            </div>
+          </section>
+
+          {/* ── Descontos / Retenções ─────────────────────────────────────────── */}
+          <section style={{ marginBottom: 10 }}>
+            <SecaoHeader titulo="Descontos / Retenções" />
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', border: `1px solid ${C.line}` }}>
+              <colgroup>
+                <col style={{ width: hasEfd ? '16%' : '20%' }} />
+                <col style={{ width: hasEfd ? '44%' : '55%' }} />
+                <col style={{ width: hasEfd ? '20%' : '25%' }} />
+                {hasEfd && <col style={{ width: '20%' }} />}
+              </colgroup>
               <thead>
                 <tr>
-                  {['Valor', 'Data', 'Forma Pag.', 'Conta', 'Nº OP'].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: '3px 5px',
-                        border: '1px solid #ddd',
-                        background: '#e3f2fd',
-                        textAlign: 'left',
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  <Th>Cód. Retenção</Th>
+                  <Th>Tipo / Descrição</Th>
+                  <Th align="right">Valor (R$)</Th>
+                  {hasEfd && <Th align="center">EFD</Th>}
+                </tr>
+              </thead>
+              <tbody>
+                {descontos.map((d) => (
+                  <tr key={d.id}>
+                    <Td>{vt(d.codigo)}</Td>
+                    <Td>{vt(d.tipo)}</Td>
+                    <Td align="right">{d.valor != null ? `R$ ${formatCurrencyBR(d.valor)}` : ''}</Td>
+                    {hasEfd && <Td align="center" style={{ fontWeight: 600 }}>{vt(d.efd_codigo)}</Td>}
+                  </tr>
+                ))}
+                {Array.from({ length: blankDescRows }).map((_, i) => (
+                  <tr key={`blank-${i}`}>
+                    <Td>&nbsp;</Td>
+                    <Td>{''}</Td>
+                    <Td>{''}</Td>
+                    {hasEfd && <Td>{''}</Td>}
+                  </tr>
+                ))}
+                <tr style={{ background: C.bg }}>
+                  <td
+                    colSpan={hasEfd ? 3 : 2}
+                    style={{
+                      padding: '4px 6px',
+                      borderTop: `1.5px solid ${C.line}`,
+                      borderRight: `1px solid ${C.line}`,
+                      fontFamily: MONO,
+                      fontSize: 8,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      color: C.ink500,
+                    }}
+                  >
+                    Total Descontos
+                  </td>
+                  <td style={{
+                    padding: '4px 6px',
+                    borderTop: `1.5px solid ${C.line}`,
+                    fontFamily: MONO,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: C.ink900,
+                    textAlign: 'right',
+                  }}>
+                    R$ {formatCurrencyBR(totalDesc)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          {/* ── Liquidação ───────────────────────────────────────────────────── */}
+          <section style={{ marginBottom: 10 }}>
+            <SecaoHeader titulo="Liquidação" />
+
+            {/* Resumo da liquidação */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: '5px 10px',
+              marginBottom: 8,
+              padding: '6px 8px',
+              background: C.bg,
+              borderRadius: 4,
+              border: `1px solid ${C.line}`,
+            }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Campo
+                  label="Valor Líquido"
+                  valor={liquidacao?.valor != null ? `R$ ${formatCurrencyBR(liquidacao.valor)}` : '—'}
+                  mono
+                  style={{ borderBottom: `1.5px solid ${C.ink900}`, borderColor: C.ink900 }}
+                />
+              </div>
+              <div>
+                <Campo label="Data Liquidação" valor={dataBR(liquidacao?.data_liquidacao) || '—'} mono />
+              </div>
+              <div>
+                <Campo label="Data Pagamento" valor={dataBR(liquidacao?.data_pagamento) || '—'} mono />
+              </div>
+              <div>
+                <Campo label="Forma de Pagamento" valor={vt(liquidacao?.forma_pagamento) || '—'} />
+              </div>
+              <div>
+                <Campo label="Nº O.P." valor={vt(liquidacao?.numero_op) || '—'} mono />
+              </div>
+              <div style={{ gridColumn: 'span 6' }}>
+                <Campo label="Conta Bancária" valor={vt(liquidacao?.conta) || '—'} mono />
+              </div>
+            </div>
+
+            {/* Parcelas */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${C.line}` }}>
+              <thead>
+                <tr>
+                  <Th align="right" w="20%">Valor (R$)</Th>
+                  <Th w="18%">Data</Th>
+                  <Th w="20%">Forma Pag.</Th>
+                  <Th>Conta</Th>
+                  <Th w="16%">Nº O.P.</Th>
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: nParc }).map((_, i) => {
                   const p = parcelas[i];
                   return (
-                    <tr key={i}>
-                      <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>
-                        {p?.valor != null ? `R$ ${formatCurrencyBR(p.valor)}` : ''}
-                      </td>
-                      <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>
-                        {dataBR(p?.data)}
-                      </td>
-                      <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>
-                        {vt(p?.forma_pagamento)}
-                      </td>
-                      <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>
-                        {vt(p?.conta)}
-                      </td>
-                      <td style={{ padding: '3px 5px', border: '1px solid #ddd' }}>
-                        {vt(p?.numero_op)}
-                      </td>
+                    <tr key={i} style={{ background: i % 2 === 1 ? '#fafbfc' : C.white }}>
+                      <Td align="right">{p?.valor != null ? `R$ ${formatCurrencyBR(p.valor)}` : ''}</Td>
+                      <Td>{dataBR(p?.data)}</Td>
+                      <Td>{vt(p?.forma_pagamento)}</Td>
+                      <Td>{vt(p?.conta)}</Td>
+                      <Td>{vt(p?.numero_op)}</Td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
-        </section>
+          </section>
 
-        {/* Footer */}
-        <footer
-          style={{
-            marginTop: '0.75rem',
-            paddingTop: '0.5rem',
-            borderTop: '1px solid #ddd',
-            fontSize: '0.7rem',
-            lineHeight: 1.4,
+          {/* ── Rodapé ──────────────────────────────────────────────────────── */}
+          <footer style={{
+            marginTop: 12,
+            paddingTop: 8,
+            borderTop: `1.5px solid ${C.line}`,
             pageBreakInside: 'avoid',
-          }}
-        >
-          {qrText && (
-            <div style={{ float: 'left', marginRight: 12 }}>
-              <QRCodeSVG value={qrText} size={80} />
+          }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+
+              {/* QR Code */}
+              {qrText && (
+                <div style={{ flexShrink: 0 }}>
+                  <QRCodeSVG value={qrText} size={72} level="M" />
+                </div>
+              )}
+
+              <div style={{ flex: 1 }}>
+                {/* Metadados */}
+                <div style={{
+                  display: 'flex',
+                  gap: 16,
+                  marginBottom: 8,
+                  flexWrap: 'wrap',
+                }}>
+                  {[
+                    ['Emitido por', impressoPor || '—'],
+                    ['Data de Impressão', dataImpressao],
+                    ['Código Interno', empenho.codigo_interno],
+                  ].map(([label, val]) => (
+                    <div key={label}>
+                      <div style={{ fontFamily: MONO, fontSize: 6.5, textTransform: 'uppercase', letterSpacing: '0.12em', color: C.ink400, marginBottom: 1 }}>
+                        {label}
+                      </div>
+                      <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 600, color: C.ink700 }}>
+                        {val}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Etapas de aprovação */}
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {[
+                    'Conferência',
+                    'Conciliação',
+                    'Empenhar / 2ª Conf.',
+                    'Liquidação',
+                    'Baixa Pagto.',
+                    'Dig. Item',
+                  ].map((etapa) => (
+                    <div key={etapa} style={{
+                      border: `1px solid ${C.line}`,
+                      borderRadius: 3,
+                      padding: '3px 7px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 8,
+                      minWidth: 70,
+                    }}>
+                      <div style={{
+                        fontFamily: MONO,
+                        fontSize: 6.5,
+                        fontWeight: 500,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: C.ink400,
+                        textAlign: 'center',
+                      }}>
+                        {etapa}
+                      </div>
+                      <div style={{ height: 18, width: '100%', borderTop: `1px solid ${C.line}` }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
-          <div style={{ marginBottom: 2, whiteSpace: 'nowrap' }}>
-            1. Impresso por: <strong>{impressoPor}</strong>&nbsp;&nbsp;Data:{' '}
-            <strong>{dataImpressao}</strong>&nbsp;&nbsp;Nº interno:{' '}
-            <strong>{empenho.codigo_interno}</strong>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {[
-              '2. Conferência',
-              '3. Conciliação',
-              '4. Empenhar & 2º Conf.',
-              '5. Liquidação',
-              '6. Baixa Pagto',
-              '7. Dig. Item',
-            ].map((etapa) => (
-              <span key={etapa}>{etapa}</span>
-            ))}
-          </div>
-          <div style={{ clear: 'both' }} />
-        </footer>
+          </footer>
+
+        </div>
       </div>
     </>
   );
