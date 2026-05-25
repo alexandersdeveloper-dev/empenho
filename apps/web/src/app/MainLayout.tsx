@@ -200,7 +200,7 @@ function Sidebar({
           aria-label="Fechar menu"
           style={{
             width: 30, height: 30, borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            alignItems: 'center', justifyContent: 'center',
             color: C.ink500, background: 'transparent', border: 0, cursor: 'pointer', flexShrink: 0,
           }}
         >
