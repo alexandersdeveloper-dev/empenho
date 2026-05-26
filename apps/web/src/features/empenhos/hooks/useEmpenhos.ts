@@ -124,8 +124,11 @@ export function useExcluirEmpenho() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const { error } = await supabase.from('empenhos').delete().eq('id', id);
-      if (error) throw new Error(error.message);
+      const { data, error } = await supabase.functions.invoke('empenho-mutate', {
+        body: { action: 'excluir', id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });

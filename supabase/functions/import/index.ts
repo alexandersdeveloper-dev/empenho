@@ -1,18 +1,38 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
+// Versão do CDN oficial SheetJS com fix do CVE-2023-30533 (prototype pollution)
+import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// ─── CORS dinâmico ────────────────────────────────────────────────────────────
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  });
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+
+function corsHeaders(origin: string) {
+  const allowed =
+    ALLOWED_ORIGINS.length === 0 ? '*' :
+    ALLOWED_ORIGINS.includes(origin) ? origin : '';
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
 }
+
+// ─── Constantes de validação ──────────────────────────────────────────────────
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+const ALLOWED_MIME = new Set([
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'text/csv',
+  'application/csv',
+  'text/plain', // alguns sistemas enviam CSV como text/plain
+]);
+
+// ─── Utilidades ───────────────────────────────────────────────────────────────
 
 function normalizarNatureza(s: string | null | undefined): string {
   if (!s || typeof s !== 'string') return '';
@@ -31,7 +51,18 @@ function parseSheet(buffer: ArrayBuffer): unknown[][] {
   return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }) as unknown[][];
 }
 
+// ─── Handler principal ────────────────────────────────────────────────────────
+
 serve(async (req) => {
+  const origin = req.headers.get('origin') ?? '';
+  const CORS   = corsHeaders(origin);
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
   try {
@@ -54,13 +85,19 @@ serve(async (req) => {
 
     const { data: perfil } = await supabaseAdmin
       .from('perfis')
-      .select('role')
+      .select('id, role, nome')
       .eq('id', user.id)
       .single();
 
     if (!perfil || !['admin', 'superadmin'].includes(perfil.role)) {
       return json({ error: 'Permissão insuficiente' }, 403);
     }
+
+    // Seta contexto de auditoria
+    await supabaseAdmin.rpc('set_audit_context', {
+      p_user_id:   perfil.id,
+      p_user_nome: perfil.nome,
+    });
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -69,17 +106,39 @@ serve(async (req) => {
     if (!file) return json({ error: 'Arquivo não enviado' }, 400);
     if (!tipo) return json({ error: 'Tipo de importação não informado' }, 400);
 
+    // ── Validação de tamanho ──────────────────────────────────────────────────
+
+    if (file.size > MAX_FILE_SIZE) {
+      return json({ error: 'Arquivo muito grande. Máximo permitido: 5 MB' }, 400);
+    }
+
+    // ── Validação de tipo MIME ────────────────────────────────────────────────
+    // Verifica tanto o tipo declarado quanto a extensão do nome do arquivo
+
+    const ext = (file.name ?? '').split('.').pop()?.toLowerCase() ?? '';
+    const extValida = ['xlsx', 'xls', 'csv'].includes(ext);
+    const mimeValido = !file.type || ALLOWED_MIME.has(file.type);
+
+    if (!extValida && !mimeValido) {
+      return json({ error: 'Tipo de arquivo inválido. Use .xlsx, .xls ou .csv' }, 400);
+    }
+    if (!extValida) {
+      return json({ error: 'Extensão inválida. Use .xlsx, .xls ou .csv' }, 400);
+    }
+
     const buffer = await file.arrayBuffer();
-    const rows = parseSheet(buffer).slice(1);
+    const rows = parseSheet(buffer).slice(1); // descarta cabeçalho
+
+    // ── Tipos de importação ───────────────────────────────────────────────────
 
     if (tipo === 'classificacao') {
       const items = rows
         .filter((r) => r[0])
         .map((r) => ({
-          numero_ficha: String(r[0]).trim(),
+          numero_ficha:      String(r[0]).trim(),
           projeto_atividade: String(r[1] || '').trim() || null,
-          dotacao: String(r[2] || '').trim() || null,
-          stn: String(r[3] || '').trim() || null,
+          dotacao:           String(r[2] || '').trim() || null,
+          stn:               String(r[3] || '').trim() || null,
         }));
 
       if (!items.length) return json({ error: 'Nenhum registro válido encontrado' }, 400);
@@ -97,7 +156,7 @@ serve(async (req) => {
         .filter((r) => r[1])
         .map((r) => ({
           numero: String(r[0] || '').trim() || null,
-          nome: String(r[1]).trim(),
+          nome:   String(r[1]).trim(),
         }));
 
       if (!items.length) return json({ error: 'Nenhum registro válido encontrado' }, 400);
@@ -114,8 +173,8 @@ serve(async (req) => {
       const items = rows
         .filter((r) => r[0] && r[1])
         .map((r) => ({
-          natureza: normalizarNatureza(String(r[0]).trim()),
-          sub: String(r[1]).trim().padStart(2, '0'),
+          natureza:  normalizarNatureza(String(r[0]).trim()),
+          sub:       String(r[1]).trim().padStart(2, '0'),
           descricao: String(r[2] || '').trim() || null,
         }));
 
@@ -133,39 +192,43 @@ serve(async (req) => {
       const items = rows
         .filter((r) => r[0] && r[1])
         .map((r) => ({
-          nome: String(r[0]).trim(),
+          nome:   String(r[0]).trim(),
           codigo: String(r[1]).trim(),
         }));
 
       if (!items.length) return json({ error: 'Nenhum registro válido encontrado' }, 400);
 
-      await supabaseAdmin.from('retencoes').delete().neq('id', 0);
-      const { error } = await supabaseAdmin.from('retencoes').insert(items);
+      // Operação atômica via RPC Postgres (evita tabela vazia em caso de erro)
+      const { data: count, error } = await supabaseAdmin
+        .rpc('substituir_retencoes', { p_items: JSON.stringify(items) });
+
       if (error) return json({ error: error.message }, 400);
-      return json({ inserted: items.length });
+      return json({ inserted: count });
     }
 
     if (tipo === 'formas_pagamento') {
       const items = rows
         .filter((r) => r[0])
         .map((r) => ({
-          codigo: String(r[0]).trim(),
+          codigo:   String(r[0]).trim(),
           descricao: String(r[1] || r[0]).trim(),
         }));
 
       if (!items.length) return json({ error: 'Nenhum registro válido encontrado' }, 400);
 
-      await supabaseAdmin.from('formas_pagamento').delete().neq('id', 0);
-      const { error } = await supabaseAdmin.from('formas_pagamento').insert(items);
+      // Operação atômica via RPC Postgres
+      const { data: count, error } = await supabaseAdmin
+        .rpc('substituir_formas_pagamento', { p_items: JSON.stringify(items) });
+
       if (error) return json({ error: error.message }, 400);
-      return json({ inserted: items.length });
+      return json({ inserted: count });
     }
 
     if (tipo === 'efd') {
       const items = rows
         .filter((r) => r[0])
         .map((r) => ({
-          codigo: String(r[0]).trim(),
+          codigo:   String(r[0]).trim(),
           descricao: String(r[1] || '').trim() || null,
         }));
 
@@ -174,6 +237,7 @@ serve(async (req) => {
       const { error } = await supabaseAdmin
         .from('efd')
         .upsert(items, { onConflict: 'codigo' });
+
       if (error) return json({ error: error.message }, 400);
       return json({ inserted: items.length });
     }

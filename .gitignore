@@ -3,9 +3,34 @@ dist/
 .next/
 build/
 .turbo/
+
+# Variáveis de ambiente — protege qualquer variante de .env
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# CLIs de deploy (contêm IDs de projeto)
+.vercel/
+.netlify/
+
+# Cobertura de testes
+coverage/
+.nyc_output/
+
+# Certificados e credenciais
+*.pem
+*.key
+*.p12
+credentials*.json
+secrets*.json
+service-account*.json
+
+# Arquivos de dados — podem conter dados reais de empenhos/credores
+*.xlsx
+*.xls
+*.csv
+
+# Logs e temporários
 *.log
 .DS_Store
 Thumbs.db

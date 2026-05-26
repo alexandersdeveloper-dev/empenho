@@ -1,17 +1,23 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+// ─── CORS dinâmico ────────────────────────────────────────────────────────────
+// Configure ALLOWED_ORIGINS no Supabase Dashboard → Edge Functions → Secrets
+// Ex: ALLOWED_ORIGINS=https://fichas.parintins.am.gov.br
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  });
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+
+function corsHeaders(origin: string) {
+  const allowed =
+    ALLOWED_ORIGINS.length === 0 ? '*' :
+    ALLOWED_ORIGINS.includes(origin) ? origin : '';
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
 }
 
 // ─── Utilitários portados de @ficha-empenho/shared ───────────────────────────
@@ -115,7 +121,7 @@ async function validarCamposObrigatorios(
   supabase: ReturnType<typeof createClient>,
   dto: EmpenhoDto,
 ) {
-  if (dto.exercicio === 2) return; // Superávit bypassa validação
+  if (dto.exercicio === 2) return;
 
   const { data: config } = await supabase
     .from('campos_obrigatorios')
@@ -148,11 +154,11 @@ async function salvarDescontos(
     .filter((d) => d.tipo || d.codigo || d.valor)
     .map((d, i) => ({
       empenho_id: empenhoId,
-      tipo: d.tipo ?? null,
-      codigo: d.codigo ?? null,
-      valor: d.valor ?? 0,
+      tipo:       d.tipo       ?? null,
+      codigo:     d.codigo     ?? null,
+      valor:      d.valor      ?? 0,
       efd_codigo: d.efd_codigo ?? null,
-      ord: i,
+      ord:        i,
     }));
 
   if (rows.length) {
@@ -172,14 +178,14 @@ async function salvarLiquidacao(
   const { data: liq, error } = await supabase
     .from('liquidacoes')
     .insert({
-      empenho_id: empenhoId,
-      valor: liquidacao.valor ?? 0,
+      empenho_id:      empenhoId,
+      valor:           liquidacao.valor           ?? 0,
       data_liquidacao: toDateOrNull(liquidacao.data_liquidacao),
-      data_pagamento: toDateOrNull(liquidacao.data_pagamento),
-      numero_op: liquidacao.numero_op ?? null,
+      data_pagamento:  toDateOrNull(liquidacao.data_pagamento),
+      numero_op:       liquidacao.numero_op       ?? null,
       forma_pagamento: liquidacao.forma_pagamento ?? null,
-      conta: liquidacao.conta ?? null,
-      ord: 0,
+      conta:           liquidacao.conta           ?? null,
+      ord:             0,
     })
     .select()
     .single();
@@ -191,13 +197,13 @@ async function salvarLiquidacao(
   );
   if (parcelas.length) {
     const rows = parcelas.map((p, i) => ({
-      liquidacao_id: liq.id,
-      valor: p.valor ?? 0,
-      data: toDateOrNull(p.data),
+      liquidacao_id:   liq.id,
+      valor:           p.valor           ?? 0,
+      data:            toDateOrNull(p.data),
       forma_pagamento: p.forma_pagamento ?? null,
-      conta: p.conta ?? null,
-      numero_op: p.numero_op ?? null,
-      ord: i,
+      conta:           p.conta           ?? null,
+      numero_op:       p.numero_op       ?? null,
+      ord:             i,
     }));
     const { error: pErr } = await supabase.from('parcelas').insert(rows);
     if (pErr) throw new Error(pErr.message);
@@ -207,6 +213,15 @@ async function salvarLiquidacao(
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 serve(async (req) => {
+  const origin = req.headers.get('origin') ?? '';
+  const CORS   = corsHeaders(origin);
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
   try {
@@ -227,7 +242,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Busca perfil do usuário autenticado
     const { data: perfil } = await supabaseAdmin
       .from('perfis')
       .select('id, role, departamento_id, nome')
@@ -237,10 +251,16 @@ serve(async (req) => {
     if (!perfil) return json({ error: 'Perfil não encontrado' }, 403);
     if (perfil.role === 'viewer') return json({ error: 'Sem permissão para esta operação' }, 403);
 
+    // Seta contexto para que os triggers de audit_log atribuam a operação ao usuário
+    await supabaseAdmin.rpc('set_audit_context', {
+      p_user_id:   perfil.id,
+      p_user_nome: perfil.nome,
+    });
+
     const body = await req.json();
     const { action, id, dto }: { action: string; id?: number; dto: EmpenhoDto } = body;
 
-    // ─── Criar ───────────────────────────────────────────────────────────────
+    // ─── Criar ────────────────────────────────────────────────────────────────
 
     if (action === 'criar') {
       await validarSubelemento(supabaseAdmin, dto);
@@ -254,26 +274,26 @@ serve(async (req) => {
       const { data: empenho, error } = await supabaseAdmin
         .from('empenhos')
         .insert({
-          departamento_id: departamentoId,
-          numero_ficha: dto.numero_ficha ?? null,
-          projeto_atividade: dto.projeto_atividade ?? null,
-          dotacao: dto.dotacao ?? null,
-          stn: dto.stn ?? null,
-          subelemento_codigo: dto.subelemento_codigo ? padSubelemento(dto.subelemento_codigo) : null,
+          departamento_id:       departamentoId,
+          numero_ficha:          dto.numero_ficha          ?? null,
+          projeto_atividade:     dto.projeto_atividade     ?? null,
+          dotacao:               dto.dotacao               ?? null,
+          stn:                   dto.stn                   ?? null,
+          subelemento_codigo:    dto.subelemento_codigo    ? padSubelemento(dto.subelemento_codigo) : null,
           subelemento_descricao: dto.subelemento_descricao ?? null,
-          credor_id: dto.credor_id ?? null,
-          credor_numero: dto.credor_numero ?? null,
-          credor_nome: dto.credor_nome ?? null,
-          tipo_empenho: dto.tipo_empenho,
-          historico: dto.historico ?? null,
-          valor_empenho: dto.valor_empenho,
-          emenda: dto.emenda ?? null,
-          exercicio: dto.exercicio,
-          numero_contrato: dto.numero_contrato ?? null,
-          numero_convenio: dto.numero_convenio ?? null,
-          data_empenho: toDateOrNull(dto.data_empenho),
-          usuario_id: perfil.id,
-          usuario_nome: perfil.nome,
+          credor_id:             dto.credor_id             ?? null,
+          credor_numero:         dto.credor_numero         ?? null,
+          credor_nome:           dto.credor_nome           ?? null,
+          tipo_empenho:          dto.tipo_empenho,
+          historico:             dto.historico             ?? null,
+          valor_empenho:         dto.valor_empenho,
+          emenda:                dto.emenda                ?? null,
+          exercicio:             dto.exercicio,
+          numero_contrato:       dto.numero_contrato       ?? null,
+          numero_convenio:       dto.numero_convenio       ?? null,
+          data_empenho:          toDateOrNull(dto.data_empenho),
+          usuario_id:            perfil.id,
+          usuario_nome:          perfil.nome,
         })
         .select()
         .single();
@@ -283,7 +303,6 @@ serve(async (req) => {
       await salvarDescontos(supabaseAdmin, empenho.id, dto.descontos ?? []);
       await salvarLiquidacao(supabaseAdmin, empenho.id, dto.liquidacao ?? null);
 
-      // Retorna o empenho completo com relações
       const { data: completo } = await supabaseAdmin
         .from('empenhos')
         .select('*, departamento:departamentos(*), descontos(*), liquidacoes(*, parcelas(*))')
@@ -298,7 +317,6 @@ serve(async (req) => {
     if (action === 'atualizar') {
       if (!id) return json({ error: 'id é obrigatório' }, 400);
 
-      // Verifica acesso ao empenho
       const { data: existing } = await supabaseAdmin
         .from('empenhos')
         .select('departamento_id')
@@ -320,23 +338,23 @@ serve(async (req) => {
       const { error } = await supabaseAdmin
         .from('empenhos')
         .update({
-          numero_ficha: dto.numero_ficha ?? null,
-          projeto_atividade: dto.projeto_atividade ?? null,
-          dotacao: dto.dotacao ?? null,
-          stn: dto.stn ?? null,
-          subelemento_codigo: dto.subelemento_codigo ? padSubelemento(dto.subelemento_codigo) : null,
+          numero_ficha:          dto.numero_ficha          ?? null,
+          projeto_atividade:     dto.projeto_atividade     ?? null,
+          dotacao:               dto.dotacao               ?? null,
+          stn:                   dto.stn                   ?? null,
+          subelemento_codigo:    dto.subelemento_codigo    ? padSubelemento(dto.subelemento_codigo) : null,
           subelemento_descricao: dto.subelemento_descricao ?? null,
-          credor_id: dto.credor_id ?? null,
-          credor_numero: dto.credor_numero ?? null,
-          credor_nome: dto.credor_nome ?? null,
-          tipo_empenho: dto.tipo_empenho,
-          historico: dto.historico ?? null,
-          valor_empenho: dto.valor_empenho,
-          emenda: dto.emenda ?? null,
-          exercicio: dto.exercicio,
-          numero_contrato: dto.numero_contrato ?? null,
-          numero_convenio: dto.numero_convenio ?? null,
-          data_empenho: toDateOrNull(dto.data_empenho),
+          credor_id:             dto.credor_id             ?? null,
+          credor_numero:         dto.credor_numero         ?? null,
+          credor_nome:           dto.credor_nome           ?? null,
+          tipo_empenho:          dto.tipo_empenho,
+          historico:             dto.historico             ?? null,
+          valor_empenho:         dto.valor_empenho,
+          emenda:                dto.emenda                ?? null,
+          exercicio:             dto.exercicio,
+          numero_contrato:       dto.numero_contrato       ?? null,
+          numero_convenio:       dto.numero_convenio       ?? null,
+          data_empenho:          toDateOrNull(dto.data_empenho),
         })
         .eq('id', id);
 
@@ -352,6 +370,45 @@ serve(async (req) => {
         .single();
 
       return json({ data: completo });
+    }
+
+    // ─── Excluir ──────────────────────────────────────────────────────────────
+
+    if (action === 'excluir') {
+      if (!id) return json({ error: 'id é obrigatório' }, 400);
+
+      const { data: existing } = await supabaseAdmin
+        .from('empenhos')
+        .select('departamento_id, liquidacoes(data_pagamento)')
+        .eq('id', id)
+        .single();
+
+      if (!existing) return json({ error: 'Empenho não encontrado' }, 404);
+
+      if (
+        !['superadmin', 'admin'].includes(perfil.role) &&
+        existing.departamento_id !== perfil.departamento_id
+      ) {
+        return json({ error: 'Empenho não encontrado' }, 404);
+      }
+
+      // Bloqueia exclusão se houver pagamento realizado
+      const liquidacoes = (existing.liquidacoes as Array<{ data_pagamento: string | null }>) ?? [];
+      if (liquidacoes.some((l) => !!l.data_pagamento)) {
+        return json(
+          { error: 'Empenho com pagamento registrado não pode ser excluído' },
+          400,
+        );
+      }
+
+      // O trigger audit_empenhos captura automaticamente o snapshot antes do DELETE
+      const { error: delError } = await supabaseAdmin
+        .from('empenhos')
+        .delete()
+        .eq('id', id);
+
+      if (delError) return json({ error: delError.message }, 400);
+      return json({ data: { ok: true } });
     }
 
     return json({ error: 'Ação inválida' }, 400);
