@@ -307,7 +307,7 @@ function Topbar({ route, onNovo, onMenuOpen }: { route: Route; onNovo: () => voi
 
   return (
     <header
-      className="topbar-pad"
+      className="topbar-pad no-print"
       style={{
         background: '#fff',
         borderBottom: `1px solid ${C.line}`,

@@ -303,8 +303,22 @@
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
 
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 @media print {
   .no-print { display: none !important; }
   .print-only { display: block; }
-  body { background: white; color: black; }
+
+  body { background: white !important; color: black; }
+
+  /* Desfaz o grid do app shell — só o conteúdo da ficha deve aparecer */
+  .app-layout { display: block !important; }
+
+  main, .content-pad {
+    padding: 0 !important;
+    background: white !important;
+  }
 }

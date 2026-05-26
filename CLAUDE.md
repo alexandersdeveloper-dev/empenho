@@ -59,9 +59,36 @@ Shared utilities under `shared/`:
 
 **`useEmpenho` normalization**: PostgREST returns `liquidacoes[]` (array) but the `Empenho` type has `liquidacao` (singular). The hook normalizes this: `liquidacao: liquidacoes?.[0]`.
 
+### Supabase / Migrations
+
+Migrations are **not auto-applied** — paste each `.sql` file into the Supabase SQL Editor manually. The files in `supabase/migrations/` are ordered by filename prefix but note: `003_security_hardening.sql` was added after `004_audit_triggers.sql`. Correct apply order:
+
+```
+001_schema_inicial.sql
+002_rls_policies.sql
+003_auth_trigger.sql
+004_audit_triggers.sql
+003_security_hardening.sql   ← applied last despite lower number; supersedes parts of 004
+```
+
+`003_security_hardening.sql` replaces `fn_audit_trigger()` (from 004) with an improved `registrar_audit()` that:
+- Supports `set_audit_context()` so Edge Functions (which use `service_role`, so `auth.uid()` is NULL) can still attribute audit entries to the correct user
+- Wraps the INSERT in `EXCEPTION WHEN OTHERS THEN NULL` so an audit failure never blocks the main operation
+
+**Pattern: audit context in Edge Functions** — after loading the `perfil` row and before any DB mutation, all three Edge Functions call:
+```ts
+await supabaseAdmin.rpc('set_audit_context', { p_user_id: perfil.id, p_user_nome: perfil.nome });
+```
+
 ### Supabase Edge Functions (Deno)
 
 Edge Functions use `https://esm.sh/` for npm packages. Auth is validated by decoding the JWT from `Authorization` header and checking `role` in the `perfis` table. CORS headers must be returned on `OPTIONS` preflight.
+
+**CORS**: All three functions read `ALLOWED_ORIGINS` from `Deno.env.get('ALLOWED_ORIGINS')` and return per-request `Access-Control-Allow-Origin` + `Vary: Origin`. Set this secret in Supabase Dashboard → Edge Functions → Secrets. Leave unset (or empty) during local dev to fall back to `*`.
+
+**Role hierarchy**: `superadmin > admin > user > viewer`. In `usuario-mutate`, the `ROLES_ABAIXO` map enforces that a user can only create/assign roles strictly below their own level. Admins are scoped to their `departamento_id`; superadmins are cross-department.
+
+**SheetJS CVE note** (`import` function): `xlsx@0.18.5` (esm.sh) has CVE-2023-30533 (prototype pollution). The fix version (0.20.x) is only available on cdn.sheetjs.com which is blocked by the Supabase bundler. Mitigated by: admin-only upload endpoint + file size limit + MIME/extension validation.
 
 ### Design system
 
