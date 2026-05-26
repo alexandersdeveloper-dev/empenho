@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -92,11 +92,47 @@ function IconAlert() {
   );
 }
 
+function useTypingPlaceholder(text: string) {
+  const [shown, setShown] = useState('');
+  const [active, setActive] = useState(true);
+  const pos = useRef(0);
+  const del = useRef(false);
+
+  useEffect(() => {
+    if (!active) return;
+    let id: ReturnType<typeof setTimeout>;
+
+    function tick() {
+      if (del.current) {
+        pos.current--;
+        setShown(text.slice(0, pos.current));
+        id = setTimeout(tick, pos.current <= 0 ? 500 : 36);
+        if (pos.current <= 0) del.current = false;
+      } else {
+        pos.current++;
+        setShown(text.slice(0, pos.current));
+        id = setTimeout(tick, pos.current >= text.length ? 1800 : 65);
+        if (pos.current >= text.length) del.current = true;
+      }
+    }
+
+    id = setTimeout(tick, 700);
+    return () => clearTimeout(id);
+  }, [text, active]);
+
+  return {
+    placeholder: shown,
+    onFocus: () => setActive(false),
+    onBlur:  (empty: boolean) => { if (empty) setActive(true); },
+  };
+}
+
 export function AuthPage() {
   const [showPw, setShowPw] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const { setUser, setLoading } = useAuthStore();
+  const emailPH = useTypingPlaceholder('seu.nome@parintins.am.gov.br');
 
   const {
     register,
@@ -276,7 +312,7 @@ export function AuthPage() {
                   {...register('email')}
                   type="email"
                   autoComplete="email"
-                  placeholder="seu.nome@parintins.am.gov.br"
+                  placeholder={emailPH.placeholder}
                   style={{
                     width: '100%', border: `1px solid ${errors.email ? S.red : S.line}`,
                     borderRadius: 10, padding: '14px 16px 14px 44px',
@@ -284,8 +320,8 @@ export function AuthPage() {
                     color: S.ink900, background: '#fff', outline: 'none',
                     transition: 'border-color .2s, box-shadow .2s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = S.ink900; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(15,22,34,.05)'; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = errors.email ? S.red : S.line; e.currentTarget.style.boxShadow = 'none'; }}
+                  onFocus={e => { emailPH.onFocus(); e.currentTarget.style.borderColor = S.ink900; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(15,22,34,.05)'; }}
+                  onBlur={e => { emailPH.onBlur(!e.currentTarget.value); e.currentTarget.style.borderColor = errors.email ? S.red : S.line; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
               {errors.email && <span style={{ fontSize: 12, color: S.red }}>{errors.email.message}</span>}
