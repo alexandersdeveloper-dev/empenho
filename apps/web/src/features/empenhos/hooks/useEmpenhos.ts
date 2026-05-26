@@ -24,6 +24,23 @@ function edgeFnError(err: unknown): string {
   return (err as Error)?.message ?? 'Erro desconhecido';
 }
 
+// Se o erro for de autenticação (401/token inválido), faz logout imediato
+// para limpar a sessão stale e redirecionar para o login.
+async function handleEdgeFnError(err: unknown): Promise<void> {
+  const msg = edgeFnError(err);
+  const isAuthError =
+    msg.toLowerCase().includes('não autorizado') ||
+    msg.toLowerCase().includes('unauthorized') ||
+    (err as { status?: number })?.status === 401;
+
+  if (isAuthError) {
+    toast.error('Sessão expirada. Faça login novamente.');
+    await supabase.auth.signOut();
+    return;
+  }
+  toast.error(msg);
+}
+
 export function useEmpenhos(filtros: Partial<EmpenhoFiltrosDto> = {}) {
   return useQuery({
     queryKey: [QUERY_KEY, filtros],
@@ -110,9 +127,7 @@ export function useCriarEmpenho() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success(`Empenho ${empenho.codigo_interno} criado com sucesso`);
     },
-    onError: (err: unknown) => {
-      toast.error(edgeFnError(err));
-    },
+    onError: (err: unknown) => { void handleEdgeFnError(err); },
   });
 }
 
@@ -130,9 +145,7 @@ export function useAtualizarEmpenho() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success(`Empenho ${empenho.codigo_interno} atualizado`);
     },
-    onError: (err: unknown) => {
-      toast.error(edgeFnError(err));
-    },
+    onError: (err: unknown) => { void handleEdgeFnError(err); },
   });
 }
 
@@ -140,19 +153,29 @@ export function useExcluirEmpenho() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data, error } = await supabase.functions.invoke('empenho-mutate', {
-        body: { action: 'excluir', id },
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) throw new Error('Sessão expirada. Faça login novamente.');
+
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/empenho-mutate`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+        },
+        body: JSON.stringify({ action: 'excluir', id }),
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error ?? json?.message ?? `Erro ${res.status}`);
+      if (json?.error) throw new Error(json.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success('Empenho excluído');
     },
-    onError: (err: unknown) => {
-      toast.error(edgeFnError(err));
-    },
+    onError: (err: unknown) => { void handleEdgeFnError(err); },
   });
 }
 

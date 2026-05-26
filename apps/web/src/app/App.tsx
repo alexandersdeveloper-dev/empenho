@@ -24,9 +24,9 @@ export function App() {
       setLoading(false);
     });
 
-    // Escuta mudanças de auth (login/logout/refresh)
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    // Escuta mudanças de auth (login/logout/refresh/token expirado)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
         setUser(null);
         setLoading(false);
       }

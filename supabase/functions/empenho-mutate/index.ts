@@ -392,13 +392,15 @@ serve(async (req) => {
         return json({ error: 'Empenho não encontrado' }, 404);
       }
 
-      // Bloqueia exclusão se houver pagamento realizado
-      const liquidacoes = (existing.liquidacoes as Array<{ data_pagamento: string | null }>) ?? [];
-      if (liquidacoes.some((l) => !!l.data_pagamento)) {
-        return json(
-          { error: 'Empenho com pagamento registrado não pode ser excluído' },
-          400,
-        );
+      // Superadmin pode excluir qualquer empenho; demais roles são bloqueados se houver pagamento
+      if (perfil.role !== 'superadmin') {
+        const liquidacoes = (existing.liquidacoes as Array<{ data_pagamento: string | null }>) ?? [];
+        if (liquidacoes.some((l) => !!l.data_pagamento)) {
+          return json(
+            { error: 'Empenho com pagamento registrado não pode ser excluído' },
+            400,
+          );
+        }
       }
 
       // O trigger audit_empenhos captura automaticamente o snapshot antes do DELETE
