@@ -321,4 +321,10 @@
     padding: 0 !important;
     background: white !important;
   }
+
+  /* Força impressão de cores de fundo (faixa institucional, cabeçalhos de tabela, etc.) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

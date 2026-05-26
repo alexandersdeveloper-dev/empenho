@@ -239,11 +239,11 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
         }}
       >
         {/* Faixa institucional — 4 cores da gestão */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', height: 6 }}>
-          <div style={{ background: '#3ea3ff' }} />
-          <div style={{ background: '#b86a2b' }} />
-          <div style={{ background: '#ffb829' }} />
-          <div style={{ background: '#ea4242' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', height: 6, WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}>
+          <div style={{ background: '#3ea3ff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties} />
+          <div style={{ background: '#b86a2b', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties} />
+          <div style={{ background: '#ffb829', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties} />
+          <div style={{ background: '#ea4242', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties} />
         </div>
 
         {/* Header — fundo branco */}
