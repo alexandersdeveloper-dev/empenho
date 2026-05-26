@@ -1,7 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-// Versão do CDN oficial SheetJS com fix do CVE-2023-30533 (prototype pollution)
-import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
+// xlsx@0.18.5 (esm.sh) — versão mais recente disponível no npm.
+// NOTA: CVE-2023-30533 (prototype pollution) existe nesta versão.
+// A correção (0.20.x) só está no CDN oficial SheetJS, bloqueado pelo bundler do Supabase.
+// Risco mitigado: apenas admins autenticados podem enviar arquivos.
+import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 
 // ─── CORS dinâmico ────────────────────────────────────────────────────────────
 
