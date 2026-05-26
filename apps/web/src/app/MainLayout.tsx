@@ -192,14 +192,34 @@ function Sidebar({
             Fichas de Empenho
           </div>
         </div>
-        {/* Close button — visible on mobile only via .hamburger CSS */}
+        {/* Collapse — desktop only, só aparece quando expandido */}
+        {!isCollapsed && (
+          <button
+            className="sidebar-toggle"
+            onClick={onToggle}
+            title="Recolher menu"
+            aria-label="Recolher menu"
+            style={{
+              width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+              display: 'grid', placeItems: 'center',
+              color: C.ink400, background: 'transparent', border: 0, cursor: 'pointer',
+              transition: 'background .15s, color .15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.bgSoft; e.currentTarget.style.color = C.ink900; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink400; }}
+          >
+            <IconChevronLeft />
+          </button>
+        )}
+
+        {/* Close — mobile only via .hamburger class */}
         <button
           className="hamburger"
           onClick={onClose}
           title="Fechar menu"
           aria-label="Fechar menu"
           style={{
-            width: 30, height: 30, borderRadius: 8,
+            width: 28, height: 28, borderRadius: 7,
             alignItems: 'center', justifyContent: 'center',
             color: C.ink500, background: 'transparent', border: 0, cursor: 'pointer', flexShrink: 0,
           }}
@@ -235,30 +255,19 @@ function Sidebar({
         </>
       )}
 
-      <div style={{ flex: 1 }} />
+      {/* Expandir — aparece como item de nav quando retraído (desktop only) */}
+      {isCollapsed && (
+        <div className="sidebar-toggle" style={{ padding: '8px 12px 0' }}>
+          <NavItem
+            icon={<IconChevronRight />}
+            label="Expandir"
+            active={false}
+            onClick={onToggle}
+          />
+        </div>
+      )}
 
-      {/* Desktop collapse toggle — hidden on mobile via .sidebar-toggle class */}
-      <div
-        className="sidebar-toggle"
-        style={{ padding: '6px 12px 2px', justifyContent: 'flex-end' }}
-      >
-        <button
-          onClick={onToggle}
-          title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
-          aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
-          style={{
-            width: 30, height: 30, borderRadius: 8,
-            display: 'grid', placeItems: 'center',
-            color: C.ink500, background: 'transparent',
-            border: `1px solid ${C.line}`, cursor: 'pointer',
-            transition: 'background .2s, color .2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = C.bgSoft; e.currentTarget.style.color = C.ink900; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink500; }}
-        >
-          {isCollapsed ? <IconChevronRight /> : <IconChevronLeft />}
-        </button>
-      </div>
+      <div style={{ flex: 1 }} />
 
       {/* User */}
       <div
