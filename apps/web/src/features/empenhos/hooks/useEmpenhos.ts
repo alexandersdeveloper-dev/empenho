@@ -8,6 +8,22 @@ import type { Empenho, ApiMeta } from '@ficha-empenho/shared';
 const QUERY_KEY = 'empenhos';
 const PAGE_SIZE = 20;
 
+// Extrai a mensagem real do corpo da resposta quando a Edge Function retorna não-2xx.
+// O SDK guarda o body como string em error.context em vez de propagá-lo em error.message.
+function edgeFnError(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const ctx = (err as Record<string, unknown>).context;
+    if (typeof ctx === 'string') {
+      try {
+        const body = JSON.parse(ctx) as Record<string, unknown>;
+        if (typeof body.error === 'string') return body.error;
+        if (typeof body.message === 'string') return body.message;
+      } catch { /* não é JSON */ }
+    }
+  }
+  return (err as Error)?.message ?? 'Erro desconhecido';
+}
+
 export function useEmpenhos(filtros: Partial<EmpenhoFiltrosDto> = {}) {
   return useQuery({
     queryKey: [QUERY_KEY, filtros],
@@ -95,7 +111,7 @@ export function useCriarEmpenho() {
       toast.success(`Empenho ${empenho.codigo_interno} criado com sucesso`);
     },
     onError: (err: unknown) => {
-      toast.error((err as Error).message ?? 'Erro ao criar empenho');
+      toast.error(edgeFnError(err));
     },
   });
 }
@@ -115,7 +131,7 @@ export function useAtualizarEmpenho() {
       toast.success(`Empenho ${empenho.codigo_interno} atualizado`);
     },
     onError: (err: unknown) => {
-      toast.error((err as Error).message ?? 'Erro ao atualizar empenho');
+      toast.error(edgeFnError(err));
     },
   });
 }
@@ -135,7 +151,7 @@ export function useExcluirEmpenho() {
       toast.success('Empenho excluído');
     },
     onError: (err: unknown) => {
-      toast.error((err as Error).message ?? 'Erro ao excluir empenho');
+      toast.error(edgeFnError(err));
     },
   });
 }
