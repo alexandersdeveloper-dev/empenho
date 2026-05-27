@@ -53,11 +53,20 @@ Shared utilities under `shared/`:
 **Simple reads** (lists, lookups) go directly through PostgREST via `supabase.from(...)` inside TanStack Query hooks.
 
 **Mutations with business logic** go through Edge Functions via `supabase.functions.invoke(...)`:
-- `empenho-mutate` — create/update empenhos (handles descontos + liquidacao sub-records)
+- `empenho-mutate` — create/update/delete empenhos (handles descontos + liquidacao sub-records)
 - `usuario-mutate` — create/update users (writes to both `perfis` and Supabase Auth)
 - `import` — bulk import of Excel/CSV for 6 table types
 
+**Exception — `useExcluirEmpenho`** uses raw `fetch` instead of `supabase.functions.invoke`. Reason: the Supabase JS SDK v2 swallows the actual error body and replaces it with "Edge Function returned a non-2xx status code", making it impossible to show the real validation message to the user. The raw `fetch` pattern reads `res.json()` directly and throws `new Error(json?.error)`.
+
+**Deletion rules** (`empenho-mutate` / `excluir` action): `superadmin` can delete any empenho regardless of payment status. `admin`/`user` are blocked if any `liquidacao` has `data_pagamento` set. `viewer` cannot delete anything.
+
 **`useEmpenho` normalization**: PostgREST returns `liquidacoes[]` (array) but the `Empenho` type has `liquidacao` (singular). The hook normalizes this: `liquidacao: liquidacoes?.[0]`.
+
+**Edge Function error handling** — shared helpers live in `shared/lib/edgeFnError.ts` and are imported by all hooks and pages that call Edge Functions:
+- `edgeFnError(err)` extracts the real message from `error.context` (SDK v2 does not propagate the body in `error.message`)
+- `handleEdgeFnError(err)` additionally calls `supabase.auth.signOut()` when the message indicates 401/session expired, forcing a redirect to login
+- All `onError` callbacks in mutations that invoke Edge Functions must use `edgeFnError` or `handleEdgeFnError` — never `(err as Error).message` directly
 
 ### Supabase / Migrations
 
@@ -97,7 +106,26 @@ Tailwind custom tokens defined in `apps/web/tailwind.config.js`:
 - **Fonts**: `font-sans` = Manrope, `font-mono` = IBM Plex Mono, `font-display` = Fraunces
 - **Institutional stripe**: 4 colors of the gestão — blue `#3ea3ff` / orange `#b86a2b` / yellow `#ffb829` / red `#ea4242`
 
-`FichaEmpenho.tsx` (PDF/print view) uses inline styles only — no Tailwind classes inside the A4 sheet — for print compatibility.
+**Design token rule**: always use custom tokens (`border-line`, `text-ink-*`, `rounded-xl`, `bg-bg-soft`) — never raw Tailwind colors (`border-gray-*`, `text-gray-*`, `bg-green-*`, `bg-red-*`). The only exception is inline style for values not in the token set (e.g. exact hex for status feedback backgrounds).
+
+**Confirmation modals**: destructive or impactful actions must use `ConfirmDeleteModal` (for empenho deletion) or `ConfirmActionModal` (generic, in `shared/components/`) — never `window.confirm()`. `ConfirmActionModal` supports three variants: `danger` (red, irreversible), `warning` (amber/institutional orange, reversible), `info` (institutional blue, safe confirmation).
+
+**Shared UI components** (all in `shared/components/`):
+- `PageHeader` — standard page title/description (Fraunces 28px). Use on every route instead of repeating the inline-style block.
+- `ConfirmDeleteModal` — specialized delete confirmation for empenhos.
+- `ConfirmActionModal` — generic action confirmation with `variant: 'danger' | 'warning' | 'info'`.
+- `Combobox` — async typeahead search field used for credor, retenção, EFD.
+- `ErrorBoundary` — React error boundary.
+
+**Empty states in tables** — distinguish two cases:
+1. *No data at all* → icon + "Nenhum X registrado ainda" + primary CTA button.
+2. *Active filters with no results* → magnifier icon + "Nenhum resultado para estes filtros/busca" + "Limpar filtros" link.
+
+**Clickable table rows** — `<tr onClick={...} className="... cursor-pointer">`. Wrap action buttons in `<td onClick={(ev) => ev.stopPropagation()}>` to prevent the row handler from firing on button clicks.
+
+**`EmpenhoQrData`** (in `packages/shared/src/utils.ts`) — all string fields accept `string | null` to be compatible with `Empenho` entity fields which use `string | null` throughout.
+
+`FichaEmpenho.tsx` (PDF/print view) uses inline styles only — no Tailwind classes inside the A4 sheet — for print compatibility. Print CSS in `globals.css` hides `.no-print` elements (sidebar, topbar), resets the `app-layout` grid to `display: block`, and sets `@page { size: A4 portrait; margin: 0 }`. Background colors (institutional stripe) require `print-color-adjust: exact` both in the global print rule and inline on the stripe divs.
 
 ### Schemas and validation
 

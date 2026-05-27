@@ -42,6 +42,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     register,
     control,
     handleSubmit,
+    reset,
     setValue,
     getValues,
     formState: { errors, isSubmitting },
@@ -305,6 +306,8 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   // ─── Submit ───────────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: EmpenhoDto) => {
+    const shouldSaveAndNew = saveAndNewRef.current;
+    saveAndNewRef.current = false;
     try {
       let result: Empenho;
       if (isEdit) {
@@ -312,15 +315,37 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       } else {
         result = await criar.mutateAsync(data);
       }
-      onSuccess?.(result);
+      if (shouldSaveAndNew) {
+        reset({ tipo_empenho: data.tipo_empenho, exercicio: data.exercicio, valor_empenho: 0, descontos: [] });
+        setCredorBusca('');
+        toast.success('Empenho criado. Formulário pronto para novo.');
+      } else {
+        onSuccess?.(result);
+      }
     } catch {
       // erro já tratado pelo hook
     }
   };
 
-  // ─── Enter → Tab ──────────────────────────────────────────────────────────────
+  // ─── Salvar e Novo ────────────────────────────────────────────────────────────
+
+  const saveAndNewRef = useRef(false);
+
+  // ─── Enter → Tab / Ctrl+S ────────────────────────────────────────────────────
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        formRef.current?.requestSubmit();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key !== 'Enter') return;
     const el = e.target as HTMLElement;
@@ -367,8 +392,10 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         {isEdit ? `Editar Empenho ${empenho.codigo_interno}` : 'Novo Empenho'}
       </h2>
 
-      {/* ── Exercício e Tipo ──────────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* ── Identificação ────────────────────────────────────────────────── */}
+      <section>
+        <h3 style={sectionHead}>Identificação</h3>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Field label="Exercício" error={errors.exercicio?.message}>
           <select {...register('exercicio', { valueAsNumber: true })} className={fieldCls}>
             {EXERCICIO_OPTS.map((o) => (
@@ -392,6 +419,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         <Field label="Emenda">
           <input type="number" {...register('emenda', { valueAsNumber: true })} className={fieldCls} placeholder="—" />
         </Field>
+      </div>
       </section>
 
       {/* ── Classificação Orçamentária ────────────────────────────────────── */}
@@ -576,6 +604,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           <span>Descontos / Retenções</span>
           <button
             type="button"
+            aria-label="Adicionar retenção"
             onClick={() => addDesconto({ tipo: '', codigo: '', valor: 0, efd_codigo: '', ord: descontoFields.length })}
             className="text-xs rounded-lg border border-line text-ink-700 px-3 py-1.5 hover:bg-bg-soft transition font-medium"
           >
@@ -751,6 +780,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
             <span className="text-xs font-semibold text-ink-500 uppercase tracking-wide" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em' }}>Parcelas</span>
             <button
               type="button"
+              aria-label="Adicionar parcela"
               onClick={() =>
                 addParcela({ valor: 0, data: '', forma_pagamento: '', conta: '', numero_op: '', ord: parcelaFields.length })
               }
@@ -839,6 +869,20 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
             className="rounded-lg border border-line px-4 py-2 text-sm text-ink-700 hover:bg-bg-soft transition font-medium"
           >
             Cancelar
+          </button>
+        )}
+        {!isEdit && (
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => {
+              saveAndNewRef.current = true;
+              formRef.current?.requestSubmit();
+            }}
+            className="rounded-lg border border-ink-900 text-ink-900 px-6 py-2 text-sm font-semibold hover:bg-bg-soft transition disabled:opacity-50"
+            title="Salvar e abrir formulário em branco (Ctrl+S salva e fecha)"
+          >
+            Salvar e Novo
           </button>
         )}
         <button

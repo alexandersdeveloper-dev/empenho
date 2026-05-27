@@ -12,6 +12,10 @@ import {
 } from '@ficha-empenho/shared';
 import { supabase } from '@/shared/lib/supabaseClient';
 import { useAuthStore } from '@/shared/lib/authStore';
+import { edgeFnError } from '@/shared/lib/edgeFnError';
+import { ConfirmActionModal } from '@/shared/components/ConfirmActionModal';
+import { PageHeader } from '@/shared/components/PageHeader';
+import { TableSkeleton } from '@/shared/components/TableSkeleton';
 import type { Perfil, ConfigQr } from '@ficha-empenho/shared';
 
 type Tab = 'qr' | 'obrigatorios' | 'usuarios' | 'secretarias';
@@ -219,6 +223,7 @@ function SecretariasSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<{ id: number; nome: string; ativo: boolean } | null>(null);
 
   const { data: secretarias = [], isLoading } = useQuery<Secretaria[]>({
     queryKey: ['departamentos'],
@@ -334,31 +339,35 @@ function SecretariasSection() {
       )}
 
       {/* Tabela */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-white">
-          <table className="w-full text-sm">
-            <thead style={{ background: '#f6f8fb' }}>
-              <tr>
-                <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
-                <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>Sigla</th>
-                <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
-                <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {secretarias.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-ink-400 text-sm">
-                    Nenhuma secretaria cadastrada
-                  </td>
-                </tr>
-              )}
-              {secretarias.map((s) => (
-                editId === s.id ? (
+      <div className="overflow-x-auto rounded-xl border border-line bg-white">
+        <table className="w-full text-sm">
+          <thead style={{ background: '#f6f8fb' }}>
+            <tr>
+              <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
+              <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>Sigla</th>
+              <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
+              <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <TableSkeleton rows={5} cols={[
+                { width: 'w-3/4' },
+                { width: 'w-16', hidden: 'sm' },
+                { width: 'w-8', hidden: 'sm' },
+                { width: 'w-20' },
+              ]} />
+            ) : (
+              <>
+                {secretarias.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-10 text-center text-ink-400 text-sm">
+                      Nenhuma secretaria cadastrada
+                    </td>
+                  </tr>
+                )}
+                {secretarias.map((s) => (
+                  editId === s.id ? (
                   /* Linha de edição inline */
                   <tr key={s.id} style={{ borderBottom: '1px solid #eef1f6', background: '#f6f8fb' }}>
                     <td className="px-3 py-2" colSpan={2}>
@@ -415,11 +424,7 @@ function SecretariasSection() {
                           Editar
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm(s.ativo ? `Desativar "${s.nome}"?` : `Ativar "${s.nome}"?`)) {
-                              toggleAtivo.mutate({ id: s.id, ativo: !s.ativo });
-                            }
-                          }}
+                          onClick={() => setPendingToggle({ id: s.id, nome: s.nome, ativo: s.ativo })}
                           className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition hover:bg-bg-soft-2 text-ink-500"
                         >
                           {s.ativo ? 'Desativar' : 'Ativar'}
@@ -429,10 +434,32 @@ function SecretariasSection() {
                   </tr>
                 )
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <ConfirmActionModal
+        open={pendingToggle !== null}
+        title={pendingToggle?.ativo ? 'Desativar secretaria' : 'Ativar secretaria'}
+        description={
+          pendingToggle?.ativo
+            ? `"${pendingToggle.nome}" ficará indisponível para novos empenhos. Esta ação pode ser revertida.`
+            : `"${pendingToggle?.nome ?? ''}" voltará a ficar disponível para associação de usuários.`
+        }
+        confirmLabel={pendingToggle?.ativo ? 'Desativar' : 'Ativar'}
+        variant={pendingToggle?.ativo ? 'warning' : 'info'}
+        isLoading={toggleAtivo.isPending}
+        onConfirm={() => {
+          if (!pendingToggle) return;
+          toggleAtivo.mutate(
+            { id: pendingToggle.id, ativo: !pendingToggle.ativo },
+            { onSuccess: () => setPendingToggle(null) },
+          );
+        }}
+        onCancel={() => setPendingToggle(null)}
+      />
     </div>
   );
 }
@@ -443,6 +470,7 @@ function UsuariosSection() {
   const qc = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const [showForm, setShowForm] = useState(false);
+  const [pendingDesativar, setPendingDesativar] = useState<{ id: string; nome: string } | null>(null);
 
   const { data: usuarios = [], isLoading } = useQuery<Perfil[]>({
     queryKey: ['usuarios'],
@@ -483,7 +511,7 @@ function UsuariosSection() {
       reset();
     },
     onError: (err: unknown) => {
-      toast.error((err as Error).message ?? 'Erro ao criar usuário');
+      toast.error(edgeFnError(err));
     },
   });
 
@@ -495,7 +523,7 @@ function UsuariosSection() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['usuarios'] }); toast.success('Usuário desativado'); },
-    onError: (err: unknown) => { toast.error((err as Error).message ?? 'Erro ao desativar usuário'); },
+    onError: (err: unknown) => { toast.error(edgeFnError(err)); },
   });
 
   const {
@@ -580,25 +608,31 @@ function UsuariosSection() {
         </form>
       )}
 
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-7 w-7 animate-spin rounded-full border-4 border-ink-900 border-t-transparent" />
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-white">
-          <table className="w-full text-sm">
-            <thead style={{ background: '#f6f8fb' }}>
-              <tr>
-                <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
-                <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>E-mail</th>
-                <th className="px-4 py-3 text-left" style={thStyle}>Perfil</th>
-                <th className="px-4 py-3 text-left col-hide-mobile" style={thStyle}>Secretaria</th>
-                <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
-                <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((u) => (
+      <div className="overflow-x-auto rounded-xl border border-line bg-white">
+        <table className="w-full text-sm">
+          <thead style={{ background: '#f6f8fb' }}>
+            <tr>
+              <th className="px-4 py-3 text-left" style={thStyle}>Nome</th>
+              <th className="px-4 py-3 text-left col-hide-sm" style={thStyle}>E-mail</th>
+              <th className="px-4 py-3 text-left" style={thStyle}>Perfil</th>
+              <th className="px-4 py-3 text-left col-hide-mobile" style={thStyle}>Secretaria</th>
+              <th className="px-4 py-3 text-center col-hide-sm" style={thStyle}>Ativo</th>
+              <th className="px-4 py-3 text-right" style={thStyle}>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <TableSkeleton rows={5} cols={[
+                { width: 'w-1/3' },
+                { width: 'w-1/2', hidden: 'sm' },
+                { width: 'w-16' },
+                { width: 'w-32', hidden: 'mobile' },
+                { width: 'w-8', hidden: 'sm' },
+                { width: 'w-16' },
+              ]} />
+            ) : (
+              <>
+                {usuarios.map((u) => (
                 <tr
                   key={u.id}
                   className={`hover:bg-bg-soft transition ${!u.ativo ? 'opacity-50' : ''}`}
@@ -622,7 +656,7 @@ function UsuariosSection() {
                   <td className="px-4 py-3 text-right">
                     {u.id !== currentUser?.id && u.ativo && (
                       <button
-                        onClick={() => { if (confirm(`Desativar ${u.nome}?`)) desativar.mutate(u.id); }}
+                        onClick={() => setPendingDesativar({ id: u.id, nome: u.nome })}
                         className="text-accent-red hover:underline text-xs font-medium"
                       >
                         Desativar
@@ -630,11 +664,28 @@ function UsuariosSection() {
                     )}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                ))}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <ConfirmActionModal
+        open={pendingDesativar !== null}
+        title="Desativar usuário"
+        description={`${pendingDesativar?.nome ?? ''} perderá acesso ao sistema imediatamente. Esta ação pode ser revertida pelo administrador.`}
+        confirmLabel="Desativar usuário"
+        variant="danger"
+        isLoading={desativar.isPending}
+        onConfirm={() => {
+          if (!pendingDesativar) return;
+          desativar.mutate(pendingDesativar.id, {
+            onSuccess: () => setPendingDesativar(null),
+          });
+        }}
+        onCancel={() => setPendingDesativar(null)}
+      />
     </div>
   );
 }
@@ -655,14 +706,10 @@ export function ConfigPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 4px', color: '#0f1622' }}>
-          Configurações
-        </h2>
-        <p style={{ fontSize: 14, color: '#5b667a', margin: 0 }}>
-          Personalize campos, QR codes e acesso de usuários.
-        </p>
-      </div>
+      <PageHeader
+        title="Configurações"
+        description="Personalize campos, QR codes e acesso de usuários."
+      />
 
       <div className="tabs-scroll mb-6" style={{ borderBottom: '1px solid #e3e7ee' }}>
         <div className="flex gap-0 min-w-max">

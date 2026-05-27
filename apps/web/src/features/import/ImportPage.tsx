@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/lib/supabaseClient';
+import { edgeFnError } from '@/shared/lib/edgeFnError';
+import { PageHeader } from '@/shared/components/PageHeader';
 
 type UploadState = 'idle' | 'uploading' | 'done' | 'error';
 
@@ -83,7 +85,7 @@ function UploadCard({
       toast.success(`${label}: importação concluída`);
     } catch (err: unknown) {
       setState('error');
-      const msg = (err as Error).message ?? 'Erro na importação';
+      const msg = edgeFnError(err);
       setResult({ message: msg });
       toast.error(msg);
     } finally {
@@ -92,10 +94,10 @@ function UploadCard({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-line bg-white p-4 flex flex-col gap-3">
       <div>
-        <h3 className="text-sm font-semibold text-gray-800">{label}</h3>
-        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+        <h3 className="text-sm font-semibold text-ink-900">{label}</h3>
+        <p className="text-xs text-ink-400 mt-0.5">{description}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -123,7 +125,10 @@ function UploadCard({
       </div>
 
       {state === 'done' && result && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-xs text-green-800">
+        <div
+          className="rounded-xl px-3 py-2 text-xs"
+          style={{ background: '#effaf2', border: '1px solid #b7e4c7', color: '#1f7a3f' }}
+        >
           {result.inserted != null && <span>Inseridos: {result.inserted} · </span>}
           {result.updated != null && <span>Atualizados: {result.updated} · </span>}
           {result.deleted != null && <span>Removidos: {result.deleted} · </span>}
@@ -133,7 +138,10 @@ function UploadCard({
       )}
 
       {state === 'error' && result?.message && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800">
+        <div
+          className="rounded-xl px-3 py-2 text-xs"
+          style={{ background: '#fef5f5', border: '1px solid #f9c1c1', color: '#8b2424' }}
+        >
           {result.message}
         </div>
       )}
@@ -144,14 +152,10 @@ function UploadCard({
 export function ImportPage() {
   return (
     <div>
-      <div className="mb-5">
-        <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 4px', color: '#0f1622' }}>
-          Importar Dados
-        </h2>
-        <p style={{ fontSize: 14, color: '#5b667a', margin: 0 }}>
-          Faça upload de planilhas Excel (.xlsx/.xls) ou CSV para popular as tabelas do sistema.
-        </p>
-      </div>
+      <PageHeader
+        title="Importar Dados"
+        description="Faça upload de planilhas Excel (.xlsx/.xls) ou CSV para popular as tabelas do sistema."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {IMPORTS.map(({ key, label, tipo, description }) => (

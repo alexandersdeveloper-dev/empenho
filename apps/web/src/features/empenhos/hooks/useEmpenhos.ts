@@ -1,45 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/lib/supabaseClient';
+import { handleEdgeFnError } from '@/shared/lib/edgeFnError';
 import { normalizarNatureza } from '@ficha-empenho/shared';
-import type { EmpenhoFiltrosDto, CreateEmpenhoDto } from '@ficha-empenho/shared';
+import type { EmpenhoFiltrosDto, EmpenhoDto } from '@ficha-empenho/shared';
 import type { Empenho, ApiMeta } from '@ficha-empenho/shared';
 
 const QUERY_KEY = 'empenhos';
 const PAGE_SIZE = 20;
-
-// Extrai a mensagem real do corpo da resposta quando a Edge Function retorna não-2xx.
-// O SDK guarda o body como string em error.context em vez de propagá-lo em error.message.
-function edgeFnError(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const ctx = (err as Record<string, unknown>).context;
-    if (typeof ctx === 'string') {
-      try {
-        const body = JSON.parse(ctx) as Record<string, unknown>;
-        if (typeof body.error === 'string') return body.error;
-        if (typeof body.message === 'string') return body.message;
-      } catch { /* não é JSON */ }
-    }
-  }
-  return (err as Error)?.message ?? 'Erro desconhecido';
-}
-
-// Se o erro for de autenticação (401/token inválido), faz logout imediato
-// para limpar a sessão stale e redirecionar para o login.
-async function handleEdgeFnError(err: unknown): Promise<void> {
-  const msg = edgeFnError(err);
-  const isAuthError =
-    msg.toLowerCase().includes('não autorizado') ||
-    msg.toLowerCase().includes('unauthorized') ||
-    (err as { status?: number })?.status === 401;
-
-  if (isAuthError) {
-    toast.error('Sessão expirada. Faça login novamente.');
-    await supabase.auth.signOut();
-    return;
-  }
-  toast.error(msg);
-}
 
 export function useEmpenhos(filtros: Partial<EmpenhoFiltrosDto> = {}) {
   return useQuery({
@@ -116,7 +84,7 @@ export function useEmpenho(id: number) {
 export function useCriarEmpenho() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: CreateEmpenhoDto) => {
+    mutationFn: async (dto: EmpenhoDto) => {
       const { data, error } = await supabase.functions.invoke('empenho-mutate', {
         body: { action: 'criar', dto },
       });
@@ -125,7 +93,7 @@ export function useCriarEmpenho() {
     },
     onSuccess: (empenho) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      toast.success(`Empenho ${empenho.codigo_interno} criado com sucesso`);
+      toast.success(`Empenho ${empenho.codigo_interno ?? empenho.id} criado com sucesso`);
     },
     onError: (err: unknown) => { void handleEdgeFnError(err); },
   });
@@ -134,7 +102,7 @@ export function useCriarEmpenho() {
 export function useAtualizarEmpenho() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, dto }: { id: number; dto: CreateEmpenhoDto }) => {
+    mutationFn: async ({ id, dto }: { id: number; dto: EmpenhoDto }) => {
       const { data, error } = await supabase.functions.invoke('empenho-mutate', {
         body: { action: 'atualizar', id, dto },
       });
