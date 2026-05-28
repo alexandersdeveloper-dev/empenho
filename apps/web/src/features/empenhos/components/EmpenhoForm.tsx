@@ -115,8 +115,15 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   const valorLiquido = Math.max(0, (Number(valorEmpenho) || 0) - totalDescontos);
 
   useEffect(() => {
-    setValue('liquidacao.valor', valorLiquido);
-  }, [valorLiquido, setValue]);
+    if (!isGlobal) setValue('liquidacao.valor', valorLiquido);
+  }, [valorLiquido, isGlobal, setValue]);
+
+  useEffect(() => {
+    if (tipoEmpenho !== prevTipoEmpenhoRef.current && tipoEmpenho === 3) {
+      setValue('liquidacao.valor', 0);
+    }
+    prevTipoEmpenhoRef.current = tipoEmpenho;
+  }, [tipoEmpenho, setValue]);
 
   const { fields: descontoFields, append: addDesconto, remove: removeDesconto } = useFieldArray({
     control,
@@ -129,6 +136,8 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   });
 
   const [credorBusca, setCredorBusca] = useState(empenho?.credor_nome ?? '');
+  const [fichaExtraBusca, setFichaExtraBusca] = useState(empenho?.ficha_extra_codigo ?? '');
+  const prevTipoEmpenhoRef = useRef(tipoEmpenho);
 
   // ─── Classificação orçamentária ───────────────────────────────────────────────
 
@@ -316,6 +325,40 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
     }));
   }
 
+  // ─── Ficha Extra autocomplete ────────────────────────────────────────────────
+
+  async function searchFichaExtra(q: string) {
+    let query = supabase
+      .from('empenhos')
+      .select('ficha_extra_codigo, ficha_extra_descricao')
+      .not('ficha_extra_codigo', 'is', null);
+    if (q) query = query.ilike('ficha_extra_codigo', `%${q}%`);
+    const { data } = await query.limit(20);
+    const seen = new Set<string>();
+    return (data ?? [])
+      .filter((r) => {
+        const c = r.ficha_extra_codigo;
+        if (!c || seen.has(c)) return false;
+        seen.add(c);
+        return true;
+      })
+      .map((r) => ({
+        label: r.ficha_extra_codigo! + (r.ficha_extra_descricao ? ' — ' + r.ficha_extra_descricao : ''),
+        value: r.ficha_extra_codigo!,
+        meta: r,
+      }));
+  }
+
+  function handleFichaExtraSelect(label: string, option?: { value: string; meta?: Record<string, unknown> }) {
+    const code = option?.value ?? label;
+    setFichaExtraBusca(code);
+    setValue('ficha_extra_codigo', code);
+    if (option?.meta) {
+      const m = option.meta as { ficha_extra_descricao: string | null };
+      setValue('ficha_extra_descricao', m.ficha_extra_descricao ?? '');
+    }
+  }
+
   // ─── Submit ───────────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: EmpenhoDto) => {
@@ -331,6 +374,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       if (shouldSaveAndNew) {
         reset({ tipo_empenho: data.tipo_empenho, exercicio: data.exercicio, valor_empenho: 0, descontos: [] });
         setCredorBusca('');
+        setFichaExtraBusca('');
         toast.success('Empenho criado. Formulário pronto para novo.');
       } else {
         onSuccess?.(result);
@@ -432,7 +476,16 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           )}
 
           <Field label="Emenda">
-            <input type="number" {...register('emenda', { valueAsNumber: true })} className={fieldCls} placeholder="—" />
+            <select
+              {...register('emenda', { setValueAs: (v) => (v === '' || v == null) ? null : Number(v) })}
+              className={fieldCls}
+            >
+              <option value="">—</option>
+              <option value="1">1 — Individual</option>
+              <option value="2">2 — Parlamentar Impositiva</option>
+              <option value="3">3 — Bancada</option>
+              <option value="4">4 — Comissão</option>
+            </select>
           </Field>
 
           {isSubEmpenho && (
@@ -448,7 +501,14 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       {/* ── Classificação Orçamentária (oculta para tipos 4, 5, 6) ──────── */}
       {showClassificacao && (
         <section>
-          <h3 style={sectionHead}>Classificação Orçamentária</h3>
+          <h3 style={sectionHead}>
+            Classificação Orçamentária
+            {isSuperavit && (
+              <span style={{ fontSize: 10, fontWeight: 500, color: '#5b667a', background: '#f6f8fb', border: '1px solid #e3e7ee', borderRadius: 4, padding: '2px 8px' }}>
+                Opcional no Superávit
+              </span>
+            )}
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <Field label="Nº da Ficha">
               <input
@@ -555,18 +615,21 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           <h3 style={sectionHead}>Ficha Extra</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <Field label="Nº Ficha Extra">
-              <input
-                {...register('ficha_extra_codigo')}
-                className={fieldCls}
+              <Combobox
+                value={fichaExtraBusca}
+                onChange={(val, opt) => handleFichaExtraSelect(val, opt as { value: string; meta?: Record<string, unknown> })}
+                onSearch={searchFichaExtra}
                 placeholder="Código da ficha extra"
+                minChars={1}
               />
+              <input type="hidden" {...register('ficha_extra_codigo')} />
             </Field>
             <div className="sm:col-span-3">
               <Field label="Descrição da Ficha">
                 <input
                   {...register('ficha_extra_descricao')}
                   className={fieldCls}
-                  placeholder="Descrição da ficha extra"
+                  placeholder="Auto-preenchida ao selecionar código"
                 />
               </Field>
             </div>
@@ -779,7 +842,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       <section>
         <h3 style={{ ...sectionHead, justifyContent: 'flex-start' }}>Liquidação</h3>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg border border-line p-4 bg-bg-soft">
-          <Field label="Valor Liquidado (R$)">
+          <Field label={isGlobal ? 'Valor Liquidado (R$)' : 'Valor Liquidado (R$) — calculado'}>
             <Controller
               control={control}
               name="liquidacao.valor"
@@ -787,6 +850,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
                 <input
                   type="text"
                   inputMode="decimal"
+                  readOnly={!isGlobal}
                   className={fieldCls}
                   value={formatCurrencyBR(f.value ?? valorLiquido)}
                   onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}

@@ -10,13 +10,21 @@ type Props = {
   onEditar: () => void;
 };
 
-const TIPO_LABEL: Record<number, string> = { 1: 'Ordinário', 2: 'Reexercício', 3: 'Global' };
+const TIPO_LABEL: Record<number, string> = {
+  1: 'Ordinário', 2: 'Estimativo', 3: 'Global',
+  4: 'Sub-Empenho', 5: 'Despesa Extra', 6: 'Receita Extra',
+};
 const EXERCICIO_LABEL: Record<number, string> = { 1: 'Normal', 2: 'Superávit' };
 const EMENDA_LABEL: Record<number, string> = {
   1: 'Individual',
-  2: 'Parlamentar',
+  2: 'Parlamentar Impositiva',
   3: 'Bancada',
   4: 'Comissão',
+};
+const NUM_LABEL: Record<number, string> = {
+  4: 'Nº do Sub-Empenho',
+  5: 'Nº do Empenho Extra',
+  6: 'Nº do Lançamento',
 };
 
 function dataBR(d: string | null | undefined): string {
@@ -175,6 +183,12 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
     staleTime: 60 * 60_000,
   });
 
+  const isSubEmpenho = empenho.tipo_empenho === 4;
+  const isDespesaExtra = empenho.tipo_empenho === 5;
+  const isReceitaExtra = empenho.tipo_empenho === 6;
+  const isExtraOrcamentario = empenho.tipo_empenho >= 4;
+  const codigoLabel = NUM_LABEL[empenho.tipo_empenho] ?? 'Código do Empenho';
+
   const descontos: Desconto[] = empenho.descontos ?? [];
   const liquidacao = empenho.liquidacao;
   const parcelas: Parcela[] = liquidacao?.parcelas ?? [];
@@ -280,7 +294,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
                 textTransform: 'uppercase',
                 marginBottom: 4,
               }}>
-                Código do Empenho
+                {codigoLabel}
               </div>
               <div style={{
                 fontFamily: MONO,
@@ -304,78 +318,146 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
           {/* ── Classificação Orçamentária ──────────────────────────────────── */}
           <section style={{ marginBottom: 10 }}>
             <SecaoHeader titulo="Classificação Orçamentária" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px 10px' }}>
 
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Nº Ficha" valor={v(empenho.numero_ficha)} mono />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Data do Empenho" valor={dataBR(empenho.data_empenho) || '—'} mono />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Tipo" valor={TIPO_LABEL[empenho.tipo_empenho] ?? '—'} />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Exercício" valor={EXERCICIO_LABEL[empenho.exercicio] ?? '—'} />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo
-                  label="Emenda"
-                  valor={empenho.emenda ? (EMENDA_LABEL[empenho.emenda] ?? String(empenho.emenda)) : '—'}
-                />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Código Interno" valor={v(empenho.codigo_interno)} mono />
-              </div>
+            {/* Tipos 1, 2, 3 — layout orçamentário completo */}
+            {!isExtraOrcamentario && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px 10px' }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Nº Ficha" valor={v(empenho.numero_ficha)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Data do Empenho" valor={dataBR(empenho.data_empenho) || '—'} mono />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Tipo" valor={TIPO_LABEL[empenho.tipo_empenho] ?? '—'} />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Exercício" valor={EXERCICIO_LABEL[empenho.exercicio] ?? '—'} />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo
+                    label="Emenda"
+                    valor={empenho.emenda ? (EMENDA_LABEL[empenho.emenda] ?? String(empenho.emenda)) : '—'}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Código Interno" valor={v(empenho.codigo_interno)} mono />
+                </div>
 
-              <div style={{ gridColumn: 'span 5' }}>
-                <Campo label="Dotação (Natureza da Despesa)" valor={v(empenho.dotacao)} mono />
-              </div>
-              <div style={{ gridColumn: 'span 3' }}>
-                <Campo label="Fonte (STN)" valor={v(empenho.stn)} mono />
-              </div>
-              <div style={{ gridColumn: 'span 4' }}>
-                <Campo
-                  label="Sub-elemento"
-                  valor={
-                    empenho.subelemento_codigo
-                      ? empenho.subelemento_codigo + (empenho.subelemento_descricao ? ' — ' + empenho.subelemento_descricao : '')
-                      : v(empenho.subelemento_descricao)
-                  }
-                  mono
-                />
-              </div>
+                <div style={{ gridColumn: 'span 5' }}>
+                  <Campo label="Dotação (Natureza da Despesa)" valor={v(empenho.dotacao)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo label="Fonte (STN)" valor={v(empenho.stn)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 4' }}>
+                  <Campo
+                    label="Sub-elemento"
+                    valor={
+                      empenho.subelemento_codigo
+                        ? empenho.subelemento_codigo + (empenho.subelemento_descricao ? ' — ' + empenho.subelemento_descricao : '')
+                        : v(empenho.subelemento_descricao)
+                    }
+                    mono
+                  />
+                </div>
 
-              <div style={{ gridColumn: 'span 8' }}>
-                <Campo label="Projeto / Atividade" valor={v(empenho.projeto_atividade)} />
-              </div>
-              <div style={{ gridColumn: 'span 4' }}>
-                <Campo
-                  label="Valor do Empenho"
-                  valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
-                  mono
-                  style={{ borderBottom: `1.5px solid ${C.ink900}` }}
-                />
-              </div>
+                <div style={{ gridColumn: 'span 8' }}>
+                  <Campo label="Projeto / Atividade" valor={v(empenho.projeto_atividade)} />
+                </div>
+                <div style={{ gridColumn: 'span 4' }}>
+                  <Campo
+                    label="Valor do Empenho"
+                    valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
+                    mono
+                    style={{ borderBottom: `1.5px solid ${C.ink900}` }}
+                  />
+                </div>
 
-              <div style={{ gridColumn: 'span 2' }}>
-                <Campo label="Nº do Credor" valor={v(empenho.credor_numero)} mono />
-              </div>
-              <div style={{ gridColumn: 'span 10' }}>
-                <Campo label="Nome do Credor" valor={v(empenho.credor_nome)} />
-              </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Nº do Credor" valor={v(empenho.credor_numero)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 10' }}>
+                  <Campo label="Nome do Credor" valor={v(empenho.credor_nome)} />
+                </div>
 
-              {(empenho.numero_contrato || empenho.numero_convenio) && (
-                <>
-                  <div style={{ gridColumn: 'span 4' }}>
-                    <Campo label="Nº do Contrato" valor={v(empenho.numero_contrato)} mono />
-                  </div>
-                  <div style={{ gridColumn: 'span 4' }}>
-                    <Campo label="Nº do Convênio" valor={v(empenho.numero_convenio)} mono />
-                  </div>
-                </>
-              )}
-            </div>
+                {(empenho.numero_contrato || empenho.numero_convenio) && (
+                  <>
+                    <div style={{ gridColumn: 'span 4' }}>
+                      <Campo label="Nº do Contrato" valor={v(empenho.numero_contrato)} mono />
+                    </div>
+                    <div style={{ gridColumn: 'span 4' }}>
+                      <Campo label="Nº do Convênio" valor={v(empenho.numero_convenio)} mono />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Tipo 4 — Sub-Empenho */}
+            {isSubEmpenho && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px 10px' }}>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo label="Tipo" valor={TIPO_LABEL[empenho.tipo_empenho]} />
+                </div>
+                <div style={{ gridColumn: 'span 5' }}>
+                  <Campo label="Fonte de Recurso" valor={v(empenho.fonte_recurso)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 4' }}>
+                  <Campo label="Data Liquidação" valor={dataBR(liquidacao?.data_liquidacao) || '—'} mono />
+                </div>
+                <div style={{ gridColumn: 'span 12' }}>
+                  <Campo
+                    label="Valor do Empenho"
+                    valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
+                    mono
+                    style={{ borderBottom: `1.5px solid ${C.ink900}` }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Nº do Credor" valor={v(empenho.credor_numero)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 10' }}>
+                  <Campo label="Nome do Credor" valor={v(empenho.credor_nome)} />
+                </div>
+              </div>
+            )}
+
+            {/* Tipos 5 e 6 — Despesa Extra / Receita Extra */}
+            {(isDespesaExtra || isReceitaExtra) && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px 10px' }}>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo label="Tipo" valor={TIPO_LABEL[empenho.tipo_empenho]} />
+                </div>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo
+                    label={isReceitaExtra ? 'Data de Lançamento' : 'Data do Empenho'}
+                    valor={dataBR(empenho.data_empenho) || '—'}
+                    mono
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo label="Nº Ficha Extra" valor={v(empenho.ficha_extra_codigo)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 3' }}>
+                  <Campo
+                    label="Valor do Empenho"
+                    valor={`R$ ${formatCurrencyBR(empenho.valor_empenho)}`}
+                    mono
+                    style={{ borderBottom: `1.5px solid ${C.ink900}` }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 12' }}>
+                  <Campo label="Descrição da Ficha" valor={v(empenho.ficha_extra_descricao)} />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Campo label="Nº do Credor" valor={v(empenho.credor_numero)} mono />
+                </div>
+                <div style={{ gridColumn: 'span 10' }}>
+                  <Campo label="Nome do Credor" valor={v(empenho.credor_nome)} />
+                </div>
+              </div>
+            )}
           </section>
 
           {/* ── Histórico ────────────────────────────────────────────────────── */}
@@ -398,8 +480,8 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
             </div>
           </section>
 
-          {/* ── Descontos / Retenções ─────────────────────────────────────────── */}
-          <section style={{ marginBottom: 10 }}>
+          {/* ── Descontos / Retenções (oculto para Receita Extra) ───────────── */}
+          {!isReceitaExtra && <section style={{ marginBottom: 10 }}>
             <SecaoHeader titulo="Descontos / Retenções" />
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', border: `1px solid ${C.line}` }}>
               <colgroup>
@@ -464,7 +546,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
                 </tr>
               </tbody>
             </table>
-          </section>
+          </section>}
 
           {/* ── Liquidação ───────────────────────────────────────────────────── */}
           <section style={{ marginBottom: 10 }}>
@@ -481,7 +563,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
               borderRadius: 4,
               border: `1px solid ${C.line}`,
             }}>
-              <div style={{ gridColumn: 'span 2' }}>
+              <div style={{ gridColumn: isReceitaExtra ? 'span 3' : 'span 2' }}>
                 <Campo
                   label="Valor Líquido"
                   valor={liquidacao?.valor != null ? `R$ ${formatCurrencyBR(liquidacao.valor)}` : '—'}
@@ -489,25 +571,33 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
                   style={{ borderBottom: `1.5px solid ${C.ink900}`, borderColor: C.ink900 }}
                 />
               </div>
+              {!isReceitaExtra && (
+                <div>
+                  <Campo label="Data Liquidação" valor={dataBR(liquidacao?.data_liquidacao) || '—'} mono />
+                </div>
+              )}
               <div>
-                <Campo label="Data Liquidação" valor={dataBR(liquidacao?.data_liquidacao) || '—'} mono />
-              </div>
-              <div>
-                <Campo label="Data Pagamento" valor={dataBR(liquidacao?.data_pagamento) || '—'} mono />
+                <Campo
+                  label={isReceitaExtra ? 'Data Recebimento' : 'Data Pagamento'}
+                  valor={dataBR(liquidacao?.data_pagamento) || '—'}
+                  mono
+                />
               </div>
               <div>
                 <Campo label="Forma de Pagamento" valor={vt(liquidacao?.forma_pagamento) || '—'} />
               </div>
-              <div>
-                <Campo label="Nº O.P." valor={vt(liquidacao?.numero_op) || '—'} mono />
-              </div>
+              {!isReceitaExtra && (
+                <div>
+                  <Campo label="Nº O.P." valor={vt(liquidacao?.numero_op) || '—'} mono />
+                </div>
+              )}
               <div style={{ gridColumn: 'span 6' }}>
                 <Campo label="Conta Bancária" valor={vt(liquidacao?.conta) || '—'} mono />
               </div>
             </div>
 
-            {/* Parcelas */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${C.line}` }}>
+            {/* Parcelas — ocultas para Receita Extra */}
+            {!isReceitaExtra && <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${C.line}` }}>
               <thead>
                 <tr>
                   <Th align="right" w="20%">Valor (R$)</Th>
@@ -531,7 +621,7 @@ export function FichaEmpenho({ empenho, onVoltar, onEditar }: Props) {
                   );
                 })}
               </tbody>
-            </table>
+            </table>}
           </section>
 
           {/* ── Rodapé ──────────────────────────────────────────────────────── */}
