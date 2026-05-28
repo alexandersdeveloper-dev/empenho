@@ -139,7 +139,7 @@ export type Empenho = {
   credor_id: number | null;
   credor_numero: string | null;
   credor_nome: string | null;
-  tipo_empenho: 1 | 2 | 3;
+  tipo_empenho: 1 | 2 | 3 | 4 | 5 | 6;
   historico: string | null;
   valor_empenho: number;
   emenda: number | null;
@@ -147,6 +147,9 @@ export type Empenho = {
   numero_contrato: string | null;
   numero_convenio: string | null;
   data_empenho: string | null;
+  fonte_recurso: string | null;
+  ficha_extra_codigo: string | null;
+  ficha_extra_descricao: string | null;
   usuario_id: string | null;
   usuario_nome: string | null;
   created_at: string;

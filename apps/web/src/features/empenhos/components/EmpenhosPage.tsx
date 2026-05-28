@@ -57,8 +57,11 @@ function FormView({
 
 const TIPO_LABEL: Record<number, string> = {
   1: 'Ordinário',
-  2: 'Reexercício',
+  2: 'Estimativo',
   3: 'Global',
+  4: 'Sub-Empenho',
+  5: 'Despesa Extra',
+  6: 'Receita Extra',
 };
 
 const thSt = {

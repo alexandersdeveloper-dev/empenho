@@ -90,6 +90,9 @@ type EmpenhoDto = {
   numero_contrato?: string | null;
   numero_convenio?: string | null;
   data_empenho?: string | null;
+  fonte_recurso?: string | null;
+  ficha_extra_codigo?: string | null;
+  ficha_extra_descricao?: string | null;
   descontos?: Desconto[];
   liquidacao?: Liquidacao | null;
 };
@@ -100,6 +103,8 @@ async function validarSubelemento(
   supabase: ReturnType<typeof createClient>,
   dto: EmpenhoDto,
 ) {
+  // Tipos extra-orçamentários (4, 5, 6) não possuem classificação orçamentária
+  if (dto.tipo_empenho >= 4) return;
   if (!dto.dotacao || !dto.subelemento_codigo) return;
 
   const natureza = normalizarNatureza(dto.dotacao);
@@ -121,7 +126,9 @@ async function validarCamposObrigatorios(
   supabase: ReturnType<typeof createClient>,
   dto: EmpenhoDto,
 ) {
+  // Superávit e tipos extra-orçamentários não validam campos obrigatórios de classificação
   if (dto.exercicio === 2) return;
+  if (dto.tipo_empenho >= 4) return;
 
   const { data: config } = await supabase
     .from('campos_obrigatorios')
@@ -292,6 +299,9 @@ serve(async (req) => {
           numero_contrato:       dto.numero_contrato       ?? null,
           numero_convenio:       dto.numero_convenio       ?? null,
           data_empenho:          toDateOrNull(dto.data_empenho),
+          fonte_recurso:         dto.fonte_recurso         ?? null,
+          ficha_extra_codigo:    dto.ficha_extra_codigo    ?? null,
+          ficha_extra_descricao: dto.ficha_extra_descricao ?? null,
           usuario_id:            perfil.id,
           usuario_nome:          perfil.nome,
         })
@@ -355,6 +365,9 @@ serve(async (req) => {
           numero_contrato:       dto.numero_contrato       ?? null,
           numero_convenio:       dto.numero_convenio       ?? null,
           data_empenho:          toDateOrNull(dto.data_empenho),
+          fonte_recurso:         dto.fonte_recurso         ?? null,
+          ficha_extra_codigo:    dto.ficha_extra_codigo    ?? null,
+          ficha_extra_descricao: dto.ficha_extra_descricao ?? null,
         })
         .eq('id', id);
 

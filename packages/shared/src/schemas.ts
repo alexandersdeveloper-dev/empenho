@@ -134,8 +134,11 @@ export type LiquidacaoDto = z.infer<typeof LiquidacaoSchema>;
 
 export const TipoEmpenhoEnum = z.union([
   z.literal(1), // Ordinário
-  z.literal(2), // Reexercício
+  z.literal(2), // Estimativo
   z.literal(3), // Global
+  z.literal(4), // Sub-Empenho
+  z.literal(5), // Despesa Extra
+  z.literal(6), // Receita Extra
 ]);
 
 export const ExercicioEnum = z.union([
@@ -167,6 +170,9 @@ export const EmpenhoSchema = z.object({
   numero_contrato: z.string().optional().nullable(),
   numero_convenio: z.string().optional().nullable(),
   data_empenho: dateString,
+  fonte_recurso: z.string().optional().nullable(),
+  ficha_extra_codigo: z.string().optional().nullable(),
+  ficha_extra_descricao: z.string().optional().nullable(),
   departamento_id: z.coerce.number().int().positive().optional().nullable(),
   descontos: z.array(DescontoSchema).default([]),
   liquidacao: LiquidacaoSchema.optional().nullable(),

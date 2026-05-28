@@ -17,8 +17,11 @@ type Props = {
 
 const TIPO_OPTS = [
   { value: 1, label: 'Ordinário' },
-  { value: 2, label: 'Reexercício' },
+  { value: 2, label: 'Estimativo' },
   { value: 3, label: 'Global' },
+  { value: 4, label: 'Sub-Empenho' },
+  { value: 5, label: 'Despesa Extra' },
+  { value: 6, label: 'Receita Extra' },
 ];
 
 const EXERCICIO_OPTS = [
@@ -59,7 +62,7 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           credor_id: empenho.credor_id ?? undefined,
           credor_numero: empenho.credor_numero ?? '',
           credor_nome: empenho.credor_nome ?? '',
-          tipo_empenho: (empenho.tipo_empenho as 1 | 2 | 3) ?? 1,
+          tipo_empenho: (empenho.tipo_empenho as 1 | 2 | 3 | 4 | 5 | 6) ?? 1,
           historico: empenho.historico ?? '',
           valor_empenho: empenho.valor_empenho ?? 0,
           emenda: empenho.emenda ?? undefined,
@@ -67,6 +70,9 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           numero_contrato: empenho.numero_contrato ?? '',
           numero_convenio: empenho.numero_convenio ?? '',
           data_empenho: empenho.data_empenho ?? null,
+          fonte_recurso: empenho.fonte_recurso ?? '',
+          ficha_extra_codigo: empenho.ficha_extra_codigo ?? '',
+          ficha_extra_descricao: empenho.ficha_extra_descricao ?? '',
           descontos: empenho.descontos ?? [],
           liquidacao: empenho.liquidacao
             ? {
@@ -92,8 +98,15 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
   const exercicio = useWatch({ control, name: 'exercicio' });
   const valorEmpenho = useWatch({ control, name: 'valor_empenho' });
   const descontosWatch = useWatch({ control, name: 'descontos' });
+
   const isSuperavit = exercicio === 2;
   const isGlobal = tipoEmpenho === 3;
+  const isSubEmpenho = tipoEmpenho === 4;
+  const isDespesaExtra = tipoEmpenho === 5;
+  const isReceitaExtra = tipoEmpenho === 6;
+  const showClassificacao = !isSubEmpenho && !isDespesaExtra && !isReceitaExtra;
+  const showFichaExtra = isDespesaExtra || isReceitaExtra;
+  const showDescontos = !isReceitaExtra;
 
   const totalDescontos = (descontosWatch ?? []).reduce(
     (sum, d) => sum + (Number(d?.valor) || 0),
@@ -395,134 +408,171 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
       {/* ── Identificação ────────────────────────────────────────────────── */}
       <section>
         <h3 style={sectionHead}>Identificação</h3>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Field label="Exercício" error={errors.exercicio?.message}>
-          <select {...register('exercicio', { valueAsNumber: true })} className={fieldCls}>
-            {EXERCICIO_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Tipo de Empenho" error={errors.tipo_empenho?.message}>
-          <select {...register('tipo_empenho', { valueAsNumber: true })} className={fieldCls}>
-            {TIPO_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Data do Empenho">
-          <input type="date" {...register('data_empenho')} className={fieldCls} />
-        </Field>
-
-        <Field label="Emenda">
-          <input type="number" {...register('emenda', { valueAsNumber: true })} className={fieldCls} placeholder="—" />
-        </Field>
-      </div>
-      </section>
-
-      {/* ── Classificação Orçamentária ────────────────────────────────────── */}
-      <section>
-        <h3 style={sectionHead}>Classificação Orçamentária</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <Field label="Nº da Ficha">
-            <input
-              {...register('numero_ficha')}
-              className={fieldCls}
-              placeholder="Ex: 001"
-              onBlur={(e) => handleFichaBlur(e.target.value)}
-              onChange={() => {
-                setValue('subelemento_codigo', '');
-                setValue('subelemento_descricao', '');
-              }}
-            />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Field label="Exercício" error={errors.exercicio?.message}>
+            <select {...register('exercicio', { valueAsNumber: true })} className={fieldCls}>
+              {EXERCICIO_OPTS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
           </Field>
 
-          <div className="sm:col-span-3">
-            <Field label="Projeto / Atividade">
-              <input
-                {...register('projeto_atividade')}
-                readOnly={classificacaoTravada}
-                className={fieldCls}
-                placeholder="Auto-preenchido pela ficha"
-              />
-            </Field>
-          </div>
-
-          <div className="sm:col-span-2">
-            <Field label="Dotação (Natureza)">
-              <input
-                {...register('dotacao')}
-                readOnly={classificacaoTravada}
-                className={fieldCls}
-                placeholder="Ex: 3.1.90.04.00"
-                onBlur={(e) => carregarSubs(e.target.value, false)}
-              />
-            </Field>
-          </div>
-
-          <Field label="Fonte (STN)">
-            <input
-              {...register('stn')}
-              readOnly={classificacaoTravada}
-              className={fieldCls}
-            />
+          <Field label="Tipo de Empenho" error={errors.tipo_empenho?.message}>
+            <select {...register('tipo_empenho', { valueAsNumber: true })} className={fieldCls}>
+              {TIPO_OPTS.map((o) => (
+                <option key={o.value} value={o.value}>{o.value} — {o.label}</option>
+              ))}
+            </select>
           </Field>
 
-          {/* Sub-elemento */}
-          <div>
-            <label className={labelCls}>Sub-elemento</label>
-            <div className="relative flex gap-1">
-              <div className="relative flex-1">
-                <input
-                  {...register('subelemento_codigo')}
-                  className={fieldCls}
-                  placeholder="Código"
-                  onChange={(e) => setSubFiltro(e.target.value)}
-                  onFocus={() => subsAtuais.length > 0 && setShowSubSugestoes(true)}
-                  onBlur={handleSubBlur}
-                  autoComplete="off"
-                />
-                {showSubSugestoes && subsFiltradas.length > 0 && (
-                  <ul className="absolute z-50 mt-1 w-64 rounded-lg border border-line bg-white shadow-md max-h-52 overflow-y-auto text-sm">
-                    {subsFiltradas.map((s) => (
-                      <li
-                        key={s.sub}
-                        onMouseDown={(e) => { e.preventDefault(); selecionarSub(s); }}
-                        className="cursor-pointer px-3 py-2 hover:bg-bg-soft hover:text-ink-900 transition"
-                      >
-                        <span className="font-mono mr-2 text-ink-700">{s.sub}</span>
-                        <span className="text-ink-500">{s.descricao}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!naturezaAtual) { toast.info('Informe a ficha para carregar sub-elementos'); return; }
-                  setShowSubSugestoes(true);
-                }}
-                className="rounded-lg border border-line px-2.5 text-ink-500 hover:bg-bg-soft transition flex items-center justify-center"
-                title="Ver sub-elementos disponíveis"
-                aria-label="Ver sub-elementos disponíveis"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-              </button>
+          {!isSubEmpenho && (
+            <Field label={isReceitaExtra ? 'Data de Lançamento' : 'Data do Empenho'}>
+              <input type="date" {...register('data_empenho')} className={fieldCls} />
+            </Field>
+          )}
+
+          <Field label="Emenda">
+            <input type="number" {...register('emenda', { valueAsNumber: true })} className={fieldCls} placeholder="—" />
+          </Field>
+
+          {isSubEmpenho && (
+            <div className="col-span-2 sm:col-span-4">
+              <Field label="Fonte de Recurso">
+                <input {...register('fonte_recurso')} className={fieldCls} placeholder="Preenchido pela ficha ou manual" />
+              </Field>
             </div>
-            <input
-              {...register('subelemento_descricao')}
-              readOnly={subsAtuais.length > 0}
-              className={cn(fieldCls, 'mt-1')}
-              placeholder="Descrição do sub-elemento"
-            />
-          </div>
+          )}
         </div>
       </section>
+
+      {/* ── Classificação Orçamentária (oculta para tipos 4, 5, 6) ──────── */}
+      {showClassificacao && (
+        <section>
+          <h3 style={sectionHead}>Classificação Orçamentária</h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <Field label="Nº da Ficha">
+              <input
+                {...register('numero_ficha')}
+                className={fieldCls}
+                placeholder="Ex: 001"
+                onBlur={(e) => handleFichaBlur(e.target.value)}
+                onChange={() => {
+                  setValue('subelemento_codigo', '');
+                  setValue('subelemento_descricao', '');
+                }}
+              />
+            </Field>
+
+            <div className="sm:col-span-3">
+              <Field label="Projeto / Atividade">
+                <input
+                  {...register('projeto_atividade')}
+                  readOnly={classificacaoTravada}
+                  className={fieldCls}
+                  placeholder="Auto-preenchido pela ficha"
+                />
+              </Field>
+            </div>
+
+            <div className="sm:col-span-2">
+              <Field label="Dotação (Natureza)">
+                <input
+                  {...register('dotacao')}
+                  readOnly={classificacaoTravada}
+                  className={fieldCls}
+                  placeholder="Ex: 3.1.90.04.00"
+                  onBlur={(e) => carregarSubs(e.target.value, false)}
+                />
+              </Field>
+            </div>
+
+            <Field label="Fonte (STN)">
+              <input
+                {...register('stn')}
+                readOnly={classificacaoTravada}
+                className={fieldCls}
+              />
+            </Field>
+
+            {/* Sub-elemento */}
+            <div>
+              <label className={labelCls}>Sub-elemento</label>
+              <div className="relative flex gap-1">
+                <div className="relative flex-1">
+                  <input
+                    {...register('subelemento_codigo')}
+                    className={fieldCls}
+                    placeholder="Código"
+                    onChange={(e) => setSubFiltro(e.target.value)}
+                    onFocus={() => subsAtuais.length > 0 && setShowSubSugestoes(true)}
+                    onBlur={handleSubBlur}
+                    autoComplete="off"
+                  />
+                  {showSubSugestoes && subsFiltradas.length > 0 && (
+                    <ul className="absolute z-50 mt-1 w-64 rounded-lg border border-line bg-white shadow-md max-h-52 overflow-y-auto text-sm">
+                      {subsFiltradas.map((s) => (
+                        <li
+                          key={s.sub}
+                          onMouseDown={(e) => { e.preventDefault(); selecionarSub(s); }}
+                          className="cursor-pointer px-3 py-2 hover:bg-bg-soft hover:text-ink-900 transition"
+                        >
+                          <span className="font-mono mr-2 text-ink-700">{s.sub}</span>
+                          <span className="text-ink-500">{s.descricao}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!naturezaAtual) { toast.info('Informe a ficha para carregar sub-elementos'); return; }
+                    setShowSubSugestoes(true);
+                  }}
+                  className="rounded-lg border border-line px-2.5 text-ink-500 hover:bg-bg-soft transition flex items-center justify-center"
+                  title="Ver sub-elementos disponíveis"
+                  aria-label="Ver sub-elementos disponíveis"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </button>
+              </div>
+              <input
+                {...register('subelemento_descricao')}
+                readOnly={subsAtuais.length > 0}
+                className={cn(fieldCls, 'mt-1')}
+                placeholder="Descrição do sub-elemento"
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Ficha Extra (apenas para Despesa Extra e Receita Extra) ─────── */}
+      {showFichaExtra && (
+        <section>
+          <h3 style={sectionHead}>Ficha Extra</h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <Field label="Nº Ficha Extra">
+              <input
+                {...register('ficha_extra_codigo')}
+                className={fieldCls}
+                placeholder="Código da ficha extra"
+              />
+            </Field>
+            <div className="sm:col-span-3">
+              <Field label="Descrição da Ficha">
+                <input
+                  {...register('ficha_extra_descricao')}
+                  className={fieldCls}
+                  placeholder="Descrição da ficha extra"
+                />
+              </Field>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Credor ───────────────────────────────────────────────────────────── */}
       <section>
@@ -598,130 +648,132 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
         </div>
       </section>
 
-      {/* ── Descontos / Retenções ─────────────────────────────────────────────── */}
-      <section>
-        <h3 style={sectionHead}>
-          <span>Descontos / Retenções</span>
-          <button
-            type="button"
-            aria-label="Adicionar retenção"
-            onClick={() => addDesconto({ tipo: '', codigo: '', valor: 0, efd_codigo: '', ord: descontoFields.length })}
-            className="text-xs rounded-lg border border-line text-ink-700 px-3 py-1.5 hover:bg-bg-soft transition font-medium"
-          >
-            + Adicionar
-          </button>
-        </h3>
+      {/* ── Descontos / Retenções (oculto para Receita Extra) ────────────── */}
+      {showDescontos && (
+        <section>
+          <h3 style={sectionHead}>
+            <span>Descontos / Retenções</span>
+            <button
+              type="button"
+              aria-label="Adicionar retenção"
+              onClick={() => addDesconto({ tipo: '', codigo: '', valor: 0, efd_codigo: '', ord: descontoFields.length })}
+              className="text-xs rounded-lg border border-line text-ink-700 px-3 py-1.5 hover:bg-bg-soft transition font-medium"
+            >
+              + Adicionar
+            </button>
+          </h3>
 
-        {descontoFields.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-line">
-            <table className="w-full text-sm" style={{ minWidth: 420 }}>
-              <thead style={{ background: '#f6f8fb' }}>
-                <tr>
-                  <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 110 }}>Código</th>
-                  <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Tipo / Retenção</th>
-                  <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
-                  <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Código EFD</th>
-                  <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
-                </tr>
-              </thead>
-              <tbody style={{ borderTop: 0 }}>
-                {descontoFields.map((field, i) => (
-                  <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
-                    <td className="px-3 py-2 col-hide-sm">
-                      <input
-                        {...register(`descontos.${i}.codigo`)}
-                        className={fieldCls}
-                        placeholder="Cód."
-                        onBlur={async (e) => {
-                          const v = e.target.value.trim();
-                          if (!v) return;
-                          try {
-                            const { data } = await supabase
-                              .from('retencoes')
-                              .select('nome')
-                              .eq('codigo', v)
-                              .maybeSingle();
-                            if (data?.nome) setValue(`descontos.${i}.tipo`, data.nome);
-                          } catch { /* manual */ }
-                        }}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Controller
-                        control={control}
-                        name={`descontos.${i}.tipo`}
-                        render={({ field: f }) => (
-                          <Combobox
-                            value={f.value ?? ''}
-                            onChange={async (val, opt) => {
-                              f.onChange(val);
-                              if (opt?.value) setValue(`descontos.${i}.codigo`, opt.value);
-                            }}
-                            onSearch={searchRetencoes}
-                            placeholder="Digite para buscar..."
-                            minChars={1}
-                          />
-                        )}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Controller
-                        control={control}
-                        name={`descontos.${i}.valor`}
-                        render={({ field: f }) => (
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            className={cn(fieldCls, 'text-right')}
-                            placeholder="0,00"
-                            value={formatCurrencyBR(f.value)}
-                            onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
-                            onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
-                          />
-                        )}
-                      />
-                    </td>
-                    <td className="px-3 py-2 col-hide-mobile">
-                      <Controller
-                        control={control}
-                        name={`descontos.${i}.efd_codigo`}
-                        render={({ field: f }) => (
-                          <Combobox
-                            value={f.value ?? ''}
-                            onChange={(val) => f.onChange(val)}
-                            onSearch={searchEfd}
-                            placeholder="EFD..."
-                            minChars={1}
-                          />
-                        )}
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => removeDesconto(i)}
-                        className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
-                        aria-label="Remover desconto"
-                      >
-                        ×
-                      </button>
-                    </td>
+          {descontoFields.length > 0 && (
+            <div className="overflow-x-auto rounded-lg border border-line">
+              <table className="w-full text-sm" style={{ minWidth: 420 }}>
+                <thead style={{ background: '#f6f8fb' }}>
+                  <tr>
+                    <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 110 }}>Código</th>
+                    <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Tipo / Retenção</th>
+                    <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
+                    <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Código EFD</th>
+                    <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody style={{ borderTop: 0 }}>
+                  {descontoFields.map((field, i) => (
+                    <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
+                      <td className="px-3 py-2 col-hide-sm">
+                        <input
+                          {...register(`descontos.${i}.codigo`)}
+                          className={fieldCls}
+                          placeholder="Cód."
+                          onBlur={async (e) => {
+                            const v = e.target.value.trim();
+                            if (!v) return;
+                            try {
+                              const { data } = await supabase
+                                .from('retencoes')
+                                .select('nome')
+                                .eq('codigo', v)
+                                .maybeSingle();
+                              if (data?.nome) setValue(`descontos.${i}.tipo`, data.nome);
+                            } catch { /* manual */ }
+                          }}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Controller
+                          control={control}
+                          name={`descontos.${i}.tipo`}
+                          render={({ field: f }) => (
+                            <Combobox
+                              value={f.value ?? ''}
+                              onChange={async (val, opt) => {
+                                f.onChange(val);
+                                if (opt?.value) setValue(`descontos.${i}.codigo`, opt.value);
+                              }}
+                              onSearch={searchRetencoes}
+                              placeholder="Digite para buscar..."
+                              minChars={1}
+                            />
+                          )}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Controller
+                          control={control}
+                          name={`descontos.${i}.valor`}
+                          render={({ field: f }) => (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              className={cn(fieldCls, 'text-right')}
+                              placeholder="0,00"
+                              value={formatCurrencyBR(f.value)}
+                              onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                              onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                            />
+                          )}
+                        />
+                      </td>
+                      <td className="px-3 py-2 col-hide-mobile">
+                        <Controller
+                          control={control}
+                          name={`descontos.${i}.efd_codigo`}
+                          render={({ field: f }) => (
+                            <Combobox
+                              value={f.value ?? ''}
+                              onChange={(val) => f.onChange(val)}
+                              onSearch={searchEfd}
+                              placeholder="EFD..."
+                              minChars={1}
+                            />
+                          )}
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeDesconto(i)}
+                          className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
+                          aria-label="Remover desconto"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        <div className="mt-3 flex flex-wrap justify-end gap-6 text-sm">
-          <span className="text-ink-500">
-            Total descontos: <span className="font-medium text-ink-900">R$ {formatCurrencyBR(totalDescontos)}</span>
-          </span>
-          <span className="text-ink-500">
-            Valor líquido: <span className="font-semibold text-accent-blue">R$ {formatCurrencyBR(valorLiquido)}</span>
-          </span>
-        </div>
-      </section>
+          <div className="mt-3 flex flex-wrap justify-end gap-6 text-sm">
+            <span className="text-ink-500">
+              Total descontos: <span className="font-medium text-ink-900">R$ {formatCurrencyBR(totalDescontos)}</span>
+            </span>
+            <span className="text-ink-500">
+              Valor líquido: <span className="font-semibold text-accent-blue">R$ {formatCurrencyBR(valorLiquido)}</span>
+            </span>
+          </div>
+        </section>
+      )}
 
       {/* ── Liquidação ────────────────────────────────────────────────────────── */}
       <section>
@@ -744,17 +796,21 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
             />
           </Field>
 
-          <Field label="Data da Liquidação">
-            <input type="date" {...register('liquidacao.data_liquidacao')} className={fieldCls} />
-          </Field>
+          {!isReceitaExtra && (
+            <Field label="Data da Liquidação">
+              <input type="date" {...register('liquidacao.data_liquidacao')} className={fieldCls} />
+            </Field>
+          )}
 
-          <Field label="Data do Pagamento">
+          <Field label={isReceitaExtra ? 'Data Recebimento' : 'Data Pagamento'}>
             <input type="date" {...register('liquidacao.data_pagamento')} className={fieldCls} />
           </Field>
 
-          <Field label="Nº O.P.">
-            <input {...register('liquidacao.numero_op')} className={fieldCls} />
-          </Field>
+          {!isReceitaExtra && (
+            <Field label="Nº O.P.">
+              <input {...register('liquidacao.numero_op')} className={fieldCls} />
+            </Field>
+          )}
 
           <Field label="Forma de Pagamento">
             <select {...register('liquidacao.forma_pagamento')} className={fieldCls}>
@@ -774,90 +830,92 @@ export function EmpenhoForm({ empenho, onSuccess, onCancel }: Props) {
           </div>
         </div>
 
-        {/* Parcelas */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-ink-500 uppercase tracking-wide" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em' }}>Parcelas</span>
-            <button
-              type="button"
-              aria-label="Adicionar parcela"
-              onClick={() =>
-                addParcela({ valor: 0, data: '', forma_pagamento: '', conta: '', numero_op: '', ord: parcelaFields.length })
-              }
-              className="text-xs rounded-lg border border-line text-ink-700 px-2.5 py-1.5 hover:bg-bg-soft transition font-medium"
-            >
-              + Parcela
-            </button>
-          </div>
-
-          {parcelaFields.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-line">
-              <table className="w-full text-sm" style={{ minWidth: 360 }}>
-                <thead style={{ background: '#f6f8fb' }}>
-                  <tr>
-                    <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
-                    <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Data</th>
-                    <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Forma</th>
-                    <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Conta</th>
-                    <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>N.º O.P.</th>
-                    <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {parcelaFields.map((field, i) => (
-                    <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
-                      <td className="px-3 py-2">
-                        <Controller
-                          control={control}
-                          name={`liquidacao.parcelas.${i}.valor`}
-                          render={({ field: f }) => (
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              className={cn(fieldCls, 'text-right')}
-                              value={formatCurrencyBR(f.value)}
-                              onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
-                              onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
-                            />
-                          )}
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input type="date" {...register(`liquidacao.parcelas.${i}.data`)} className={fieldCls} />
-                      </td>
-                      <td className="px-3 py-2 col-hide-mobile">
-                        <select {...register(`liquidacao.parcelas.${i}.forma_pagamento`)} className={fieldCls}>
-                          <option value="">—</option>
-                          {Array.isArray(formasPagamento) && formasPagamento.map((f) => (
-                            <option key={f.codigo} value={f.codigo}>
-                              {f.descricao || f.codigo}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-3 py-2 col-hide-mobile">
-                        <input {...register(`liquidacao.parcelas.${i}.conta`)} className={fieldCls} />
-                      </td>
-                      <td className="px-3 py-2 col-hide-sm">
-                        <input {...register(`liquidacao.parcelas.${i}.numero_op`)} className={fieldCls} />
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <button
-                          type="button"
-                          onClick={() => removeParcela(i)}
-                          className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
-                          aria-label="Remover parcela"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Parcelas — ocultas para Receita Extra */}
+        {!isReceitaExtra && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-ink-500 uppercase tracking-wide" style={{ fontFamily: '"IBM Plex Mono", monospace', letterSpacing: '0.1em' }}>Parcelas</span>
+              <button
+                type="button"
+                aria-label="Adicionar parcela"
+                onClick={() =>
+                  addParcela({ valor: 0, data: '', forma_pagamento: '', conta: '', numero_op: '', ord: parcelaFields.length })
+                }
+                className="text-xs rounded-lg border border-line text-ink-700 px-2.5 py-1.5 hover:bg-bg-soft transition font-medium"
+              >
+                + Parcela
+              </button>
             </div>
-          )}
-        </div>
+
+            {parcelaFields.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-line">
+                <table className="w-full text-sm" style={{ minWidth: 360 }}>
+                  <thead style={{ background: '#f6f8fb' }}>
+                    <tr>
+                      <th className="px-3 py-2.5 text-right" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Valor (R$)</th>
+                      <th className="px-3 py-2.5 text-left" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee', width: 130 }}>Data</th>
+                      <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Forma</th>
+                      <th className="px-3 py-2.5 text-left col-hide-mobile" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>Conta</th>
+                      <th className="px-3 py-2.5 text-left col-hide-sm" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#5b667a', fontWeight: 500, borderBottom: '1px solid #e3e7ee' }}>N.º O.P.</th>
+                      <th className="px-3 py-2.5" style={{ borderBottom: '1px solid #e3e7ee', width: 36 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parcelaFields.map((field, i) => (
+                      <tr key={field.id} style={{ borderBottom: '1px solid #eef1f6' }}>
+                        <td className="px-3 py-2">
+                          <Controller
+                            control={control}
+                            name={`liquidacao.parcelas.${i}.valor`}
+                            render={({ field: f }) => (
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                className={cn(fieldCls, 'text-right')}
+                                value={formatCurrencyBR(f.value)}
+                                onChange={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                                onBlur={(e) => f.onChange(parseCurrencyBR(e.target.value))}
+                              />
+                            )}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input type="date" {...register(`liquidacao.parcelas.${i}.data`)} className={fieldCls} />
+                        </td>
+                        <td className="px-3 py-2 col-hide-mobile">
+                          <select {...register(`liquidacao.parcelas.${i}.forma_pagamento`)} className={fieldCls}>
+                            <option value="">—</option>
+                            {Array.isArray(formasPagamento) && formasPagamento.map((f) => (
+                              <option key={f.codigo} value={f.codigo}>
+                                {f.descricao || f.codigo}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-3 py-2 col-hide-mobile">
+                          <input {...register(`liquidacao.parcelas.${i}.conta`)} className={fieldCls} />
+                        </td>
+                        <td className="px-3 py-2 col-hide-sm">
+                          <input {...register(`liquidacao.parcelas.${i}.numero_op`)} className={fieldCls} />
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => removeParcela(i)}
+                            className="text-accent-red hover:text-red-700 text-lg leading-none w-7 h-7 rounded flex items-center justify-center hover:bg-red-50 transition"
+                            aria-label="Remover parcela"
+                          >
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── Ações ──────────────────────────────────────────────────────────────── */}
